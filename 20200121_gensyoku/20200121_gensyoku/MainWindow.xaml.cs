@@ -30,7 +30,6 @@ namespace _20200121_gensyoku
         {
             InitializeComponent();
 
-
             this.AllowDrop = true;
             this.Drop += MainWindow_Drop;
         }
