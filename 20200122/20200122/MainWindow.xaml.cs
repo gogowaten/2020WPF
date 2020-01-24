@@ -359,9 +359,9 @@ namespace _20200122
                 if (MaxR < vMaxR[i]) MaxR = vMaxR[i];
                 if (MaxG < vMaxG[i]) MaxG = vMaxG[i];
                 if (MaxB < vMaxB[i]) MaxB = vMaxB[i];
-                if (MinR < vMinR[i]) MinR = vMinR[i];
-                if (MinG < vMinG[i]) MinG = vMinG[i];
-                if (MinB < vMinB[i]) MinB = vMinB[i];
+                if (MinR > vMinR[i]) MinR = vMinR[i];
+                if (MinG > vMinG[i]) MinG = vMinG[i];
+                if (MinB > vMinB[i]) MinB = vMinB[i];
             }
 
             for (int i = myLast; i < pixels.Length; i += 4)
