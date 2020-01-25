@@ -1,0 +1,63 @@
+﻿<Window x:Class="_20200125_VectorMinMax.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:_20200125_VectorMinMax"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="400" Width="600">
+  <Window.Resources>
+    <Style TargetType="StackPanel">
+      <Setter Property="Margin" Value="4"/>
+    </Style>
+  </Window.Resources>
+    <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition/>
+      <ColumnDefinition/>
+    </Grid.ColumnDefinitions>
+    <StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonForIf" Content="ForIf" Width="160"/>
+        <TextBlock x:Name="tbForIf"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonMathMax" Content="MathMax" Width="160"/>
+        <TextBlock x:Name="tbMathMax"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonLinqMax" Content="LinqMax" Width="160"/>
+        <TextBlock x:Name="tbLinqMax"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonVectorMax" Content="VectorMax" Width="160"/>
+        <TextBlock x:Name="tbVectorMax"/>
+      </StackPanel>
+      <Button x:Name="ButtonRandomArray" Content="配列リセット"/>
+    </StackPanel>
+      
+    <StackPanel Grid.Column="1">      
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonForIfMT" Content="ForIfMT" Width="160"/>
+        <TextBlock x:Name="tbForIfMT"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonMathMaxMT" Content="MathMaxMT" Width="160"/>
+        <TextBlock x:Name="tbMathMaxMT"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonLinqAsParallelMax" Content="LinqAsParallelMax" Width="160"/>
+        <TextBlock x:Name="tbLinqAsParallelMax"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonVectorMaxMT" Content="VectorMaxMT" Width="160"/>
+        <TextBlock x:Name="tbVectorMaxMT"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonTest" Content="test" Width="160"/>
+        <TextBlock x:Name="tbTest"/>
+      </StackPanel>
+      
+    </StackPanel>
+  </Grid>
+</Window>

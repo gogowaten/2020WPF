@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20200125_VectorMinMax", "20200125_VectorMinMax\20200125_VectorMinMax.csproj", "{CDB287E1-A70A-4FE0-82F5-4F6A1C004EAE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CDB287E1-A70A-4FE0-82F5-4F6A1C004EAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDB287E1-A70A-4FE0-82F5-4F6A1C004EAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDB287E1-A70A-4FE0-82F5-4F6A1C004EAE}.Debug|x64.ActiveCfg = Debug|x64
+		{CDB287E1-A70A-4FE0-82F5-4F6A1C004EAE}.Debug|x64.Build.0 = Debug|x64
+		{CDB287E1-A70A-4FE0-82F5-4F6A1C004EAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDB287E1-A70A-4FE0-82F5-4F6A1C004EAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDB287E1-A70A-4FE0-82F5-4F6A1C004EAE}.Release|x64.ActiveCfg = Release|x64
+		{CDB287E1-A70A-4FE0-82F5-4F6A1C004EAE}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B1B5039F-DA8A-49A9-A140-F9E6690FE023}
+	EndGlobalSection
+EndGlobal
