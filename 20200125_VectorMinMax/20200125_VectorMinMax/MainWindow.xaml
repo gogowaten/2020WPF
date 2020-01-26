@@ -34,6 +34,9 @@
         <TextBlock x:Name="tbVectorMax"/>
       </StackPanel>
       <Button x:Name="ButtonRandomArray" Content="配列リセット"/>
+      <Button x:Name="ButtonSetLoopCount10" Content="ループ回数10にする"/>
+      <Button x:Name="ButtonSetLoopCount100" Content="ループ回数100にする"/>
+      <Button x:Name="ButtonSetLoopCount1000" Content="ループ回数1000にする"/>
     </StackPanel>
       
     <StackPanel Grid.Column="1">      
@@ -53,6 +56,24 @@
         <Button x:Name="ButtonVectorMaxMT" Content="VectorMaxMT" Width="160"/>
         <TextBlock x:Name="tbVectorMaxMT"/>
       </StackPanel>
+
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonForIfMT2" Content="ForIfMT2" Width="160"/>
+        <TextBlock x:Name="tbForIfMT2"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonMathMaxMT2" Content="MathMaxMT2" Width="160"/>
+        <TextBlock x:Name="tbMathMaxMT2"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonLinqAsParallelMax2" Content="LinqMaxMT2" Width="160"/>
+        <TextBlock x:Name="tbLinqAsParallelMax2"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="ButtonVectorMaxMT2" Content="VectorMaxMT2" Width="160"/>
+        <TextBlock x:Name="tbVectorMaxMT2"/>
+      </StackPanel>
+
       <StackPanel Orientation="Horizontal">
         <Button x:Name="ButtonTest" Content="test" Width="160"/>
         <TextBlock x:Name="tbTest"/>

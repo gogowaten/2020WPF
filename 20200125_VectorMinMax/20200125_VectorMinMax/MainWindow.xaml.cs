@@ -24,33 +24,55 @@ namespace _20200125_VectorMinMax
     public partial class MainWindow : Window
     {
         private int[] MyArray;
-        const int RMIN = 0;
-        const int RMAX = int.MaxValue;
-        const int MY要素数 = 100000;//100000
-        const int MYループ回数 = 10000;//10000
+        const int MY要素数 = 10_000_000;
+        private int Myループ回数;
         public MainWindow()
         {
             InitializeComponent();
 
-            this.Title = $"int型配列、要素数：{MY要素数}から最大値を取得、ループ回数：{MYループ回数}の処理時間";
+
+
+            int simdLength = Vector<int>.Count;//8個 (Ryzen 5 2500Gの場合)
+            var va = new Vector<int>(123);
+            //var vb = new Vector<int>(new int[] { 1, 2 });//要素数が合わないのでエラー
+            var vc = new Vector<int>(Enumerable.Range(50, simdLength).ToArray());
+            var vd = new Vector<int>(new int[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+            var ve = new Vector<int>(new int[] { 1, 1, 1, 1, 100, 1, 1, 1 });
+            var vf = System.Numerics.Vector.Max(vd, ve);
+            int max = int.MinValue;
+            for (int i = 0; i < simdLength; i++)
+            {
+                if (max < vf[i]) max = vf[i];
+            }
+
+            SetLoopCount(100);
             MyArray = new int[MY要素数];
-            SetMyArray(RMIN, RMAX);
+            SetMyArray(int.MinValue, int.MaxValue);
+            //MyArray[MY要素数 - 1] = int.MaxValue;//テスト用、最後の要素を最大値にする
 
-            ButtonRandomArray.Click += (o, e) => { SetMyArray(RMIN, RMAX); };
+            ButtonRandomArray.Click += (s, e) => { SetMyArray(int.MinValue, int.MaxValue); };
+            ButtonSetLoopCount10.Click += (s, e) => { SetLoopCount(10); };
+            ButtonSetLoopCount100.Click += (s, e) => SetLoopCount(100);
+            ButtonSetLoopCount1000.Click += (s, e) => SetLoopCount(1000);
 
-            ButtonForIf.Click += (o, e) => { MyTime(ForIf, nameof(ForIf), tbForIf); };
-            ButtonMathMax.Click += (o, e) => { MyTime(MathMax, nameof(MathMax), tbMathMax); };
-            ButtonLinqMax.Click += (o, e) => { MyTime(LinqMax, nameof(LinqMax), tbLinqMax); };
-            ButtonVectorMax.Click += (o, e) => { MyTime(VectorMax, nameof(VectorMax), tbVectorMax); };
+            ButtonForIf.Click += (s, e) => { MyTime(ForIf, tbForIf); };
+            ButtonMathMax.Click += (s, e) => { MyTime(MathMax, tbMathMax); };
+            ButtonLinqMax.Click += (s, e) => { MyTime(LinqMax, tbLinqMax); };
+            ButtonVectorMax.Click += (s, e) => { MyTime(VectorMax, tbVectorMax); };
+
+            ButtonForIfMT.Click += (s, e) => { MyTime(ForIfMT, tbForIfMT); };
+            ButtonMathMaxMT.Click += (s, e) => { MyTime(MathMaxMT, tbMathMaxMT); };
+            ButtonLinqAsParallelMax.Click += (s, e) => { MyTime(LinqMaxAsParallel, tbLinqAsParallelMax); };
+            ButtonVectorMaxMT.Click += (s, e) => { MyTime(VectorMaxMT, tbVectorMaxMT); };
+
+            ButtonForIfMT2.Click += (s, e) => { MyTimeParallel(ForIf, tbForIfMT2); };
+            ButtonMathMaxMT2.Click += (s, e) => { MyTimeParallel(MathMax, tbMathMaxMT2); };
+            ButtonLinqAsParallelMax2.Click += (s, e) => { MyTimeParallel(LinqMax, tbLinqAsParallelMax2); };
+            ButtonVectorMaxMT2.Click += (s, e) => { MyTimeParallel(VectorMax, tbVectorMaxMT2); };
 
 
-            ButtonForIfMT.Click += (o, e) => { MyTime(ForIfMT, nameof(ForIfMT), tbForIfMT); };
-            ButtonMathMaxMT.Click += (o, e) => { MyTime(MathMaxMT, nameof(MathMax), tbMathMaxMT); };
-            ButtonLinqAsParallelMax.Click += (o, e) => { MyTime(LinqMaxAsParallel, nameof(LinqMaxAsParallel), tbLinqAsParallelMax); };
-            ButtonVectorMaxMT.Click += (o, e) => { MyTime(VectorMaxMT, nameof(VectorMaxMT), tbVectorMaxMT); };
-
-            ButtonTest.Click += (o, e) => { MyTime(ForIfMT2, nameof(ForIfMT2), tbTest); };
-
+            //ButtonTest.Click += (s, e) => { MyTime(ForIfMT2, tbTest); };
+            //ButtonTest.Click += (s, e) => { MyTime(ForIfParallelFor, tbTest); };
         }
 
         private void SetMyArray(int min, int max)
@@ -63,7 +85,55 @@ namespace _20200125_VectorMinMax
             r.Next(min, max);
         }
 
+        private void SetLoopCount(int loopCount)
+        {
+            Myループ回数 = loopCount;
+            this.Title = $"int型配列(要素数10,000,000)から最大値を取得、{Myループ回数}ループの処理時間";
+            //全TextBlockを取得してTextをなしにする
+            //var neko = EnumerateDescendantObjects2<TextBlock>(this).Select(a =>  a.Text = null);
+            foreach (var item in EnumerateDescendantObjects2<TextBlock>(this))
+            {
+                item.Text = "";
+            }
+        }
 
+        //コントロールの列挙
+        private static IEnumerable<T> EnumerateDescendantObjects<T>(DependencyObject obj) where T : DependencyObject
+        {
+            foreach (var child in LogicalTreeHelper.GetChildren(obj))
+            {
+                if (child is T cobj)
+                {
+                    yield return cobj;
+                }
+                if (child is DependencyObject dobj)
+                {
+                    foreach (var cobj2 in EnumerateDescendantObjects<T>(dobj))
+                    {
+                        yield return cobj2;
+                    }
+                }
+            }
+        }
+        private static List<T> EnumerateDescendantObjects2<T>(DependencyObject obj) where T : DependencyObject
+        {
+            var l = new List<T>();
+            foreach (object child in LogicalTreeHelper.GetChildren(obj))
+            {
+                if (child is T)
+                {
+                    l.Add((T)child);
+                }
+                if (child is DependencyObject dobj)
+                {
+                    foreach (T cobj2 in EnumerateDescendantObjects2<T>(dobj))
+                    {
+                        l.Add(cobj2);
+                    }
+                }
+            }
+            return l;
+        }
         private int ForIf(int[] intAry)
         {
             int max = intAry[0];
@@ -71,6 +141,7 @@ namespace _20200125_VectorMinMax
             {
                 if (max < intAry[i]) max = intAry[i];
             }
+
             return max;
         }
         private int ForIfMT(int[] intAry)
@@ -85,19 +156,56 @@ namespace _20200125_VectorMinMax
 
             return mm.Max();
         }
-        private int ForIfMT2(int[] intAry)
+        private int ForIfMT最後の要素まできっちり処理(int[] intAry)
         {
             int cpuThread = Environment.ProcessorCount;
             int windowSize = intAry.Length / cpuThread;
-            Task<int[]> mm = Task.WhenAll(Enumerable.Range(0, cpuThread).Select(n => Task.Run(() =>
+            int[] mm = Task.WhenAll(Enumerable.Range(0, cpuThread).Select(n => Task.Run(() =>
             {
                 var a = intAry.Skip(windowSize * n).Take(windowSize);
                 return ForIf(a.ToArray());
-            })));
-            int[] neko = mm.Result;
-            
+            }))).GetAwaiter().GetResult();
+
+            //スレッド数で割り切れなかった余りの要素との比較1
+            int last = windowSize * cpuThread;
+            int[] nokori = intAry.Skip(last).ToArray();
+            return nokori.Concat(mm).Max();
+
+            //処理速度は↑と変わらない
+            //スレッド数で割り切れなかった余りの要素との比較2
+            //int max = int.MinValue;
+            //for (int i = windowSize * cpuThread; i < intAry.Length; i++)
+            //{
+            //    if (max < intAry[i]) max = intAry[i];
+            //}
+            //for (int i = 0; i < cpuThread; i++)
+            //{
+            //    if (max < mm[i]) max = mm[i];
+            //}
+            //return max;
+        }
+
+        //Parallel
+        private int ForIfParallelFor(int[] intAry)
+        {
+            int cpuThread = Environment.ProcessorCount;
+            int windowSize = intAry.Length / cpuThread;
+
+            //配列を分割、CPUスレッド数分の配列を作る
+            int[][] temp = new int[cpuThread][];
+            for (int i = 0; i < cpuThread; i++)
+            {
+                temp[i] = intAry.Skip(i * windowSize).Take(windowSize).ToArray();
+            }
+
+            int[] neko = new int[cpuThread];
+            //var op = new ParallelOptions();//あんまり意味ない、2でも4でも8でも誤差
+            //op.MaxDegreeOfParallelism = 8;//2(5.18) 4(4.98) 8(4.88)
+            //Parallel.For(0, cpuThread, op, i => { neko[i] = ForIf(temp[i]); });
+            Parallel.For(0, cpuThread, i => { neko[i] = ForIf(temp[i]); });
             return neko.Max();
         }
+
 
         private int MathMax(int[] intAry)
         {
@@ -170,18 +278,39 @@ namespace _20200125_VectorMinMax
         }
 
 
-        private void MyTime(Func<int[], int> func, string funcName, TextBlock textBlock)
+        private void MyTime(Func<int[], int> func, TextBlock textBlock)
         {
             var sw = new Stopwatch();
-            sw.Start();
             int max = 0;
-            for (int i = 0; i < MYループ回数; i++)
+            sw.Start();
+            for (int i = 0; i < Myループ回数; i++)
             {
                 max = func(MyArray);
             }
             sw.Stop();
-            textBlock.Text = $"{funcName}\n最大値 = {max}\n処理時間：{sw.Elapsed.TotalSeconds.ToString("00.00")}秒";
+            textBlock.Text =
+                $"{System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}" +
+                $"\n最大値 = {max}\n処理時間：{sw.Elapsed.TotalSeconds.ToString("00.00")}秒";
         }
+        private void MyTimeParallel(Func<int[], int> func, TextBlock textBlock)
+        {
+            var sw = new Stopwatch();
+            int max = 0;
+            int[] mm = new int[Myループ回数];
+            var option = new ParallelOptions();
+            option.MaxDegreeOfParallelism = Environment.ProcessorCount;
+            sw.Start();
+            Parallel.For(0, Myループ回数, option, n =>
+             {
+                 mm[n] = func(MyArray);
+             });
+            max = mm.Max();
+            sw.Stop();
+            textBlock.Text =
+                $"{System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}" +
+                $"\n最大値 = {max}\n処理時間：{sw.Elapsed.TotalSeconds.ToString("00.00")}秒";
+        }
+
     }
 }
 //配列の中から指定した範囲の要素を抜き出す - .NET Tips(VB.NET, C#...)
@@ -190,3 +319,5 @@ namespace _20200125_VectorMinMax
 //http://c5d5e5.asablo.jp/blog/2017/09/27/8685145
 //Vector, System.Numerics C# (CSharp) Code Examples - HotExamples
 //https://csharp.hotexamples.com/examples/System.Numerics/Vector/-/php-vector-class-examples.html
+//[WPF]DependencyObject の子孫要素を型指定ですべて列挙する
+//https://mseeeen.msen.jp/wpf-enumerate-descendant-objects-of-dependency-object/
