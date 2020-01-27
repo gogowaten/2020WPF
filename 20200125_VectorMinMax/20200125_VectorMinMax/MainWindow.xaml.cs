@@ -32,18 +32,40 @@ namespace _20200125_VectorMinMax
 
 
 
-            int simdLength = Vector<int>.Count;//8個 (Ryzen 5 2500Gの場合)
-            var va = new Vector<int>(123);
-            //var vb = new Vector<int>(new int[] { 1, 2 });//要素数が合わないのでエラー
-            var vc = new Vector<int>(Enumerable.Range(50, simdLength).ToArray());
-            var vd = new Vector<int>(new int[] { 1, 2, 3, 4, 5, 6, 7, 8 });
-            var ve = new Vector<int>(new int[] { 1, 1, 1, 1, 100, 1, 1, 1 });
-            var vf = System.Numerics.Vector.Max(vd, ve);
-            int max = int.MinValue;
-            for (int i = 0; i < simdLength; i++)
-            {
-                if (max < vf[i]) max = vf[i];
-            }
+            //int simdLength = Vector<int>.Count;//8個 (Ryzen 5 2500Gの場合)
+
+
+            //var va = new Vector<int>(123);
+
+
+            ////var vb = new Vector<int>(new int[] { 1, 2, 2 });//要素数が合わない(8個未満)のでエラー
+            //var vb2 = new Vector<int>(new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });//8個目以降は無視される
+
+            //var vc = new Vector<int>(new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }, 2);
+
+
+            //var vd = new Vector<int>(new int[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+            //var ve = new Vector<int>(new int[] { 1, 1, 1, 1, 100, 1, 1, 1 });
+            //var vf = System.Numerics.Vector.Max(vd, ve);
+            //int[] ary = new int[simdLength];
+            //for (int i = 0; i < simdLength; i++)
+            //{
+            //    ary[i] = vf[i];
+            //}
+
+            //int max = vf[0];
+            //for (int i = 1; i < simdLength; i++)
+            //{
+            //    if (max < vf[i]) max = vf[i];
+            //}
+
+
+
+
+
+
+
+
 
             SetLoopCount(100);
             MyArray = new int[MY要素数];
@@ -51,6 +73,7 @@ namespace _20200125_VectorMinMax
             //MyArray[MY要素数 - 1] = int.MaxValue;//テスト用、最後の要素を最大値にする
 
             ButtonRandomArray.Click += (s, e) => { SetMyArray(int.MinValue, int.MaxValue); };
+            ButtonSetLoopCount1.Click += (s, e) => { SetLoopCount(1); };
             ButtonSetLoopCount10.Click += (s, e) => { SetLoopCount(10); };
             ButtonSetLoopCount100.Click += (s, e) => SetLoopCount(100);
             ButtonSetLoopCount1000.Click += (s, e) => SetLoopCount(1000);
@@ -70,6 +93,7 @@ namespace _20200125_VectorMinMax
             ButtonLinqAsParallelMax2.Click += (s, e) => { MyTimeParallel(LinqMax, tbLinqAsParallelMax2); };
             ButtonVectorMaxMT2.Click += (s, e) => { MyTimeParallel(VectorMax, tbVectorMaxMT2); };
 
+            ButtonVectorMinMaxMT2.Click += (s, e) => MyTimeParallelMinMax(VectorMinMax, tbVectorMinMaxMT2);
 
             //ButtonTest.Click += (s, e) => { MyTime(ForIfMT2, tbTest); };
             //ButtonTest.Click += (s, e) => { MyTime(ForIfParallelFor, tbTest); };
@@ -88,7 +112,7 @@ namespace _20200125_VectorMinMax
         private void SetLoopCount(int loopCount)
         {
             Myループ回数 = loopCount;
-            this.Title = $"int型配列(要素数10,000,000)から最大値を取得、{Myループ回数}ループの処理時間";
+            this.Title = $"int型配列(要素数10,000,000)から最大値を、{Myループ回数}回取得するまでの処理時間";
             //全TextBlockを取得してTextをなしにする
             //var neko = EnumerateDescendantObjects2<TextBlock>(this).Select(a =>  a.Text = null);
             foreach (var item in EnumerateDescendantObjects2<TextBlock>(this))
@@ -97,7 +121,7 @@ namespace _20200125_VectorMinMax
             }
         }
 
-        //コントロールの列挙
+        #region コントロールの列挙
         private static IEnumerable<T> EnumerateDescendantObjects<T>(DependencyObject obj) where T : DependencyObject
         {
             foreach (var child in LogicalTreeHelper.GetChildren(obj))
@@ -134,6 +158,8 @@ namespace _20200125_VectorMinMax
             }
             return l;
         }
+        #endregion
+
         private int ForIf(int[] intAry)
         {
             int max = intAry[0];
@@ -144,6 +170,7 @@ namespace _20200125_VectorMinMax
 
             return max;
         }
+
         private int ForIfMT(int[] intAry)
         {
             int cpuThread = Environment.ProcessorCount;
@@ -156,6 +183,8 @@ namespace _20200125_VectorMinMax
 
             return mm.Max();
         }
+
+        #region 未使用
         private int ForIfMT最後の要素まできっちり処理(int[] intAry)
         {
             int cpuThread = Environment.ProcessorCount;
@@ -205,7 +234,7 @@ namespace _20200125_VectorMinMax
             Parallel.For(0, cpuThread, i => { neko[i] = ForIf(temp[i]); });
             return neko.Max();
         }
-
+        #endregion
 
         private int MathMax(int[] intAry)
         {
@@ -277,11 +306,39 @@ namespace _20200125_VectorMinMax
             return mm.Max();
         }
 
+        //最小値と最大値を返す
+        private (int min, int max) VectorMinMax(int[] intAry)
+        {
+            int simdLength = Vector<int>.Count;
+            int myLast = intAry.Length - simdLength;
+            var vMin = new Vector<int>(int.MaxValue);
+            var vMax = new Vector<int>(int.MinValue);
+            for (int i = 0; i < myLast; i += simdLength)
+            {
+                var v = new Vector<int>(intAry, i);
+                vMin = System.Numerics.Vector.Min(vMin, v);
+                vMax = System.Numerics.Vector.Max(vMax, v);
+            }
+            int max = int.MinValue;
+            int min = int.MaxValue;
+            for (int i = 0; i < simdLength; i++)
+            {
+                if (max < vMax[i]) max = vMax[i];
+                if (min > vMin[i]) min = vMin[i];
+            }
+            for (int i = myLast; i < intAry.Length; i++)
+            {
+                if (max < intAry[i]) max = intAry[i];
+                if (min > intAry[i]) min = intAry[i];
+            }
+            return (min, max);
+        }
 
+        #region 時間計測
         private void MyTime(Func<int[], int> func, TextBlock textBlock)
         {
             var sw = new Stopwatch();
-            int max = 0;
+            int max = int.MinValue;
             sw.Start();
             for (int i = 0; i < Myループ回数; i++)
             {
@@ -295,7 +352,7 @@ namespace _20200125_VectorMinMax
         private void MyTimeParallel(Func<int[], int> func, TextBlock textBlock)
         {
             var sw = new Stopwatch();
-            int max = 0;
+            int max = int.MinValue;
             int[] mm = new int[Myループ回数];
             var option = new ParallelOptions();
             option.MaxDegreeOfParallelism = Environment.ProcessorCount;
@@ -310,6 +367,30 @@ namespace _20200125_VectorMinMax
                 $"{System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}" +
                 $"\n最大値 = {max}\n処理時間：{sw.Elapsed.TotalSeconds.ToString("00.00")}秒";
         }
+
+        private void MyTimeParallelMinMax(Func<int[], (int min, int max)> func, TextBlock textBlock)
+        {
+            var sw = new Stopwatch();
+            int min = int.MaxValue;
+            int max = int.MinValue;
+            int[] mins = new int[Myループ回数];
+            int[] maxs = new int[Myループ回数];
+            var option = new ParallelOptions();
+            option.MaxDegreeOfParallelism = Environment.ProcessorCount;
+            sw.Start();
+            Parallel.For(0, Myループ回数, option, n =>
+            {
+                (mins[n], maxs[n]) = func(MyArray);
+            });
+            min = mins.Min();
+            max = maxs.Max();
+            sw.Stop();
+            textBlock.Text =
+                $"{System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}" +
+                $"\n最小値 = {min}\n最大値 = {max}\n処理時間：{sw.Elapsed.TotalSeconds.ToString("00.00")}秒";
+        }
+
+        #endregion
 
     }
 }
