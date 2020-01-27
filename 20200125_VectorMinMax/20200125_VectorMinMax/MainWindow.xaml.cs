@@ -15,6 +15,9 @@ using System.Windows.Shapes;
 using System.Diagnostics;
 using System.Numerics;
 
+//ブログ記事
+//C#、配列から最大値を求めるMaxは、MathクラスよりSystem.Numerics.Vectorクラスのほうが速い - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/01/27/213744
 
 namespace _20200125_VectorMinMax
 {
