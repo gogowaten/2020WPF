@@ -18,6 +18,7 @@
       <Button x:Name="Button1" Content="if" Click="Button1_Click"/>
       <Button x:Name="Button2" Content="Math" Click="Button2_Click"/>
       <Button x:Name="Button3" Content="Vector" Click="Button3_Click"/>
+      <Button x:Name="Button4" Content="Vector" Click="Button4_Click"/>
     </StackPanel>
   </Grid>
 </Window>

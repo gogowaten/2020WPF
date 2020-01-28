@@ -29,6 +29,7 @@ namespace _20200122
         {
             InitializeComponent();
 
+
             int[] ri = new int[10000000];
             var r = new Random();
 
@@ -120,44 +121,6 @@ namespace _20200122
             return iMax;
         }
 
-        internal static void HWAcceleratedGetStats(ushort[] input, out ushort min, out ushort max, out double average)
-        {
-            var simdLength = Vector<ushort>.Count;
-            var vmin = new Vector<ushort>(ushort.MaxValue);
-            var vmax = new Vector<ushort>(ushort.MinValue);
-            var i = 0;
-            ulong total = 0;
-            var lastSafeVectorIndex = input.Length - simdLength;
-            for (i = 0; i < lastSafeVectorIndex; i += simdLength)
-            {
-                total += input[i];
-                total += input[i + 1];
-                total += input[i + 2];
-                total += input[i + 3];
-                total += input[i + 4];
-                total += input[i + 5];
-                total += input[i + 6];
-                total += input[i + 7];
-                var vector = new Vector<ushort>(input, i);
-                vmin = System.Numerics.Vector.Min(vector, vmin);
-                vmax = System.Numerics.Vector.Max(vector, vmax);
-            }
-            min = ushort.MaxValue;
-            max = ushort.MinValue;
-            for (var j = 0; j < simdLength; ++j)
-            {
-                min = Math.Min(min, vmin[j]);
-                max = Math.Max(max, vmax[j]);
-            }
-            for (; i < input.Length; ++i)
-            {
-                min = Math.Min(min, input[i]);
-                max = Math.Max(max, input[i]);
-                total += input[i];
-            }
-            average = total / (double)input.Length;
-        }
-
 
         /// <summary>
         /// 画像ファイルからbitmapと、そのbyte配列を返す、ピクセルフォーマットは指定したものに変換
@@ -231,6 +194,16 @@ namespace _20200122
             MessageBox.Show(sw.ElapsedMilliseconds.ToString());
 
         }
+
+        private void Button4_Click(object sender, RoutedEventArgs e)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            var neko = new Cube4(OriginPixels);
+            sw.Stop();
+            MessageBox.Show(sw.ElapsedMilliseconds.ToString());
+
+        }
     }
 
     public class Cube
@@ -299,6 +272,7 @@ namespace _20200122
     }
 
 
+    //最速
     public class Cube3
     {
         public byte MaxR { get; private set; }
@@ -307,7 +281,7 @@ namespace _20200122
         public byte MinR { get; private set; }
         public byte MinG { get; private set; }
         public byte MinB { get; private set; }
-
+        private byte[] Pixels;
 
         /// <summary>
         /// PixelFormats.Bgra32だけが対象
@@ -315,24 +289,26 @@ namespace _20200122
         /// <param name="pixels"></param>
         public Cube3(byte[] pixels)
         {
+            Pixels = pixels;
             var simdLength = Vector<byte>.Count;
-            var vMaxR = new Vector<byte>(255);
-            var vMaxG = new Vector<byte>(255);
-            var vMaxB = new Vector<byte>(255);
-            var vMinR = new Vector<byte>(0);
-            var vMinG = new Vector<byte>(0);
-            var vMinB = new Vector<byte>(0);
+            var vMaxR = new Vector<byte>(0);
+            var vMaxG = new Vector<byte>(0);
+            var vMaxB = new Vector<byte>(0);
+            var vMinR = new Vector<byte>(255);
+            var vMinG = new Vector<byte>(255);
+            var vMinB = new Vector<byte>(byte.MaxValue);
 
             var r = new byte[simdLength];
             var g = new byte[simdLength];
             var b = new byte[simdLength];
 
             Vector<byte> vr; Vector<byte> vg; Vector<byte> vb;
-
             int myLast = pixels.Length - simdLength;
+            int pixelSimdLength = simdLength * 4;
 
-            for (int i = 0; i < myLast; i += simdLength * 4)
+            for (int i = 0; i < myLast; i += pixelSimdLength)//bgra * simdLenghtづつ進む
             {
+                //simdLenghtに収まる配列を作成
                 for (int j = 0; j < simdLength; j++)
                 {
                     int jj = j * 4;
@@ -340,15 +316,17 @@ namespace _20200122
                     g[j] = pixels[i + jj + 1];
                     b[j] = pixels[i + jj];
                 }
+                //配列からVector作成
                 vr = new Vector<byte>(r);
                 vg = new Vector<byte>(g);
                 vb = new Vector<byte>(b);
+                //比較
                 vMaxR = System.Numerics.Vector.Max(vMaxR, vr);
                 vMaxG = System.Numerics.Vector.Max(vMaxG, vg);
                 vMaxB = System.Numerics.Vector.Max(vMaxB, vb);
                 vMinR = System.Numerics.Vector.Min(vMinR, vr);
-                vMinG = System.Numerics.Vector.Min(vMinG, vr);
-                vMinB = System.Numerics.Vector.Min(vMinB, vr);
+                vMinG = System.Numerics.Vector.Min(vMinG, vg);
+                vMinB = System.Numerics.Vector.Min(vMinB, vb);
             }
 
 
@@ -375,6 +353,122 @@ namespace _20200122
 
             }
         }
+    
+        private void Bunkatu(int count)
+        {
+
+        }
+
     }
 
+
+
+    public class Cube4
+    {
+        public byte MaxR { get; private set; }
+        public byte MaxG { get; private set; }
+        public byte MaxB { get; private set; }
+        public byte MinR { get; private set; }
+        public byte MinG { get; private set; }
+        public byte MinB { get; private set; }
+
+
+        /// <summary>
+        /// PixelFormats.Bgra32だけが対象
+        /// Vector使用
+        /// rgbごとの配列を作成(このぶんメモリを余計に使うはず)しておいて、Vector作成にはインデックスを指定
+        /// cuve3より遅くなった…
+        /// </summary>
+        /// <param name="pixels"></param>
+        public Cube4(byte[] pixels)
+        {
+            int cLength = pixels.Length / 4;
+            byte[] rA = new byte[cLength];
+            byte[] gA = new byte[cLength];
+            byte[] bA = new byte[cLength];
+            //rgbごとの配列を作成
+            for (int i = 0; i < cLength; i++)
+            {
+                rA[i] = pixels[i * 4 + 2];
+                gA[i] = pixels[i * 4 + 1];
+                bA[i] = pixels[i * 4];
+            }
+            //int p = 0;
+            //for (int i = 0; i < pixels.Length; i += 4)
+            //{
+            //    rA[p] = pixels[i + 2];
+            //    gA[p] = pixels[i + 1];
+            //    bA[p] = pixels[i];
+            //    p++;
+            //}
+
+            var simdLength = Vector<byte>.Count;
+            var vMaxR = new Vector<byte>(byte.MinValue);
+            var vMaxG = new Vector<byte>(byte.MinValue);
+            var vMaxB = new Vector<byte>(byte.MinValue);
+            var vMinR = new Vector<byte>(byte.MaxValue);
+            var vMinG = new Vector<byte>(byte.MaxValue);
+            var vMinB = new Vector<byte>(byte.MaxValue);
+
+
+            int myLast = cLength - simdLength;
+
+            for (int i = 0; i < myLast; i += simdLength)
+            {
+                vMaxR = System.Numerics.Vector.Max(vMaxR, new Vector<byte>(rA, i));
+                vMaxG = System.Numerics.Vector.Max(vMaxG, new Vector<byte>(gA, i));
+                vMaxB = System.Numerics.Vector.Max(vMaxB, new Vector<byte>(bA, i));
+                vMinR = System.Numerics.Vector.Min(vMinR, new Vector<byte>(rA, i));
+                vMinG = System.Numerics.Vector.Min(vMinG, new Vector<byte>(gA, i));
+                vMinB = System.Numerics.Vector.Min(vMinB, new Vector<byte>(bA, i));
+            }
+
+            //ここだけ並列処理にしたけど逆に遅くなった
+            //Parallel.Invoke(() => { MaxR = GetMax(rA); MaxG= GetMax(gA); MaxB = GetMax(bA); });
+
+
+            MaxR = 0; MaxG = 0; MaxB = 0;
+            MinR = 255; MinG = 255; MinB = 255;
+            for (int i = 0; i < simdLength; i++)
+            {
+                if (MaxR < vMaxR[i]) MaxR = vMaxR[i];
+                if (MaxG < vMaxG[i]) MaxG = vMaxG[i];
+                if (MaxB < vMaxB[i]) MaxB = vMaxB[i];
+                if (MinR > vMinR[i]) MinR = vMinR[i];
+                if (MinG > vMinG[i]) MinG = vMinG[i];
+                if (MinB > vMinB[i]) MinB = vMinB[i];
+            }
+
+            myLast = pixels.Length - simdLength;
+            for (int i = myLast; i < pixels.Length; i += 4)
+            {
+                MaxR = Math.Max(MaxR, pixels[i + 2]);
+                MaxG = Math.Max(MaxG, pixels[i + 1]);
+                MaxB = Math.Max(MaxB, pixels[i]);
+                MinR = Math.Min(MinR, pixels[i + 2]);
+                MinG = Math.Min(MinG, pixels[i + 1]);
+                MinB = Math.Min(MinB, pixels[i]);
+
+            }
+
+        }
+        //private byte GetMax(byte[] vs)
+        //{
+        //    int simdLenght = Vector<byte>.Count;
+        //    int myLast = vs.Length - simdLenght;
+        //    var vMax = new Vector<byte>(byte.MinValue);
+        //    for (int i = 0; i < myLast; i += simdLenght)
+        //    {
+        //        vMax = System.Numerics.Vector.Max(vMax, new Vector<byte>(vs, i));
+        //    }
+        //    byte max = byte.MinValue;
+        //    for (int i = 0; i < simdLenght; i++)
+        //    { if (max < vMax[i]) max = vMax[i]; }
+        //    for (int i = myLast; i < vs.Length; i++)
+        //    {
+        //        if (max < vs[i]) max = vs[i];
+        //    }
+        //    return max;
+        //}
+    }
 }
