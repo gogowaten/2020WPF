@@ -204,6 +204,36 @@ namespace _20200122
             MessageBox.Show(sw.ElapsedMilliseconds.ToString());
 
         }
+
+        private void Button5_Click(object sender, RoutedEventArgs e)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            var rgbArray = MakeRgbArray(OriginPixels);
+            sw.Stop();
+            MessageBox.Show(sw.ElapsedMilliseconds.ToString());
+            sw.Restart();
+            var neko = new Cube5(rgbArray.red, rgbArray.green, rgbArray.blue);
+            sw.Stop();
+            MessageBox.Show(sw.ElapsedMilliseconds.ToString());
+
+
+        }
+        private (byte[] red, byte[] green, byte[] blue) MakeRgbArray(byte[] pixels)
+        {
+            var ColorCount = pixels.Length / 4;
+            var redArray = new byte[ColorCount];
+            var greenArray = new byte[ColorCount];
+            var blueArray = new byte[ColorCount];
+            for (int i = 0; i < ColorCount; i++)
+            {
+                redArray[i] = pixels[i * 4 + 2];
+                greenArray[i] = pixels[i * 4 + 1];
+                blueArray[i] = pixels[i * 4];
+            }
+
+            return (redArray, greenArray, blueArray);
+        }
     }
 
     public class Cube
@@ -282,6 +312,7 @@ namespace _20200122
         public byte MinG { get; private set; }
         public byte MinB { get; private set; }
         private byte[] Pixels;
+        private List<Cube3> Cubes;
 
         /// <summary>
         /// PixelFormats.Bgra32だけが対象
@@ -289,6 +320,7 @@ namespace _20200122
         /// <param name="pixels"></param>
         public Cube3(byte[] pixels)
         {
+            Cubes = new List<Cube3>();
             Pixels = pixels;
             var simdLength = Vector<byte>.Count;
             var vMaxR = new Vector<byte>(0);
@@ -353,10 +385,93 @@ namespace _20200122
 
             }
         }
-    
-        private void Bunkatu(int count)
-        {
 
+        private int GetSideLength(Cube3 cube)
+        {
+            int rLength = cube.MaxR - cube.MinR;
+            int gLength = cube.MaxG - cube.MinG;
+            int bLength = cube.MaxB - cube.MinB;
+
+            if (rLength >= gLength)
+            {
+                if (rLength >= bLength) { return rLength; }
+                else { return bLength; }
+            }
+            else if (gLength >= bLength) { return gLength; }
+            else { return bLength; }
+        }
+        //最大辺を持つCubeを選択、最大辺の色も取得
+        private Cube3 SelectCube()
+        {
+            int[] sides = new int[Cubes.Count];
+            for (int i = 0; i < Cubes.Count; i++)
+            {
+                sides[i] = GetSideLength(Cubes[i]);
+            }
+            return Cubes[sides.Max()];
+        }
+
+        //Cubeリストから選択、分割、選択Cubeをリストから削除、分割したCubeをリストに追加
+        //最大辺の中間で分割
+        private void Bunkatu(Cube3 cube, int count)
+        {
+            int rLength = MaxR - MinR;
+            int gLength = MaxG - MinG;
+            int bLength = MaxB - MinB;
+            byte[] cPixels = cube.Pixels;
+            int colorCount = 1;
+            //中間は切り捨てで取得、判定は以下(より大きい)
+            int mid;
+            var lowList = new List<byte>();
+            var HiList = new List<byte>();
+
+            if (rLength >= gLength)
+            {
+                if (rLength >= bLength)
+                {
+                    //aka
+                    mid = MaxR - MinR;//中間は切り捨てで取得
+                    for (int i = 0; i < cPixels.Length; i += 4)
+                    {
+                        if (cPixels[i + 2] > mid)
+                        {
+                            HiList.Add(cPixels[i]);
+                            HiList.Add(cPixels[i + 1]);
+                            HiList.Add(cPixels[i + 2]);
+                            HiList.Add(cPixels[i + 3]);
+                        }
+                        else
+                        {
+                            lowList.Add(cPixels[i]);
+                            lowList.Add(cPixels[i + 1]);
+                            lowList.Add(cPixels[i + 2]);
+                            lowList.Add(cPixels[i + 3]);
+                        }
+                    }
+                }
+                //分割できなかった場合
+                if (HiList.Count == 0 && lowList.Count == 0) { }
+                //分割できたら元のCubeをリストから削除、分割Cubeをリストに追加
+                else
+                {
+                    Cubes.Remove(cube);
+                    Cubes.Add(new Cube3(HiList.ToArray()));
+                    Cubes.Add(new Cube3(lowList.ToArray()));
+                    count++;
+                    if (colorCount < count)
+                    {
+                        //次の分割
+                    }
+                }
+            }
+            else if (gLength >= bLength)
+            {
+
+            }
+            else
+            {
+
+            }
         }
 
     }
@@ -470,5 +585,135 @@ namespace _20200122
         //    }
         //    return max;
         //}
+    }
+    
+    
+    
+    public class Cube5
+    {
+        public byte MaxR { get; private set; }
+        public byte MaxG { get; private set; }
+        public byte MaxB { get; private set; }
+        public byte MinR { get; private set; }
+        public byte MinG { get; private set; }
+        public byte MinB { get; private set; }
+        public byte[] RedArray { get; private set; }
+        public byte[] GreArray { get; private set; }
+        public byte[] BluArray { get; private set; }
+        public int ColorCount { get; private set; }
+        public List<Cube5> Cubes { get; private set; }
+
+        public Cube5(byte[] redArray, byte[] greenArray, byte[] blueArray)
+        {
+            ColorCount = redArray.Length;
+            Initialize(redArray, greenArray, blueArray);
+        }
+
+        public Cube5(byte[] pixels)
+        {
+            ColorCount = pixels.Length / 4;
+            var redArray = new byte[ColorCount];
+            var greenArray = new byte[ColorCount];
+            var blueArray = new byte[ColorCount];
+            for (int i = 0; i < ColorCount; i++)
+            {
+                redArray[i] = pixels[i * 4 + 2];
+                greenArray[i] = pixels[i * 4 + 1];
+                blueArray[i] = pixels[i * 4];
+            }
+
+            Initialize(redArray, greenArray, blueArray);
+        }
+        private void Initialize(byte[] redArray, byte[] greenArray, byte[] blueArray)
+        {
+            RedArray = redArray;
+            GreArray = greenArray;
+            BluArray = blueArray;
+            SetMinMax();
+            Cubes = new List<Cube5>();
+            Cubes.Add(this);
+        }
+        private void SetMinMax()
+        {
+            var simdLength = Vector<byte>.Count;
+            var vMaxR = new Vector<byte>(byte.MinValue);
+            var vMaxG = new Vector<byte>(byte.MinValue);
+            var vMaxB = new Vector<byte>(byte.MinValue);
+            var vMinR = new Vector<byte>(byte.MaxValue);
+            var vMinG = new Vector<byte>(byte.MaxValue);
+            var vMinB = new Vector<byte>(byte.MaxValue);
+
+            int myLast = ColorCount - simdLength;
+            for (int i = 0; i < myLast; i += simdLength)
+            {
+                vMaxR = System.Numerics.Vector.Max(vMaxR, new Vector<byte>(RedArray, i));
+                vMaxG = System.Numerics.Vector.Max(vMaxG, new Vector<byte>(GreArray, i));
+                vMaxB = System.Numerics.Vector.Max(vMaxB, new Vector<byte>(BluArray, i));
+                vMinR = System.Numerics.Vector.Min(vMinR, new Vector<byte>(RedArray, i));
+                vMinG = System.Numerics.Vector.Min(vMinG, new Vector<byte>(GreArray, i));
+                vMinB = System.Numerics.Vector.Min(vMinB, new Vector<byte>(BluArray, i));
+            }
+
+            MaxR = vMaxR[0];
+            MaxG = vMaxG[0];
+            MaxB = vMaxB[0];
+            MinR = vMinR[0];
+            MinG = vMinG[0];
+            MinB = vMinB[0];
+            for (int i = 1; i < simdLength; i++)
+            {
+                if (MaxR < vMaxR[i]) MaxR = vMaxR[i];
+                if (MaxG < vMaxG[i]) MaxG = vMaxG[i];
+                if (MaxB < vMaxB[i]) MaxB = vMaxB[i];
+                if (MinR > vMinR[i]) MinR = vMinR[i];
+                if (MinG > vMinG[i]) MinG = vMinG[i];
+                if (MinB > vMinB[i]) MinB = vMinB[i];
+            }
+
+            for (int i = myLast; i < ColorCount; i++)
+            {
+                MaxR = Math.Max(MaxR, RedArray[i]);
+                MaxG = Math.Max(MaxG, GreArray[i]);
+                MaxB = Math.Max(MaxB, BluArray[i]);
+                MinR = Math.Min(MinR, RedArray[i]);
+                MinG = Math.Min(MinG, GreArray[i]);
+                MinB = Math.Min(MinB, BluArray[i]);
+            }
+        }
+
+        public (Cube5 cube1,Cube5 cube2) Bunkatu(Cube5 cube)
+        {
+
+        }
+        //最大辺
+        private Cube5 Select(List<Cube5> cubes)
+        {
+            Cube5 cube = cubes[0];
+            if (cubes.Count == 1) return cube;
+            int max = GetSideLength(cube);
+            for (int i = 1; i < cubes.Count; i++)
+            {
+                int length = GetSideLength(cubes[i]);
+                if (max < length)
+                {
+                    cube = cubes[i]; 
+                    max = length;
+                }
+            }
+            return cube;
+        }
+        private int GetSideLength(Cube5 cube)
+        {
+            int r = cube.MaxR - cube.MinR;
+            int g = cube.MaxG - cube.MinG;
+            int b = cube.MaxB - cube.MinB;
+            if (r > g)
+            {
+                if (r > b) return r;
+                else return b;
+            }
+            else if (g > b) return g;
+            else return b;
+        }
     }
 }
