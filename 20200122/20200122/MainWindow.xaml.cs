@@ -30,28 +30,28 @@ namespace _20200122
             InitializeComponent();
 
 
-            int[] ri = new int[10000000];
-            var r = new Random();
+            //int[] ri = new int[10000000];
+            //var r = new Random();
 
-            for (int i = 0; i < ri.Length; i++)
-            {
-                ri[i] = r.Next(int.MinValue, int.MaxValue);
-            }
-            int max = int.MinValue;
-            var sw = new Stopwatch();
-            sw.Start();
-            for (int i = 0; i < 10; i++)
-            {
+            //for (int i = 0; i < ri.Length; i++)
+            //{
+            //    ri[i] = r.Next(int.MinValue, int.MaxValue);
+            //}
+            //int max = int.MinValue;
+            //var sw = new Stopwatch();
+            //sw.Start();
+            //for (int i = 0; i < 10; i++)
+            //{
 
-                max = MyVectorMax(ri);
-            }
-            sw.Stop();
-            MessageBox.Show($"{sw.ElapsedMilliseconds}ミリ秒 MAX={max}");
+            //    max = MyVectorMax(ri);
+            //}
+            //sw.Stop();
+            //MessageBox.Show($"{sw.ElapsedMilliseconds}ミリ秒 MAX={max}");
 
-            sw.Restart();
-            max = MyMax(ri);
-            sw.Stop();
-            MessageBox.Show($"{sw.ElapsedMilliseconds}ミリ秒 MAX={max}");
+            //sw.Restart();
+            //max = MyMax(ri);
+            //sw.Stop();
+            //MessageBox.Show($"{sw.ElapsedMilliseconds}ミリ秒 MAX={max}");
 
 
             Vector<ushort> vb = new Vector<ushort>(10);
@@ -80,7 +80,9 @@ namespace _20200122
 
             string imagePath = @"D:\ブログ用\チェック用2\WP_20200111_09_25_36_Pro_2020_01_11_午後わてん.jpg";
             imagePath = @"D:\ブログ用\テスト用画像\1ピクセルだけ半透明_.png";
-            //imagePath = @"D:\ブログ用\テスト用画像\不透明と半透明.png";
+            imagePath = @"D:\ブログ用\テスト用画像\不透明と半透明.png";
+            imagePath = @"D:\ブログ用\テスト用画像\テスト結果用\NEC_1354_2018_02_25_午後わてん.jpg_.png";
+            imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200125_12_28_46_Pro.jpg";
             (OriginPixels, OriginBitmapSource) = MakeBitmapSourceAndPixelData(imagePath, PixelFormats.Bgra32, 96, 96);
             MyImage.Source = OriginBitmapSource;
 
@@ -212,11 +214,16 @@ namespace _20200122
             var rgbArray = MakeRgbArray(OriginPixels);
             sw.Stop();
             MessageBox.Show(sw.ElapsedMilliseconds.ToString());
+
             sw.Restart();
             var neko = new Cube5(rgbArray.red, rgbArray.green, rgbArray.blue);
             sw.Stop();
             MessageBox.Show(sw.ElapsedMilliseconds.ToString());
 
+            sw.Restart();
+            var inu = neko.Bunkatu(18);
+            sw.Stop();
+            MessageBox.Show(sw.ElapsedMilliseconds.ToString());
 
         }
         private (byte[] red, byte[] green, byte[] blue) MakeRgbArray(byte[] pixels)
@@ -586,11 +593,18 @@ namespace _20200122
         //    return max;
         //}
     }
-    
-    
-    
+
+
+
     public class Cube5
     {
+        private enum MaxSideColor
+        {
+            Red = 2, Green = 1, Blue = 0, None = -1
+        }
+
+
+        #region sonota
         public byte MaxR { get; private set; }
         public byte MaxG { get; private set; }
         public byte MaxB { get; private set; }
@@ -602,6 +616,9 @@ namespace _20200122
         public byte[] BluArray { get; private set; }
         public int ColorCount { get; private set; }
         public List<Cube5> Cubes { get; private set; }
+        #endregion
+        private MaxSideColor SpritKeyColor;//最大辺長の色(RGBのどれか)
+        private int MaxSideLength;//最大辺長
 
         public Cube5(byte[] redArray, byte[] greenArray, byte[] blueArray)
         {
@@ -632,10 +649,17 @@ namespace _20200122
             SetMinMax();
             Cubes = new List<Cube5>();
             Cubes.Add(this);
+            SetSelectKey();
         }
         private void SetMinMax()
         {
             var simdLength = Vector<byte>.Count;
+            if (simdLength > ColorCount)
+            {
+                SetMinMax2();
+                return;
+            }
+
             var vMaxR = new Vector<byte>(byte.MinValue);
             var vMaxG = new Vector<byte>(byte.MinValue);
             var vMaxB = new Vector<byte>(byte.MinValue);
@@ -680,40 +704,129 @@ namespace _20200122
                 MinB = Math.Min(MinB, BluArray[i]);
             }
         }
-
-        public (Cube5 cube1,Cube5 cube2) Bunkatu(Cube5 cube)
+        private void SetMinMax2()
         {
-
-        }
-        //最大辺
-        private Cube5 Select(List<Cube5> cubes)
-        {
-            Cube5 cube = cubes[0];
-            if (cubes.Count == 1) return cube;
-            int max = GetSideLength(cube);
-            for (int i = 1; i < cubes.Count; i++)
+            for (int i = 0; i < ColorCount; i++)
             {
-                int length = GetSideLength(cubes[i]);
-                if (max < length)
+                MaxR = Math.Max(MaxR, RedArray[i]);
+                MaxG = Math.Max(MaxG, GreArray[i]);
+                MaxB = Math.Max(MaxB, BluArray[i]);
+                MinR = Math.Min(MinR, RedArray[i]);
+                MinG = Math.Min(MinG, GreArray[i]);
+                MinB = Math.Min(MinB, BluArray[i]);
+            }
+        }
+
+        public List<Cube5> Bunkatu(int spritCount)
+        {
+            Cube5 selectedCube = Select();
+            List<byte> vs1R = new List<byte>();
+            List<byte> vs1G = new List<byte>();
+            List<byte> vs1B = new List<byte>();
+            List<byte> vs2R = new List<byte>();
+            List<byte> vs2G = new List<byte>();
+            List<byte> vs2B = new List<byte>();
+            int mid;//中間値は切り捨てint
+
+            byte[] keyArray;
+            if (selectedCube.SpritKeyColor == MaxSideColor.Red)
+            {
+                keyArray = selectedCube.RedArray;
+                mid = (selectedCube.MaxR + selectedCube.MinR) / 2;
+            }
+            else if (selectedCube.SpritKeyColor == MaxSideColor.Green)
+            {
+                keyArray = selectedCube.GreArray;
+                mid = (selectedCube.MaxG + selectedCube.MinG) / 2;
+            }
+            else
+            {
+                keyArray = selectedCube.BluArray;
+                mid = (selectedCube.MaxB + selectedCube.MinB) / 2;
+            }
+            //中間値で分割
+            for (int i = 0; i < selectedCube.ColorCount; i++)
+            {
+                if (mid > keyArray[i])
                 {
-                    cube = cubes[i]; 
-                    max = length;
+                    vs1R.Add(selectedCube.RedArray[i]);
+                    vs1G.Add(selectedCube.GreArray[i]);
+                    vs1B.Add(selectedCube.BluArray[i]);
+
+                }
+                else
+                {
+                    vs2R.Add(selectedCube.RedArray[i]);
+                    vs2G.Add(selectedCube.GreArray[i]);
+                    vs2B.Add(selectedCube.BluArray[i]);
                 }
             }
-            return cube;
+            //2つに分割できなかったら、今のCubeを諦めて別のCubeで試行
+            if (vs1B.Count == 0 || vs2B.Count == 0)
+            {
+
+                return Cubes;
+            }
+            //2つに分割できたら
+            else
+            {
+                //分割した元Cubeはリストから削除、元Cubeから分割した2つのCubeをリストに追加
+                Cubes.Remove(selectedCube);
+                var c1 = new Cube5(vs1R.ToArray(), vs1G.ToArray(), vs1B.ToArray());
+                var c2 = new Cube5(vs2R.ToArray(), vs2G.ToArray(), vs2B.ToArray());
+                Cubes.Add(c1);
+                Cubes.Add(c2);
+                //指定分割数になるまで繰り返す
+                if (Cubes.Count < spritCount) Bunkatu(spritCount);
+            }
+            return Cubes;
         }
-        private int GetSideLength(Cube5 cube)
+
+        //最大辺
+        private Cube5 Select()
         {
-            int r = cube.MaxR - cube.MinR;
-            int g = cube.MaxG - cube.MinG;
-            int b = cube.MaxB - cube.MinB;
+            Cube5 selectedCube = Cubes[0];
+            if (Cubes.Count == 1) return selectedCube;
+
+            for (int i = 1; i < Cubes.Count; i++)
+            {
+                if (selectedCube.MaxSideLength < Cubes[i].MaxSideLength)
+                {
+                    selectedCube = Cubes[i];
+                }
+            }
+            return selectedCube;
+        }
+
+        private void SetSelectKey()
+        {
+            int r = MaxR - MinR;
+            int g = MaxG - MinG;
+            int b = MaxB - MinB;
             if (r > g)
             {
-                if (r > b) return r;
-                else return b;
+                if (r > b)
+                {
+                    MaxSideLength = r;
+                    SpritKeyColor = MaxSideColor.Red;
+                }
+                else
+                {
+                    MaxSideLength = b;
+                    SpritKeyColor = MaxSideColor.Blue;
+                }
             }
-            else if (g > b) return g;
-            else return b;
+            else if (g > b)
+            {
+                MaxSideLength = g;
+                SpritKeyColor = MaxSideColor.Green;
+            }
+
+            else
+            {
+                MaxSideLength = b;
+                SpritKeyColor = MaxSideColor.Blue;
+            }
         }
     }
 }
