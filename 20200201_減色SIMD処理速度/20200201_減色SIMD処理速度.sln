@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29728.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20200201_減色SIMD処理速度", "20200201_減色SIMD処理速度\20200201_減色SIMD処理速度.csproj", "{EC932D80-CFD7-4842-9ED2-68C0208B40EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EC932D80-CFD7-4842-9ED2-68C0208B40EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC932D80-CFD7-4842-9ED2-68C0208B40EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC932D80-CFD7-4842-9ED2-68C0208B40EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC932D80-CFD7-4842-9ED2-68C0208B40EA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F6DCB004-AB85-4151-921F-E13A1FFBFD08}
+	EndGlobalSection
+EndGlobal

@@ -29,6 +29,26 @@ namespace _20200122
         {
             InitializeComponent();
 
+            var v1 = new Vector<int>(10);
+            var v2 = new Vector<int>(Enumerable.Range(20,8).ToArray());
+            var add = System.Numerics.Vector.Add(v1, v2);//足し算
+            var abs = System.Numerics.Vector.Abs(v1);//絶対値
+            var andnot = System.Numerics.Vector.AndNot(v1, v2);
+            var bitwiseand = System.Numerics.Vector.BitwiseAnd(v1, v2);
+            var bitwiseor = System.Numerics.Vector.BitwiseOr(v1, v2);
+            var divide = System.Numerics.Vector.Divide(v1, v2);//割り算
+            var dot = System.Numerics.Vector.Dot(v1, v2);//掛け算して足し算
+            var greaterthan = System.Numerics.Vector.GreaterThan(v1, v2);
+            var greaterthanall = System.Numerics.Vector.GreaterThanAll(v1, v2);
+            var lessthan = System.Numerics.Vector.LessThan(v1, v2);
+            var multiply = System.Numerics.Vector.Multiply(v1, v2);//掛け算
+            var negati = System.Numerics.Vector.Negate(v1);//符号反転
+            var squareroot = System.Numerics.Vector.SquareRoot(v1);//平方根
+            var subtract = System.Numerics.Vector.Subtract(v1, v2);//引き算
+            var xor = System.Numerics.Vector.Xor(v1, v2);
+            var neko = add;
+
+
 
             //int[] ri = new int[10000000];
             //var r = new Random();
@@ -54,9 +74,7 @@ namespace _20200122
             //MessageBox.Show($"{sw.ElapsedMilliseconds}ミリ秒 MAX={max}");
 
 
-            Vector<ushort> vb = new Vector<ushort>(10);
-            Vector<ushort> vg = new Vector<ushort>(20);
-            var neko = System.Numerics.Vector.Min(vb, vg);
+          
 
             var simdLength = Vector<byte>.Count;//32
             var rAArray = ZRandomByte(simdLength);
