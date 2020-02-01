@@ -6,7 +6,34 @@
         xmlns:local="clr-namespace:_20200201_SIMDでbyte配列の平均値"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+  <Grid>
+    <StackPanel>
+      <StackPanel.Resources>
+        <Style TargetType="Button">
+          <Setter Property="HorizontalContentAlignment" Value="Left"/>
+          <Setter Property="Margin" Value="2,6,2,0"/>
+        </Style>
+      </StackPanel.Resources>
+      
+      <Button Content="1:シングル" x:Name="ButtonExe1" Click="ButtonExe1_Click"/>
+      <TextBlock x:Name="tbTime1" Text="time"/>
+      <Button Content="2:シングル＋SIMD" x:Name="ButtonExe2" Click="ButtonExe2_Click"/>
+      <TextBlock x:Name="tbTime2" Text="time"/>
+      <Button Content="3:" x:Name="ButtonExe3" Click="ButtonExe3_Click"/>
+      <TextBlock x:Name="tbTime3" Text="time"/>
+      <Button Content="4:" x:Name="ButtonExe4" Click="ButtonExe4_Click"/>
+      <TextBlock x:Name="tbTime4" Text="time"/>
+      <Button Content="5:Parallelマルチ" x:Name="ButtonExe5" Click="ButtonExe5_Click"/>
+      <TextBlock x:Name="tbTime5" Text="time"/>
+      <Button Content="6:Takeマルチ" x:Name="ButtonExe6" Click="ButtonExe6_Click"/>
+      <TextBlock x:Name="tbTime6" Text="time"/>
+      <Button Content="7:Parallelでのマルチ＋SIMD" x:Name="ButtonExe7" Click="ButtonExe7_Click"/>
+      <TextBlock x:Name="tbTime7" Text="time"/>
+      <Button Content="8:Taskを使ったマルチ+SIMD" x:Name="ButtonExe8" Click="ButtonExe8_Click"/>
+      <TextBlock x:Name="tbTime8" Text="time"/>
+      <Button Content="9:Taskを使ったマルチ+SIMD(intint)" x:Name="ButtonExe9" Click="ButtonExe9_Click"/>
+      <TextBlock x:Name="tbTime9" Text="time"/>
 
-    </Grid>
+    </StackPanel>
+  </Grid>
 </Window>
