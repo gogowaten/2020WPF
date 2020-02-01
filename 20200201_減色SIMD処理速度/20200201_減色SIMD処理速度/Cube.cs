@@ -175,7 +175,7 @@ namespace _20200201_減色SIMD処理速度
 
 
         //分割
-        public List<Cube> Bunkatu(int spritCount)
+        public List<Cube> Split(int spritCount)
         {
             Cube selectedCube = Select();
             List<byte> vs1R = new List<byte>();
@@ -202,7 +202,7 @@ namespace _20200201_減色SIMD処理速度
             //中央値で分割
             for (int i = 0; i < selectedCube.ColorCount; i++)
             {
-                if (Median > keyArray[i])
+                if (selectedCube.Median > keyArray[i])
                 {
                     vs1R.Add(selectedCube.RedArray[i]);
                     vs1G.Add(selectedCube.GreArray[i]);
@@ -230,7 +230,7 @@ namespace _20200201_減色SIMD処理速度
                 Cubes.Add(new Cube(vs1R.ToArray(), vs1G.ToArray(), vs1B.ToArray()));
                 Cubes.Add(new Cube(vs2R.ToArray(), vs2G.ToArray(), vs2B.ToArray()));
                 //指定分割数になるまで繰り返す
-                if (Cubes.Count < spritCount) Bunkatu(spritCount);
+                if (Cubes.Count < spritCount) Split(spritCount);
             }
             return Cubes;
         }
@@ -253,10 +253,44 @@ namespace _20200201_減色SIMD処理速度
             return selectedCube;
         }
 
+
+        //色取得
+        public List<Color> GetColors()
+        {
+            List<Color> colors = new List<Color>();
+            for (int i = 0; i < Cubes.Count; i++)
+            {
+                colors.Add(MakeColorAverage(Cubes[i]));
+            }
+            return colors;
+        }
         //Cubeから色の取得は平均色
-        public Color MakeColorFromCube(Cube cube)
+        private Color MakeColorAverage(Cube cube)
         {
             //red[n]++++++.../red.count
+            int simdLength = Vector<int>.Count;
+            int lastIndex = cube.ColorCount - simdLength;
+            var r = new Vector<int>(cube.RedArray., 0);
+            var g = new Vector<byte>(cube.GreArray, 0);
+            var b = new Vector<byte>(cube.BluArray, 0);
+
+            for (int i = 1; i < lastIndex; i += simdLength)
+            {
+                r = Vector.Add(r, new Vector<byte>(cube.RedArray, i));
+                g = Vector.Add(r, new Vector<byte>(cube.GreArray, i));
+                b = Vector.Add(r, new Vector<byte>(cube.BluArray, i));
+            }
+            int rAve = 0; int gAve = 0; int bAve = 0;
+            for (int i = 0; i < simdLength; i++)
+            {
+                rAve += r[i]; gAve += g[i]; bAve += b[i];
+            }
+            for (int i = lastIndex; i < cube.ColorCount; i++)
+            {
+                rAve += cube.RedArray[i]; gAve += cube.GreArray[i]; bAve += cube.BluArray[i];
+            }
+            rAve /= ColorCount; gAve /= ColorCount; bAve /= ColorCount;
+            return Color.FromArgb(255, (byte)rAve, (byte)gAve, (byte)bAve);
         }
 
 

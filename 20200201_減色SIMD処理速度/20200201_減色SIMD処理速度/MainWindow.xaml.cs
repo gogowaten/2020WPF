@@ -12,6 +12,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Numerics;
+using System.Diagnostics;
+
 
 namespace _20200201_減色SIMD処理速度
 {
@@ -30,6 +33,21 @@ namespace _20200201_減色SIMD処理速度
 
             this.AllowDrop = true;
             this.Drop += MainWindow_Drop;
+
+            string path = @"E:\オレ\携帯\2019スマホ\WP_20200125_12_31_30_Pro.jpg";
+            path = @"D:\ブログ用\テスト用画像\1ピクセルだけ半透明_.png";
+            (OriginPixels, OriginBitmapSource) = MakeBitmapSourceAndPixelData(path, PixelFormats.Bgra32, 96, 96);
+            MyImageOrigin.Source = OriginBitmapSource;
+            MyImage.Source = OriginBitmapSource;
+            ImageFileFullPath = path;
+        }
+
+            //cubeを作成、色取得
+        private List<Color> GetColors(byte[] pixels)
+        {
+            Cube cube = new Cube(OriginPixels);
+            cube.Split(16);
+            return cube.GetColors();
         }
 
         private void MainWindow_Drop(object sender, DragEventArgs e)
@@ -49,6 +67,68 @@ namespace _20200201_減色SIMD処理速度
                 ImageFileFullPath = filePath[0];
             }
         }
+
+        private BitmapSource ZmT2SIMD減色9(BitmapSource source, byte[] pixels, List<byte[]> palette)
+        {
+            byte[] zPixels = new byte[pixels.Length];
+            int MyThreads = Environment.ProcessorCount;
+            int windowSize = pixels.Length / MyThreads;//1スレッドに割り当てる量
+
+            Task.WhenAll(Enumerable.Range(0, MyThreads)
+                .Select(n => Task.Run(() =>
+                {
+                    for (int p = n * windowSize; p < (n + 1) * windowSize; p += 4)
+                    {
+                        var r = pixels[p + 2];
+                        var g = pixels[p + 1];
+                        var b = pixels[p];
+                        double min = ColorDistanceV3(r, g, b, palette[0]);
+                        int pIndex = 0;
+                        for (int i = 1; i < palette.Count; i++)
+                        {
+                            var distance = ColorDistanceV3(r, g, b, palette[i]);
+                            if (min > distance)
+                            {
+                                min = distance;
+                                pIndex = i;
+                            }
+                        }
+
+                        zPixels[p] = palette[pIndex][2];
+                        zPixels[p + 1] = palette[pIndex][1];
+                        zPixels[p + 2] = palette[pIndex][0];
+                        zPixels[p + 3] = 255;
+                    }
+                }))).Wait();
+
+            return BitmapSource.Create(source.PixelWidth, source.PixelHeight, 96, 96, source.Format, null, zPixels, source.PixelWidth * 4);
+        }
+        //色の距離、SIMDを使うVectorクラスで計算
+        private float ColorDistanceV3(byte r1, byte g1, byte b1, byte[] palette)
+        {
+            Vector3 value1 = new Vector3(r1, g1, b1);
+            Vector3 value2 = new Vector3(palette[0], palette[1], palette[2]);
+            return Vector3.Distance(value1, value2);
+        }
+        //private float ColorDistanceV3(byte[] RGBA, byte[] palette)
+        //{
+        //    Vector3 value1 = new Vector3(RGBA[0], RGBA[1], RGBA[2]);
+        //    Vector3 value2 = new Vector3(palette[0], palette[1], palette[2]);
+        //    return Vector3.Distance(value1, value2);
+        //}
+
+
+        //処理時間計測
+        //private void MyTime(Func<BitmapSource, byte[], List<byte[]>, BitmapSource> func, TextBlock textBlock)
+        //{
+        //    if (OriginBitmapSource == null) return;
+        //    var sw = new Stopwatch();
+        //    sw.Start();
+        //    //MyImage.Source = func(OriginBitmapSource, OriginPixels, MakePalette());
+        //    MyImage.Source = func(OriginBitmapSource, OriginPixels, MakePalette(16));
+        //    sw.Stop();
+        //    textBlock.Text = $"{sw.Elapsed.Seconds}秒{sw.Elapsed.Milliseconds.ToString("000")}";
+        //}
 
 
 
@@ -139,6 +219,11 @@ namespace _20200201_減色SIMD処理速度
                     encoder.Save(fs);
                 }
             }
+        }
+
+        private void ButtonTest_Click(object sender, RoutedEventArgs e)
+        {
+            var neko = GetColors(OriginPixels);
         }
     }
 

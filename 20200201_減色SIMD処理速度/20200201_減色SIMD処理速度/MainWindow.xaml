@@ -25,6 +25,7 @@
         </Style>
       </StackPanel.Resources>
       <Button Content="保存" Click="ButtonSaveImage_Click"/>
+      <Button Content="test" Name="ButtonTest" Click="ButtonTest_Click"/>
       <Button Content="1:普通、シングルスレッド" x:Name="ButtonExe1"/>
       <TextBlock x:Name="tbTime1" Text="time"/>
       <Button Content="2:普通、シングルスレッド" x:Name="ButtonExe2"/>
