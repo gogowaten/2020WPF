@@ -16,6 +16,8 @@ using System.Numerics;
 using System.Diagnostics;
 //配列の一部だけをコピーするには？［C#／VB］：.NET TIPS - ＠IT
 //https://www.atmarkit.co.jp/ait/articles/1705/10/news015.html
+//方法: 小さいループ本体を高速化する | Microsoft Docs
+//https://docs.microsoft.com/ja-jp/dotnet/standard/parallel-programming/how-to-speed-up-small-loop-bodies
 
 
 //イマイチ
@@ -30,9 +32,9 @@ namespace _20200201_SIMDでbyte配列の平均値
     /// </summary>
     public partial class MainWindow : Window
     {
-        const int ELEMENT_COUNT = 10_000_000;
-        const int MIN_VALUE = -100;
-        const int MAX_VALUE = 1000000;
+        const int ELEMENT_COUNT = 1000;
+        const int MIN_VALUE = 0;
+        const int MAX_VALUE = 100000000;
         const int LOOP_COUNT = 100;
         int[] IntArray;
         //byte[] ByteArray;
@@ -52,6 +54,24 @@ namespace _20200201_SIMDでbyte配列の平均値
             //var neko = new Span<int>(IntArray, 0, 20);
             //var neko = new Vector<int>(new Span<int>(IntArray).Slice(1,8));
             //var neko = long.MaxValue > (int.MaxValue * 10000000L);
+            //var neko = new Span<int>(IntArray, 0, 10);
+            //var inu = new Span<long>(IntArray, 0, 29);//エラー型が違う
+
+            IntArray = new int[2];
+            IntArray[0] = int.MaxValue;
+            IntArray[1] = 10;
+            var rangePartitioner = System.Collections.Concurrent.Partitioner.Create(0,IntArray.Length);
+            BigInteger max = 0;
+            Parallel.ForEach(rangePartitioner, (range, loopState) =>
+             {
+                 for (int i = range.Item1; i < range.Item2; i++)
+                 {
+                     max += IntArray[i];
+                 }
+             });
+            //var neko = max /(double) IntArray.Length;
+            var inu = IntArray.Average();
+
             MessageBox.Show(IntArray.Average().ToString());
         }
 
