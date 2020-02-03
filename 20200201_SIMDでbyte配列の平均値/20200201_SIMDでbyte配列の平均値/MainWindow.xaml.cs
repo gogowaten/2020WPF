@@ -195,6 +195,7 @@ namespace _20200201_SIMDでbyte配列の平均値
             return add / (double)ary.Length;
         }
 
+        //不正確
         private double IntAverageSimdCastLong(int[] ary)
         {
             Vector<long> v = (Vector<long>)new Vector<int>(ary);
