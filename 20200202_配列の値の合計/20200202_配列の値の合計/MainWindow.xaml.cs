@@ -29,6 +29,7 @@ namespace _20200202_配列の値の合計
         {
             InitializeComponent();
 
+            Test5();
             Test31();
             Test4();
             Test();
@@ -38,6 +39,50 @@ namespace _20200202_配列の値の合計
             button2_Click();
 
         }
+
+        private void Test5()
+        {
+            int[] ii = Enumerable.Range(1, 1_000_000).ToArray();
+            long total = 0;
+            int simdLongLength = Vector<long>.Count;
+            int simdIntLength = Vector<int>.Count;
+
+            int[] inu = new ArraySegment<int>(ii, 0, simdIntLength).ToArray();
+            var vInu = new Vector<int>(inu);
+            var tako = new ArraySegment<int>(ii, 0, simdIntLength);
+            var vTako = new Vector<int>(tako);
+
+            //var neko = new ArraySegment<long>(nums, 0, simdLongLength);//エラー型が違う
+
+            var neko = new long[simdLongLength];
+            //Array.ConstrainedCopy(ii, 1, neko, 0, 8);//エラー
+            for (int i = 0; i < simdLongLength; i++)
+            {
+                neko[i] = ii[i];
+            }
+            var uma = new long[ii.Length];
+            ii.CopyTo(uma, 0);
+
+            int[] iii = new ArraySegment<int>(ii, 10, simdLongLength).ToArray();
+            long[] ll = new long[simdLongLength];
+            iii.CopyTo(ll, 0);
+
+            int[] mm = ii.Skip(10).Take(simdLongLength).ToArray();
+            long[] nn = new long[simdLongLength];
+            mm.CopyTo(nn, 0);
+
+            int[] sp = new Span<int>(ii, 10, simdLongLength).ToArray();
+            long[] oo = new long[simdLongLength];
+            sp.CopyTo(oo, 0);
+
+            long[] pp = new long[simdLongLength];
+            new Span<int>(ii, 10, simdLongLength).ToArray().CopyTo(pp, 0);
+
+
+        }
+
+
+
         //        方法: スレッド ローカル変数を使用する Parallel.For ループを記述する | Microsoft Docs
         //https://docs.microsoft.com/ja-jp/dotnet/standard/parallel-programming/how-to-write-a-parallel-for-loop-with-thread-local-variables
 
@@ -95,8 +140,8 @@ namespace _20200202_配列の値の合計
 
         private void Test4()
         {
-//            c# — C＃で整数の配列を合計する方法
-//https://www.it-swarm.dev/ja/c%23/c%EF%BC%83%E3%81%A7%E6%95%B4%E6%95%B0%E3%81%AE%E9%85%8D%E5%88%97%E3%82%92%E5%90%88%E8%A8%88%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95/968057375/
+            //            c# — C＃で整数の配列を合計する方法
+            //https://www.it-swarm.dev/ja/c%23/c%EF%BC%83%E3%81%A7%E6%95%B4%E6%95%B0%E3%81%AE%E9%85%8D%E5%88%97%E3%82%92%E5%90%88%E8%A8%88%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95/968057375/
 
             int[] ii = Enumerable.Range(1, 100_000_000).ToArray();
             long total = 0;
