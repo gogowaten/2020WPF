@@ -47,16 +47,18 @@ namespace _20200203_int配列から4要素のlong配列作成
             Button2.Click += (s, e) => Measure(Test11, Tb2);
             Button3.Click += (s, e) => Measure(Test111, Tb3);
             Button4.Click += (s, e) => Measure(Test2, Tb4);
-            Button5.Click += (s, e) => Measure(Test3, Tb5);
-            Button6.Click += (s, e) => Measure(Test4, Tb6);
-            Button7.Click += (s, e) => Measure(Test41, Tb7);
-            Button8.Click += (s, e) => Measure(Test5, Tb8);
+            Button5.Click += (s, e) => Measure(Test21, Tb5);
+            Button6.Click += (s, e) => Measure(Test3, Tb6);
+            Button7.Click += (s, e) => Measure(Test4, Tb7);
+            Button8.Click += (s, e) => Measure(Test41, Tb8);
+            Button9.Click += (s, e) => Measure(Test5, Tb9);
 
             System.Collections.IEnumerator neko = MyAry.GetEnumerator();
 
 
         }
 
+        //普通
         private void Test1()
         {
             var ll = new long[MyAry.Length];
@@ -77,7 +79,7 @@ namespace _20200203_int配列から4要素のlong配列作成
                 MyVector = new Vector<long>(MyLongAry);
             }
         }
-
+        //最速
         private void Test111()
         {
             for (int j = 0; j < LastIndex; j += LongVectorCount)
@@ -91,15 +93,26 @@ namespace _20200203_int配列から4要素のlong配列作成
             }
         }
 
-
+        //ArraySegment
         private void Test2()
-        {
+        {            
             for (int i = 0; i < LastIndex; i += LongVectorCount)
-            {
+            {                
                 new ArraySegment<int>(MyAry, i, LongVectorCount).ToArray().CopyTo(MyLongAry, 0);
                 MyVector = new Vector<long>(MyLongAry);
             }
         }
+        private void Test21()
+        {
+            var aSeg = new ArraySegment<int>(MyAry);
+            for (int i = 0; i < LastIndex; i += LongVectorCount)
+            {
+                aSeg.Slice(i, LongVectorCount).ToArray().CopyTo(MyLongAry, 0);
+                MyVector = new Vector<long>(MyLongAry);
+            }
+        }
+
+        //Linq、最遅
         private void Test3()
         {
             for (int i = 0; i < LastIndex; i += LongVectorCount)
@@ -108,6 +121,8 @@ namespace _20200203_int配列から4要素のlong配列作成
                 MyVector = new Vector<long>(MyLongAry);
             }
         }
+
+        //Span
         private void Test4()
         {
             for (int i = 0; i < LastIndex; i += LongVectorCount)
@@ -126,16 +141,20 @@ namespace _20200203_int配列から4要素のlong配列作成
             }
         }
 
+        //Buffer.BlockCopy
         private void Test5()
         {
-            var sp = new Span<int>(MyAry);
-            for (int i = 0; i < LastIndex; i += LongVectorCount)
+            int typeSize = System.Runtime.InteropServices.Marshal.SizeOf(MyAry.GetType().GetElementType());
+            var ia = new int[LongVectorCount];
+            for (int i = 0; i < LastIndex; i+=LongVectorCount)
             {
-                sp.Slice(i, LongVectorCount).ToArray().CopyTo(MyLongAry, 0);
+                Buffer.BlockCopy(MyAry, i * typeSize, ia, 0, LongVectorCount * typeSize);
+                ia.CopyTo(MyLongAry, 0);
                 MyVector = new Vector<long>(MyLongAry);
             }
         }
 
+        //処理時間測定
         private void Measure(Action action, TextBlock textBlock)
         {
             MyVector = new Vector<long>();
@@ -153,10 +172,9 @@ namespace _20200203_int配列から4要素のlong配列作成
             {
                 str += "  " + MyVector[i].ToString("N0");
             }
-            //str += "\n";
-
-            textBlock.Text = $"{sw.Elapsed.TotalSeconds.ToString("00.000")}秒  { System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(action).Name}  {str}";
-            //MessageBox.Show($"{sw.ElapsedMilliseconds.ToString("00.00")}秒" + str);
+            textBlock.Text = $"{sw.Elapsed.TotalSeconds.ToString("00.000")}秒" +
+                $"  { System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(action).Name}  {str}";
+            
         }
     }
 }

@@ -40,7 +40,10 @@
         <Button x:Name="Button8" Content="test"/>
         <TextBlock x:Name="Tb8" Text="time"/>
       </StackPanel>
-
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button9" Content="test"/>
+        <TextBlock x:Name="Tb9" Text="time"/>
+      </StackPanel>
     </StackPanel>
     </Grid>
 </Window>
