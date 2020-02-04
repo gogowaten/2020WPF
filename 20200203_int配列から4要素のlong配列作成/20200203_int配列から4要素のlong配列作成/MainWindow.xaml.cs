@@ -38,22 +38,26 @@ namespace _20200203_int配列から4要素のlong配列作成
             LastIndex = MyAry.Length - (MyAry.Length % LongVectorCount);
             MyVector = new Vector<long>();
             this.Title = $"Vector<long>.Count = {LongVectorCount}  |  {MyAry.Length.ToString("N0")}要素、ループ10回";
-            
+
+//            今日からできる！簡単.NET 高速化 Tips p46
+//https://www.slideshare.net/xin9le/dotnetperformancetips-170268354
+            //int[] ap = System.Buffers.ArrayPool<int>.Shared.Rent(20);            
+            //System.Buffers.ArrayPool<int>.Shared.Return(ap);
+
 
             Button1.Click += (s, e) =>
             {
                 Measure(Test1, Tb1);//一番早いけどメモリ消費が2倍                
             };
             Button2.Click += (s, e) => Measure(Test11, Tb2);
-            Button3.Click += (s, e) => Measure(Test111, Tb3);
+            Button3.Click += (s, e) => Measure(Test12, Tb3);
             Button4.Click += (s, e) => Measure(Test2, Tb4);
             Button5.Click += (s, e) => Measure(Test21, Tb5);
             Button6.Click += (s, e) => Measure(Test3, Tb6);
             Button7.Click += (s, e) => Measure(Test4, Tb7);
             Button8.Click += (s, e) => Measure(Test41, Tb8);
-            Button9.Click += (s, e) => Measure(Test5, Tb9);
-
-            System.Collections.IEnumerator neko = MyAry.GetEnumerator();
+            Button9.Click += (s, e) => Measure(Test42, Tb9);
+            Button10.Click += (s, e) => Measure(Test5, Tb10);
 
 
         }
@@ -80,7 +84,7 @@ namespace _20200203_int配列から4要素のlong配列作成
             }
         }
         //最速
-        private void Test111()
+        private void Test12()
         {
             for (int j = 0; j < LastIndex; j += LongVectorCount)
             {
@@ -137,9 +141,20 @@ namespace _20200203_int配列から4要素のlong配列作成
             for (int i = 0; i < LastIndex; i += LongVectorCount)
             {
                 sp.Slice(i, LongVectorCount).ToArray().CopyTo(MyLongAry, 0);
-                MyVector = new Vector<long>(MyLongAry);
+                MyVector = new Vector<long>(MyLongAry);                
             }
         }
+        private void Test42()
+        {   
+            for (int i = 0; i < LastIndex; i += LongVectorCount)
+            {
+                MyAry.AsSpan(i, LongVectorCount).ToArray().CopyTo(MyLongAry, 0);
+                MyVector = new Vector<long>(MyLongAry);
+                //MyAry[1..^i].CopyTo(MyLongAry,0);
+            }
+        }
+
+
 
         //Buffer.BlockCopy
         private void Test5()
