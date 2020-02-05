@@ -150,6 +150,9 @@ namespace _20200203_int配列から4要素のlong配列作成
             {
                 MyAry.AsSpan(i, LongVectorCount).ToArray().CopyTo(MyLongAry, 0);
                 MyVector = new Vector<long>(MyLongAry);
+                C# 8.0 の新機能 - C# によるプログラミング入門 | ++C++; // 未確認飛行 C
+https://ufcpp.net/study/csharp/cheatsheet/ap_ver8/
+
                 //MyAry[1..^i].CopyTo(MyLongAry,0);
             }
         }
