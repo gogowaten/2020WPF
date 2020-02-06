@@ -1,17 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Diagnostics;
 using System.Numerics;
 
@@ -25,8 +15,8 @@ namespace _20200205_int配列の値の合計
     {
         private int[] MyIntAry;
         private long[] MyLongAry;
-        const int LOOP_COUNT = 100;
-        const int ELEMENT_COUNT = 1_000_000;
+        private const int LOOP_COUNT = 100;
+        private const int ELEMENT_COUNT = 1_000_000;
         
 
         public MainWindow()
@@ -48,18 +38,18 @@ namespace _20200205_int配列の値の合計
             Button5.Click += (s, e) => MyExe(TestVectorAddEach, Tb5);
             Button6.Click += (s, e) => MyExe(TestVectorAddEachCount4, Tb6);
             Button7.Click += (s, e) => MyExe(TestVectorAddEachCopyToLinq, Tb7);
-            Button8.Click += (s, e) => MyExe(TestVectorAddCopyToEachArraySegment, Tb8);
-            Button9.Click += (s, e) => MyExe(TestVectorAddCopyToEachArraySegmentSlice, Tb9);
-            Button10.Click += (s, e) => MyExe(TestVectorAddEachCopyToArraySpan, Tb10);
-            Button11.Click += (s, e) => MyExe(TestVectorAddEachCopyToArraySpan2, Tb11);
-            Button12.Click += (s, e) => MyExe(TestVectorAddEachCopyToArrayBlockCopy, Tb12);
+            Button8.Click += (s, e) => MyExe(TestVectorAddEachCopyToArraySegment, Tb8);
+            Button9.Click += (s, e) => MyExe(TestVectorAddEachCopyToArraySegmentSlice, Tb9);
+            Button10.Click += (s, e) => MyExe(TestVectorAddEachCopyToSpan, Tb10);
+            Button11.Click += (s, e) => MyExe(TestVectorAddEachCopyToSpan2, Tb11);
+            Button12.Click += (s, e) => MyExe(TestVectorAddEachCopyToBlockCopy, Tb12);
 
             Button13.Click += (s, e) => MyExe(TestLongLinqSum, Tb13);
             Button14.Click += (s, e) => MyExe(TestLongVectorAdd, Tb14);
             Button15.Click += (s, e) => MyExe(TestLongVectorAddSpan, Tb15);
             Button16.Click += (s, e) => MyExe(TestLongVectorAddReadOnlySpan, Tb16);
             Button17.Click += (s, e) => MyExe(TestLongVectorAdd2, Tb17);
-            //Button18.Click += (s, e) => MyExe(Test38, Tb18);
+            Button18.Click += (s, e) => MyExe(TestLongVectorAddOverflow, Tb18);
             //Button19.Click += (s, e) => MyExe(Test39, Tb19);
 
 
@@ -124,7 +114,7 @@ namespace _20200205_int配列の値の合計
             return total;
         }
 
-        //int型配列からlong型配列には計算する分だけをその都度変換
+        //int型配列からlong型配列への変換は、計算する分だけをその都度変換
         //一括変換よりメモリ使用量が小さくて済む
         private long TestVectorAddEach(int[] Ary)
         {
@@ -159,7 +149,7 @@ namespace _20200205_int配列の値の合計
         }
 
         //決め打ち
-        //int型配列からlong型配列には計算する分だけをその都度変換
+        //int型配列からlong型配列への変換は、計算する分だけをその都度変換
         //一括変換よりメモリ使用量が小さくて済む
         //変換する要素数は4個で決め打ち
         private long TestVectorAddEachCount4(int[] Ary)
@@ -196,7 +186,7 @@ namespace _20200205_int配列の値の合計
         }
 
         //LINQ、最遅
-        //int型配列からlong型配列には計算する分だけをその都度変換
+        //int型配列からlong型配列への変換は、計算する分だけをその都度変換
         //一括変換よりメモリ使用量が小さくて済む
         //LINQのSkipとTakeを使って変換範囲を取り出す
         private long TestVectorAddEachCopyToLinq(int[] Ary)
@@ -226,10 +216,10 @@ namespace _20200205_int配列の値の合計
         }
 
         //ArraySegment
-        //int型配列からlong型配列には計算する分だけをその都度変換
+        //int型配列からlong型配列への変換は、計算する分だけをその都度変換
         //一括変換よりメモリ使用量が小さくて済む
         //ArraySegmentを使って変換範囲を指定する
-        private long TestVectorAddCopyToEachArraySegment(int[] Ary)
+        private long TestVectorAddEachCopyToArraySegment(int[] Ary)
         {
             int simdLength = Vector<long>.Count;
             int lastIndex = Ary.Length - (Ary.Length % simdLength);
@@ -256,10 +246,10 @@ namespace _20200205_int配列の値の合計
         }
 
         //ArraySegment
-        //int型配列からlong型配列には計算する分だけをその都度変換
+        //int型配列からlong型配列への変換は、計算する分だけをその都度変換
         //一括変換よりメモリ使用量が小さくて済む
         //ArraySegmentのSliceを使って変換範囲を指定する
-        private long TestVectorAddCopyToEachArraySegmentSlice(int[] Ary)
+        private long TestVectorAddEachCopyToArraySegmentSlice(int[] Ary)
         {
             int simdLength = Vector<long>.Count;
             int lastIndex = Ary.Length - (Ary.Length % simdLength);
@@ -287,10 +277,10 @@ namespace _20200205_int配列の値の合計
         }
 
         //Span        
-        //int型配列からlong型配列には計算する分だけをその都度変換
+        //int型配列からlong型配列への変換は、計算する分だけをその都度変換
         //一括変換よりメモリ使用量が小さくて済む
         //SpanのSliceを使って変換範囲を指定する
-        private long TestVectorAddEachCopyToArraySpan(int[] Ary)
+        private long TestVectorAddEachCopyToSpan(int[] Ary)
         {
             int simdLength = Vector<long>.Count;
             int lastIndex = Ary.Length - (Ary.Length % simdLength);
@@ -311,10 +301,10 @@ namespace _20200205_int配列の値の合計
         }
 
         //Span        
-        //int型配列からlong型配列には計算する分だけをその都度変換
+        //int型配列からlong型配列への変換は、計算する分だけをその都度変換
         //一括変換よりメモリ使用量が小さくて済む
         //SpanのSliceを使って変換範囲を指定する
-        private long TestVectorAddEachCopyToArraySpan2(int[] Ary)
+        private long TestVectorAddEachCopyToSpan2(int[] Ary)
         {
             int simdLength = Vector<long>.Count;
             int lastIndex = Ary.Length - (Ary.Length % simdLength);
@@ -336,10 +326,10 @@ namespace _20200205_int配列の値の合計
         }
 
         //Buffer.BlockCopy
-        //int型配列からlong型配列には計算する分だけをその都度変換
+        //int型配列からlong型配列への変換は、計算する分だけをその都度変換
         //一括変換よりメモリ使用量が小さくて済む
         //Buffer.BlockCopyを使って変換範囲を指定する
-        private long TestVectorAddEachCopyToArrayBlockCopy(int[] Ary)
+        private long TestVectorAddEachCopyToBlockCopy(int[] Ary)
         {
             int simdLength = Vector<long>.Count;
             int lastIndex = Ary.Length - (Ary.Length % simdLength);
@@ -462,8 +452,31 @@ namespace _20200205_int配列の値の合計
             return total;
         }
 
+
+
         #endregion
 
+        //結果は不正確、Overflowする
+        private long TestLongVectorAddOverflow(int[] Ary)
+        {
+            var v = new Vector<int>(Ary);
+            int simdLength = Vector<int>.Count;
+            int lastIndex = Ary.Length - (Ary.Length % simdLength);
+            for (int i = simdLength; i < lastIndex; i += simdLength)
+            {
+                v = System.Numerics.Vector.Add(v, new Vector<int>(Ary, i));
+            }
+            long total = 0;
+            for (int i = 0; i < simdLength; i++)
+            {
+                total += v[i];
+            }
+            for (int i = lastIndex; i < Ary.Length; i++)
+            {
+                total += Ary[i];
+            }
+            return total;
+        }
 
         private void MyExe(Func<int[], long> func, TextBlock tb)
         {

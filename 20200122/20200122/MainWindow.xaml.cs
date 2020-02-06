@@ -29,26 +29,79 @@ namespace _20200122
         {
             InitializeComponent();
 
-            var v1 = new Vector<int>(10);
-            var v2 = new Vector<int>(Enumerable.Range(20,8).ToArray());
-            var add = System.Numerics.Vector.Add(v1, v2);//足し算
-            var abs = System.Numerics.Vector.Abs(v1);//絶対値
-            var andnot = System.Numerics.Vector.AndNot(v1, v2);
-            var bitwiseand = System.Numerics.Vector.BitwiseAnd(v1, v2);
-            var bitwiseor = System.Numerics.Vector.BitwiseOr(v1, v2);
-            var divide = System.Numerics.Vector.Divide(v1, v2);//割り算
-            var dot = System.Numerics.Vector.Dot(v1, v2);//掛け算して足し算
-            var greaterthan = System.Numerics.Vector.GreaterThan(v1, v2);
-            var greaterthanall = System.Numerics.Vector.GreaterThanAll(v1, v2);
-            var lessthan = System.Numerics.Vector.LessThan(v1, v2);
-            var multiply = System.Numerics.Vector.Multiply(v1, v2);//掛け算
-            var negati = System.Numerics.Vector.Negate(v1);//符号反転
-            var squareroot = System.Numerics.Vector.SquareRoot(v1);//平方根
-            var subtract = System.Numerics.Vector.Subtract(v1, v2);//引き算
-            var xor = System.Numerics.Vector.Xor(v1, v2);
-            var neko = add;
+            //var v1 = new Vector<int>(10);
+            //var v2 = new Vector<int>(Enumerable.Range(20, 8).ToArray());
+            //var add = System.Numerics.Vector.Add(v1, v2);//足し算
+            //var abs = System.Numerics.Vector.Abs(v1);//絶対値
+            //var andnot = System.Numerics.Vector.AndNot(v1, v2);
+            //var bitwiseand = System.Numerics.Vector.BitwiseAnd(v1, v2);
+            //var bitwiseor = System.Numerics.Vector.BitwiseOr(v1, v2);
+            //var divide = System.Numerics.Vector.Divide(v1, v2);//割り算
+            //var dot = System.Numerics.Vector.Dot(v1, v2);//掛け算して足し算
+            //var greaterthan = System.Numerics.Vector.GreaterThan(v1, v2);
+            //var greaterthanall = System.Numerics.Vector.GreaterThanAll(v1, v2);
+            //var lessthan = System.Numerics.Vector.LessThan(v1, v2);
+            //var multiply = System.Numerics.Vector.Multiply(v1, v2);//掛け算
+            //var negati = System.Numerics.Vector.Negate(v1);//符号反転
+            //var squareroot = System.Numerics.Vector.SquareRoot(v1);//平方根
+            //var subtract = System.Numerics.Vector.Subtract(v1, v2);//引き算
+            //var xor = System.Numerics.Vector.Xor(v1, v2);
+            //var neko = add;
 
 
+
+            //var ia = new int[] { 10, 11, 12, 13, 14, 15, 16, 17 };
+            //var ib = Enumerable.Repeat(int.MaxValue, iCount).ToArray();
+            //var va = new Vector<int>(ia);
+            //var vb = new Vector<int>(ib);
+            //var vv = System.Numerics.Vector.Add(va, vb);
+            //var ii = new List<int>();
+            //for (int i = 0; i < iCount; i++)
+            //{
+            //    ii.Add(vv[i]);
+            //}
+
+
+            var iCount = Vector<int>.Count;//8、Vectorで一度に計算できる個数
+            var lCount = Vector<long>.Count;//4、Vectorで一度に計算できる個数
+            var ia = new int[] { 10, 11, 12, 13, 14, 15, 16, 17 };
+            var lTemp = new long[ia.Length];
+            ia.CopyTo(lTemp, 0);
+            var lva = new Vector<long>(lTemp);
+            var ib = Enumerable.Repeat(int.MaxValue, lCount).ToArray();
+            ib.CopyTo(lTemp, 0);
+            var lvb = new Vector<long>(lTemp);
+            
+            var vv = System.Numerics.Vector.Add(lva, lvb);
+            var ii = new List<long>();
+            for (int i = 0; i < lCount; i++)
+            {
+                ii.Add(vv[i]);
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            var inu = 1;
 
             //int[] ri = new int[10000000];
             //var r = new Random();
@@ -74,24 +127,24 @@ namespace _20200122
             //MessageBox.Show($"{sw.ElapsedMilliseconds}ミリ秒 MAX={max}");
 
 
-          
 
-            var simdLength = Vector<byte>.Count;//32
-            var rAArray = ZRandomByte(simdLength);
-            var rBArray = ZRandomByte(simdLength);
 
-            var bba = new Vector<byte>(rAArray);
-            var bbb = new Vector<byte>(rBArray);
-            Vector<byte> ii = System.Numerics.Vector.Min(bba, bbb);
-            var vMin = 255;
-            for (int i = 0; i < simdLength; i++)
-            {
-                if (vMin > ii[i]) vMin = ii[i];
-            }
+            //var simdLength = Vector<byte>.Count;//32
+            //var rAArray = ZRandomByte(simdLength);
+            //var rBArray = ZRandomByte(simdLength);
 
-            byte aMin = rAArray.Min();
-            byte bMin = rBArray.Min();
-            byte min = Math.Min(aMin, bMin);
+            //var bba = new Vector<byte>(rAArray);
+            //var bbb = new Vector<byte>(rBArray);
+            //Vector<byte> ii = System.Numerics.Vector.Min(bba, bbb);
+            //var vMin = 255;
+            //for (int i = 0; i < simdLength; i++)
+            //{
+            //    if (vMin > ii[i]) vMin = ii[i];
+            //}
+
+            //byte aMin = rAArray.Min();
+            //byte bMin = rBArray.Min();
+            //byte min = Math.Min(aMin, bMin);
 
 
 
