@@ -25,9 +25,24 @@ namespace _20200202_配列の値の合計
     public partial class MainWindow : Window
     {
         private BlockingCollection<double> FBlock;
+        private int[] MyIntAry;
+        private long[] MyLongAry;
+        private const int LOOP_COUNT = 100;
+        private const int ELEMENT_COUNT = 1_000_000;
+
+
+
         public MainWindow()
         {
             InitializeComponent();
+
+            MyTextBlock.Text = $"配列の値の合計、要素数{ELEMENT_COUNT.ToString("N0")}の合計を{LOOP_COUNT}回求める処理時間";
+            MyTextBlockVectorCount.Text = $"Vector<long>.Count = {Vector<long>.Count}";
+            MyIntAry = Enumerable.Range(1, ELEMENT_COUNT).ToArray();
+            MyLongAry = new long[MyIntAry.Length];
+            MyIntAry.CopyTo(MyLongAry, 0);
+
+
 
             Test5();
             Test31();
@@ -39,6 +54,22 @@ namespace _20200202_配列の値の合計
             button2_Click();
 
         }
+
+        //for
+        private long TestFor(int[] Ary)
+        {
+            long total = 0;
+            for (int i = 0; i < Ary.Length; i++)
+            {
+                total += Ary[i];
+            }
+            return total;
+        }
+
+
+
+
+
 
         private void Test5()
         {
@@ -257,6 +288,34 @@ namespace _20200202_配列の値の合計
 
             stopWatch.Stop();
             MessageBox.Show(String.Format("GrandTotal={0}, Time={1}", grandTotal, stopWatch.ElapsedMilliseconds));
+        }
+
+
+
+
+        private void MyExe(Func<int[], long> func, TextBlock tb)
+        {
+            long total = 0;
+            var sw = new Stopwatch();
+            sw.Start();
+            for (int i = 0; i < LOOP_COUNT; i++)
+            {
+                total = func(MyIntAry);
+            }
+            sw.Stop();
+            tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒  合計値：{total}  {System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}";
+        }
+        private void MyExe(Func<long[], long> func, TextBlock tb)
+        {
+            long total = 0;
+            var sw = new Stopwatch();
+            sw.Start();
+            for (int i = 0; i < LOOP_COUNT; i++)
+            {
+                total = func(MyLongAry);
+            }
+            sw.Stop();
+            tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒  合計値：{total}  {System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}";
         }
     }
 }
