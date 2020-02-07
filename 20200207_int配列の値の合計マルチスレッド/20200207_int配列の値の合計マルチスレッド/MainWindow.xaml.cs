@@ -82,7 +82,7 @@ namespace _20200207_int配列の値の合計マルチスレッド
 
         private long Test10For(int[] Ary)
         {
-            long total = 0;          
+            long total = 0;
             Parallel.For(0, Ary.Length, n =>
             {
                 //total += Ary[n];//不正確
@@ -311,18 +311,18 @@ namespace _20200207_int配列の値の合計マルチスレッド
             //over load no6
             Parallel.ForEach(rangePartitioner, (range) =>
             {
-                long subtotal = 0;
                 var v = new Vector<long>();
                 var l = new long[simdLength];
                 int lastIndex = range.Item2 - (range.Item2 % simdLength);
-                for (int i = range.Item1; i < lastIndex; i+=simdLength)
+                for (int i = range.Item1; i < lastIndex; i += simdLength)
                 {
                     for (int j = 0; j < simdLength; j++)
                     {
                         l[j] = ary[i + j];
                     }
-                    v = System.Numerics.Vector.Add(v, new Vector<long>(l));                    
+                    v = System.Numerics.Vector.Add(v, new Vector<long>(l));
                 }
+                long subtotal = 0;
                 for (int i = 0; i < simdLength; i++)
                 {
                     subtotal += v[i];
@@ -342,16 +342,18 @@ namespace _20200207_int配列の値の合計マルチスレッド
             int windowSize = ary.Length / Environment.ProcessorCount;
             var rangePartitioner = Partitioner.Create(0, ary.Length, windowSize);//
             int simdLength = Vector<long>.Count;
+            //var options = new ParallelOptions() { MaxDegreeOfParallelism = 4 };
             //over load no6
+            //int ii = 0;
             Parallel.ForEach(rangePartitioner, (range) =>
             {
-                long subtotal = 0;
-                var v = new Vector<long>();                
-                int lastIndex =  range.Item2 -(range.Item2% simdLength);
+                var v = new Vector<long>();
+                int lastIndex = range.Item2 - (range.Item2 % simdLength);
                 for (int i = range.Item1; i < lastIndex; i += simdLength)
                 {
-                    v = System.Numerics.Vector.Add(v, new Vector<long>(ary,i));
+                    v = System.Numerics.Vector.Add(v, new Vector<long>(ary, i));
                 }
+                long subtotal = 0;
                 for (int i = 0; i < simdLength; i++)
                 {
                     subtotal += v[i];
@@ -361,11 +363,12 @@ namespace _20200207_int配列の値の合計マルチスレッド
                     subtotal += ary[i];
                 }
                 Interlocked.Add(ref total, subtotal);
+                //Interlocked.Increment(ref ii);
             });
             return total;
         }
 
-
+     
         private long Test10(int[] ary)
         {
             return ary.AsParallel().Sum(i => (long)i);
