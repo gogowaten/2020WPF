@@ -62,22 +62,22 @@ namespace _20200122
             //}
 
 
-            var iCount = Vector<int>.Count;//8、Vectorで一度に計算できる個数
-            var lCount = Vector<long>.Count;//4、Vectorで一度に計算できる個数
-            var ia = new int[] { 10, 11, 12, 13, 14, 15, 16, 17 };
-            var lTemp = new long[ia.Length];
-            ia.CopyTo(lTemp, 0);
-            var lva = new Vector<long>(lTemp);
-            var ib = Enumerable.Repeat(int.MaxValue, lCount).ToArray();
-            ib.CopyTo(lTemp, 0);
-            var lvb = new Vector<long>(lTemp);
+            //var iCount = Vector<int>.Count;//8、Vectorで一度に計算できる個数
+            //var lCount = Vector<long>.Count;//4、Vectorで一度に計算できる個数
+            //var ia = new int[] { 10, 11, 12, 13, 14, 15, 16, 17 };
+            //var lTemp = new long[ia.Length];
+            //ia.CopyTo(lTemp, 0);
+            //var lva = new Vector<long>(lTemp);
+            //var ib = Enumerable.Repeat(int.MaxValue, lCount).ToArray();
+            //ib.CopyTo(lTemp, 0);
+            //var lvb = new Vector<long>(lTemp);
             
-            var vv = System.Numerics.Vector.Add(lva, lvb);
-            var ii = new List<long>();
-            for (int i = 0; i < lCount; i++)
-            {
-                ii.Add(vv[i]);
-            }
+            //var vv = System.Numerics.Vector.Add(lva, lvb);
+            //var ii = new List<long>();
+            //for (int i = 0; i < lCount; i++)
+            //{
+            //    ii.Add(vv[i]);
+            //}
 
 
 
