@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20200207_int配列の値の合計マルチスレッド"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="800">
+        Title="MainWindow" Height="600" Width="614">
     <Grid>
     <StackPanel>
       <StackPanel.Resources>
@@ -69,7 +69,7 @@
         <Button x:Name="Button12" Content="test12"/>
         <TextBlock x:Name="Tb12" Text="time"/>
       </StackPanel>
-      <Border Height="1" Background="Orange" UseLayoutRounding="True"/>
+      <!--<Border Height="1" Background="Orange" UseLayoutRounding="True"/>-->
       <StackPanel Orientation="Horizontal">
         <Button x:Name="Button13" Content="test13"/>
         <TextBlock x:Name="Tb13" Text="time"/>
