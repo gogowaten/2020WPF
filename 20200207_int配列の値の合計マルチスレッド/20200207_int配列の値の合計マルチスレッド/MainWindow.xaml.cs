@@ -20,7 +20,7 @@ namespace _20200207_int配列の値の合計マルチスレッド
     {
         private int[] MyIntAry;
         private long[] MyLongAry;
-        private const int LOOP_COUNT = 1000;
+        private const int LOOP_COUNT = 100;
         private const int ELEMENT_COUNT = 1_000_001;
 
         public MainWindow()
@@ -56,6 +56,7 @@ namespace _20200207_int配列の値の合計マルチスレッド
             Button19.Click += (s, e) => MyExe(Test90_ParallelForEachPartitioner_Vector, Tb19);
             Button20.Click += (s, e) => MyExe(Test91_ParallelForEachPartitioner_Vector, Tb20);
             Button21.Click += (s, e) => MyExe(Test9x_ParallelForEachPartitionerVector_Overflow, Tb21);
+            Button22.Click += (s, e) => MyExe(Test99x_ParallelForEachPartitionerVector4_Incorect, Tb22);
 
         }
 
@@ -315,7 +316,7 @@ namespace _20200207_int配列の値の合計マルチスレッド
 
 
 
-    
+
 
         //VectorAdd、intからlongへの変換
         //int型配列からlong型配列への変換は、計算する分だけをその都度変換
@@ -548,6 +549,31 @@ namespace _20200207_int配列の値の合計マルチスレッド
             return total;
         }
 
+        private long Test99x_ParallelForEachPartitionerVector4_Incorect(int[] ary)
+        {
+            long total = 0;
+            int windowSize = ary.Length / Environment.ProcessorCount;
+            var rangePartitioner = Partitioner.Create(0, ary.Length, windowSize);//
+            int simdLength = 4;
+            Parallel.ForEach(rangePartitioner, (range) =>
+            {
+                int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                var v = new Vector4();
+                for (int i = range.Item1; i < lastIndex; i += simdLength)
+                {
+                    v = Vector4.Add(v, new Vector4(ary[i], ary[i + 1], ary[i + 2], ary[i + 3]));// System.Numerics.Vector.Add(v, new Vector<int>(ary, i));
+                }
+                long subtotal = (long)(v.X + v.Y + v.Z + v.W);
+                //long subtotal = (long)((long)v.X + (long)v.Y + (long)v.Z + (long)v.W);
+                for (int i = lastIndex; i < range.Item2; i++)
+                {
+                    subtotal += ary[i];
+                }
+
+                Interlocked.Add(ref total, subtotal);
+            });
+            return total;
+        }
 
 
 
@@ -576,7 +602,7 @@ namespace _20200207_int配列の値の合計マルチスレッド
             }
             sw.Stop();
             tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒  合計値：{total}  {System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}";
-        }      
+        }
 
     }
 }

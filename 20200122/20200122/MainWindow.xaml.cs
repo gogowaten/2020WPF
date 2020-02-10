@@ -31,18 +31,18 @@ namespace _20200122
 
             //var v1 = new Vector<int>(10);
             //var v2 = new Vector<int>(Enumerable.Range(20, 8).ToArray());
-            //var add = System.Numerics.Vector.Add(v1, v2);//足し算
-            //var abs = System.Numerics.Vector.Abs(v1);//絶対値
+            //var add = System.Numerics.Vector.Add(v1, v2);         //足し算
+            //var abs = System.Numerics.Vector.Abs(v1);             //絶対値
             //var andnot = System.Numerics.Vector.AndNot(v1, v2);
             //var bitwiseand = System.Numerics.Vector.BitwiseAnd(v1, v2);
             //var bitwiseor = System.Numerics.Vector.BitwiseOr(v1, v2);
-            //var divide = System.Numerics.Vector.Divide(v1, v2);//割り算
-            //var dot = System.Numerics.Vector.Dot(v1, v2);//掛け算して足し算
+            //var divide = System.Numerics.Vector.Divide(v1, v2);   //割り算
+            //var dot = System.Numerics.Vector.Dot(v1, v2);         //掛け算して足し算
             //var greaterthan = System.Numerics.Vector.GreaterThan(v1, v2);
             //var greaterthanall = System.Numerics.Vector.GreaterThanAll(v1, v2);
             //var lessthan = System.Numerics.Vector.LessThan(v1, v2);
             //var multiply = System.Numerics.Vector.Multiply(v1, v2);//掛け算
-            //var negati = System.Numerics.Vector.Negate(v1);//符号反転
+            //var negati = System.Numerics.Vector.Negate(v1);       //符号反転
             //var squareroot = System.Numerics.Vector.SquareRoot(v1);//平方根
             //var subtract = System.Numerics.Vector.Subtract(v1, v2);//引き算
             //var xor = System.Numerics.Vector.Xor(v1, v2);
@@ -71,7 +71,7 @@ namespace _20200122
             //var ib = Enumerable.Repeat(int.MaxValue, lCount).ToArray();
             //ib.CopyTo(lTemp, 0);
             //var lvb = new Vector<long>(lTemp);
-            
+
             //var vv = System.Numerics.Vector.Add(lva, lvb);
             //var ii = new List<long>();
             //for (int i = 0; i < lCount; i++)
@@ -79,23 +79,34 @@ namespace _20200122
             //    ii.Add(vv[i]);
             //}
 
+            //int[] ary = Enumerable.Range(100, 16).ToArray();
+            //float[] ff = new float[ary.Length];
+            //ary.CopyTo(ff, 0);
+            //var v1 = new Vector<float>(ff,0);
+            //var v2 = new Vector<float>(ff, 8);
+
+            //float ave = (float)ary.Sum() / ary.Length;
+            //var vv1 = System.Numerics.Vector.Subtract(v1, new Vector<float>(ave));
+            //float vp1 = System.Numerics.Vector.Dot(vv1, vv1);
+            //var vv2 = System.Numerics.Vector.Subtract(v2, new Vector<float>(ave));
+            //float vp2 = System.Numerics.Vector.Dot(vv2, vv2);
+            //var total = vp1 + vp2;
 
 
+            var ii = new int[] { 3, 0, 10, 0, 0, 0, 0, 0 };
+            var v = new Vector<int>(ii);
+            var l = System.Numerics.Vector.AsVectorUInt64(v);
+            int[] i = Enumerable.Range(1, 32).ToArray();
+            byte[] b =  new byte[] {1,1,1,1,1,11,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,22,2,2,2,2,2,2,2,2,2,2,22,2 };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+            var vv = new Vector<int>(Enumerable.Range(1, 8).ToArray());
+            Vector<long> vs1;
+            Vector<long> vs2;
+            System.Numerics.Vector.Widen(vv, out vs1,out vs2);
+            Vector<long> neko = System.Numerics.Vector.Add(vs1, vs2);
+            long[] ll = new long[5];
+            neko.CopyTo(ll);
 
 
 

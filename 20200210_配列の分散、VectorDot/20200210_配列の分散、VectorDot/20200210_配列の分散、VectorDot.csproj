@@ -3,11 +3,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>_20200205_int配列の値の合計</RootNamespace>
+    <RootNamespace>_20200210_配列の分散_VectorDot</RootNamespace>
     <UseWPF>true</UseWPF>
-    <Platforms>AnyCPU;x64</Platforms>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
   </PropertyGroup>
 
 </Project>

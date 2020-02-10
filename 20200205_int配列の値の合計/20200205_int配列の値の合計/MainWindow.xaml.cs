@@ -17,7 +17,7 @@ namespace _20200205_int配列の値の合計
         private long[] MyLongAry;
         private const int LOOP_COUNT = 100;
         private const int ELEMENT_COUNT = 1_000_000;
-        
+
 
         public MainWindow()
         {
@@ -29,7 +29,7 @@ namespace _20200205_int配列の値の合計
             MyLongAry = new long[MyIntAry.Length];
             MyIntAry.CopyTo(MyLongAry, 0);
 
-            
+
 
             Button1.Click += (s, e) => MyExe(TestFor, Tb1);
             Button2.Click += (s, e) => MyExe(TestForeach, Tb2);
@@ -44,13 +44,14 @@ namespace _20200205_int配列の値の合計
             Button11.Click += (s, e) => MyExe(TestVectorAddEachCopyToSpan2, Tb11);
             Button12.Click += (s, e) => MyExe(TestVectorAddEachCopyToBlockCopy, Tb12);
 
+            Button19.Click += (s, e) => MyExe(TestVectorAdd_VectorWiden, Tb19);
+
             Button13.Click += (s, e) => MyExe(TestLongLinqSum, Tb13);
             Button14.Click += (s, e) => MyExe(TestLongVectorAdd, Tb14);
             Button15.Click += (s, e) => MyExe(TestLongVectorAddSpan, Tb15);
             Button16.Click += (s, e) => MyExe(TestLongVectorAddReadOnlySpan, Tb16);
             Button17.Click += (s, e) => MyExe(TestLongVectorAdd2, Tb17);
             Button18.Click += (s, e) => MyExe(TestLongVectorAddOverflow, Tb18);
-            //Button19.Click += (s, e) => MyExe(Test39, Tb19);
 
 
 
@@ -436,8 +437,8 @@ namespace _20200205_int配列の値の合計
             int lastIndex = Ary.Length - (Ary.Length % simdLength);
             for (int i = simdLength; i < lastIndex; i += simdLength)
             {
-//                C# 8.0 の新機能 - C# によるプログラミング入門 | ++C++; // 未確認飛行 C
-//https://ufcpp.net/study/csharp/cheatsheet/ap_ver8/
+                //                C# 8.0 の新機能 - C# によるプログラミング入門 | ++C++; // 未確認飛行 C
+                //https://ufcpp.net/study/csharp/cheatsheet/ap_ver8/
                 v = System.Numerics.Vector.Add(v, new Vector<long>(Ary[i..(i + simdLength)]));
             }
             long total = 0;
@@ -477,6 +478,42 @@ namespace _20200205_int配列の値の合計
             }
             return total;
         }
+
+//        API Proposal: Widen, Narrow, and Convert for Vector<T> · Issue #20147 · dotnet/runtime
+//https://github.com/dotnet/runtime/issues/20147
+
+        //最速、VectorWidenを使ってint型Vectorをlong型Vector2つに変換
+        private long TestVectorAdd_VectorWiden(int[] Ary)
+        {
+            var subtotal = new Vector<long>();
+            int simdIntLength = Vector<int>.Count;
+            int lastIndex = Ary.Length - (Ary.Length % simdIntLength);
+            Vector<long> l1;
+            Vector<long> l2;
+            for (int i = 0; i < lastIndex; i += simdIntLength)
+            {                
+                System.Numerics.Vector.Widen(new Vector<int>(Ary,i), out l1, out l2);
+                subtotal = System.Numerics.Vector.Add(subtotal, l1);
+                subtotal = System.Numerics.Vector.Add(subtotal, l2);
+            }
+
+            long total = 0;
+            for (int i = 0; i < Vector<long>.Count; i++)
+            {
+                total += subtotal[i];
+            }
+
+            for (int i = lastIndex; i < Ary.Length; i++)
+            {
+                total += Ary[i];
+            }
+            return total;
+        }
+
+
+
+
+
 
         private void MyExe(Func<int[], long> func, TextBlock tb)
         {
