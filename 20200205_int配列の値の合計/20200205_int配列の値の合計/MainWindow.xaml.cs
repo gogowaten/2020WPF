@@ -5,6 +5,10 @@ using System.Windows.Controls;
 using System.Diagnostics;
 using System.Numerics;
 
+//int型配列要素の合計値を求めるのにSystem.Numerics.VectorのAddを使ってみたけど - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/02/06/220537
+//本当は速いSystem.Numerics.Vector.Addを使って、int型配列の値合計2回め - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/02/11/153010
 
 namespace _20200205_int配列の値の合計
 {

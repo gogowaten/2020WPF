@@ -10,6 +10,10 @@ using System.Threading;
 //c# — C＃で整数の配列を合計する方法
 //https://www.it-swarm.dev/ja/c%23/c%EF%BC%83%E3%81%A7%E6%95%B4%E6%95%B0%E3%81%AE%E9%85%8D%E5%88%97%E3%82%92%E5%90%88%E8%A8%88%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95/968057375/
 
+//int型配列の合計値マルチスレッド編 - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/02/08/215710
+//    本当は速いSystem.Numerics.Vector.Addを使って、int型配列の値合計2回め - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/02/11/153010
 
 namespace _20200207_int配列の値の合計マルチスレッド
 {
