@@ -20,12 +20,13 @@ namespace _20200207_int配列の値の合計マルチスレッド
     {
         private int[] MyIntAry;
         private long[] MyLongAry;
-        private const int LOOP_COUNT = 100;
+        private const int LOOP_COUNT = 1000;
         private const int ELEMENT_COUNT = 1_000_001;
 
         public MainWindow()
         {
             InitializeComponent();
+
 
             MyTextBlock.Text = $"配列の値の合計、要素数{ELEMENT_COUNT.ToString("N0")}の合計を{LOOP_COUNT}回求める処理時間";
             MyTextBlockVectorCount.Text = $"Vector<long>.Count = {Vector<long>.Count}";
@@ -35,28 +36,29 @@ namespace _20200207_int配列の値の合計マルチスレッド
             MyIntAry.CopyTo(MyLongAry, 0);
 
 
-            Button1.Click += (s, e) => MyExe(Test0_For, Tb1);
-            Button2.Click += (s, e) => MyExe(Test10_ParallelFor, Tb2);////
-            Button3.Click += (s, e) => MyExe(Test20_AsParallelSum, Tb3);
+            Button1.Click += (s, e) => MyExe(Test0_For, Tb1);//基準
+            Button2.Click += (s, e) => MyExe(Test10_ParallelFor, Tb2);////遅い
+            Button3.Click += (s, e) => MyExe(Test20_AsParallelSum, Tb3);//速くはないけど書くのがラク
             Button4.Click += (s, e) => MyExe(Test30_ParallelForEach, Tb4);
             Button5.Click += (s, e) => MyExe(Test40_ParallelForThreadLocalVariable, Tb5);
-            Button6.Click += (s, e) => MyExe(Test4x_ParallelForThreadLocalVariable_Overflow, Tb6);
+            Button6.Click += (s, e) => MyExe(Test4x_ParallelForThreadLocalVariable_Overflow, Tb6);//オーバーフロー
             Button7.Click += (s, e) => MyExe(Test41_ParallelForThreadLocalVariable, Tb7);
             Button8.Click += (s, e) => MyExe(Test42_ParallelForThreadLocalVariable, Tb8);
             Button9.Click += (s, e) => MyExe(Test43_ParallelForThreadLocalVariable, Tb9);
             Button10.Click += (s, e) => MyExe(Test50_TaskLinqSkipTake, Tb10);
-            Button11.Click += (s, e) => MyExe(Test60_ParallelForEachPartitioner, Tb11);////
-            Button12.Click += (s, e) => MyExe(Test70_ParallelForEachPartitionerThreadLocalVariable, Tb12);
-            Button13.Click += (s, e) => MyExe(Test71_ParallelForEachPartitionerThreadLocalVariable, Tb13);
-            Button14.Click += (s, e) => MyExe(Test72_ParallelForEachPartitionerThreadLocalVariable, Tb14);
-            Button15.Click += (s, e) => MyExe(Test73_ParallelForEachPartitionerThreadLocalVariable, Tb15);
+            Button11.Click += (s, e) => MyExe(Test60_ParallelForEachPartitioner, Tb11);////遅い
+            Button12.Click += (s, e) => MyExe(Test70_ParallelForEachPartitionerThreadLocalVariable, Tb12);//速い
+            Button13.Click += (s, e) => MyExe(Test71_ParallelForEachPartitionerThreadLocalVariable, Tb13);//速い
+            Button14.Click += (s, e) => MyExe(Test72_ParallelForEachPartitionerThreadLocalVariable, Tb14);//速い
+            Button15.Click += (s, e) => MyExe(Test73_ParallelForEachPartitionerThreadLocalVariable, Tb15);//速い
             Button16.Click += (s, e) => MyExe(Test80_TaskLinqSkipTake_Vector, Tb16);
             Button17.Click += (s, e) => MyExe(Test81_TaskVectorAdd_ForInt, Tb17);
             Button18.Click += (s, e) => MyExe(Test82_TaskVectorAdd_ForLong, Tb18);
             Button19.Click += (s, e) => MyExe(Test90_ParallelForEachPartitioner_Vector, Tb19);
             Button20.Click += (s, e) => MyExe(Test91_ParallelForEachPartitioner_Vector, Tb20);
-            Button21.Click += (s, e) => MyExe(Test9x_ParallelForEachPartitionerVector_Overflow, Tb21);
-            Button22.Click += (s, e) => MyExe(Test99x_ParallelForEachPartitionerVector4_Incorect, Tb22);
+            Button21.Click += (s, e) => MyExe(Test9x_ParallelForEachPartitionerVector_Overflow, Tb21);//オーバーフロー
+            Button22.Click += (s, e) => MyExe(Test99x_ParallelForEachPartitionerVector4_Incorect, Tb22);//誤差
+            Button23.Click += (s, e) => MyExe(Test99_ParallelForEachPartitioner_VectorWiden, Tb23);//最速
 
         }
 
@@ -549,6 +551,7 @@ namespace _20200207_int配列の値の合計マルチスレッド
             return total;
         }
 
+        //Vector4で計算、Vector4はfloat型なので誤差が出る
         private long Test99x_ParallelForEachPartitionerVector4_Incorect(int[] ary)
         {
             long total = 0;
@@ -575,6 +578,42 @@ namespace _20200207_int配列の値の合計マルチスレッド
             return total;
         }
 
+        private long Test99_ParallelForEachPartitioner_VectorWiden(int[] ary)
+        {
+            long total = 0;
+            int windowSize = ary.Length / Environment.ProcessorCount;
+            var rangePartitioner = Partitioner.Create(0, ary.Length, windowSize);//
+            int simdLength = Vector<int>.Count;
+
+            Parallel.ForEach(rangePartitioner, (range) =>
+            {
+                int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                var v = new Vector<long>();
+
+                for (int i = range.Item1; i < lastIndex; i += simdLength)
+                {
+                    Vector<long> v1;
+                    Vector<long> v2;
+                    System.Numerics.Vector.Widen(new Vector<int>(ary, i), out v1, out v2);
+                    v = System.Numerics.Vector.Add(v, v1);
+                    v = System.Numerics.Vector.Add(v, v2);
+                }
+                long subtotal = 0;
+
+                for (int i = 0; i < Vector<long>.Count; i++)
+                {
+                    subtotal += v[i];
+                }
+
+                for (int i = lastIndex; i < range.Item2; i++)
+                {
+                    subtotal += ary[i];
+                }
+
+                Interlocked.Add(ref total, subtotal);
+            });
+            return total;
+        }
 
 
 

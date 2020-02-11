@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20200207_int配列の値の合計マルチスレッド"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="614">
+        Title="MainWindow" Height="628" Width="614">
     <Grid>
     <StackPanel>
       <StackPanel.Resources>

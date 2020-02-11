@@ -6,6 +6,7 @@
     <RootNamespace>_20200207_int配列の値の合計マルチスレッド</RootNamespace>
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x64</Platforms>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
 </Project>
