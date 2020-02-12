@@ -1,17 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Diagnostics;
 using System.Numerics;
 using System.Threading;
@@ -37,8 +27,11 @@ namespace _20200210_配列の分散_VectorDot
 
 
 
-            MyTextBlock.Text = $"配列の値の分散、要素数{ELEMENT_COUNT.ToString("N0")}の分散を{LOOP_COUNT}回求める処理時間";
+            MyTextBlock.Text = $"byte型配列の値の分散、要素数{ELEMENT_COUNT.ToString("N0")}の分散を{LOOP_COUNT}回求める";
             MyTextBlockVectorCount.Text = $"Vector<long>.Count = {Vector<long>.Count}";
+            string str = $"VectorCount : Long={Vector<long>.Count}, Double={Vector<double>.Count}, int={Vector<int>.Count}, flort={Vector<float>.Count}, short={Vector<short>.Count}, byte={Vector<byte>.Count}";
+            MyTextBlockVectorCount.Text = str;
+            MyTextBlockCpuThreadCount.Text =$"CPUスレッド数：{Environment.ProcessorCount.ToString()} thread";
             //MyIntAry = Enumerable.Range(1, ELEMENT_COUNT).ToArray();//連番値
             //MyIntAry = Enumerable.Repeat(1, ELEMENT_COUNT).ToArray();//全値1
             //MyLongAry = new long[MyIntAry.Length];//long型配列作成
@@ -51,8 +44,8 @@ namespace _20200210_配列の分散_VectorDot
             Button3.Click += (s, e) => MyExe(Test03_FloatVectorSubtractDot, Tb3, MyByteAry);
             Button4.Click += (s, e) => MyExe(Test04_DoubleVectorSubtractDot, Tb4, MyByteAry);
             Button5.Click += (s, e) => MyExe(Test05_IntegerVectorSubtractDot, Tb5, MyByteAry);
-            Button6.Click += (s, e) => MyExe(Test06_ByteVectorSubtractDot, Tb6, MyByteAry);
-            Button7.Click += (s, e) => MyExe(Test07_ShortVectorSubtractDot, Tb7, MyByteAry);
+            Button6.Click += (s, e) => MyExe(Test06_ByteVectorSubtractDot_Overflow, Tb6, MyByteAry);
+            Button7.Click += (s, e) => MyExe(Test07_ShortVectorSubtractDot_Overflow, Tb7, MyByteAry);
             Button8.Click += (s, e) => MyExe(Test08_FloatVector4, Tb8, MyByteAry);
             Button9.Click += (s, e) => MyExe(Test09_IntegerVectorDot, Tb9, MyByteAry);
             Button10.Click += (s, e) => MyExe(Test10_DoubleVectorDot, Tb10, MyByteAry);
@@ -62,12 +55,12 @@ namespace _20200210_配列の分散_VectorDot
             Button13.Click += (s, e) => MyExe(Test13_FloatVectorDot, Tb13, MyByteAry);
             Button14.Click += (s, e) => MyExe(Test14_DoubleVectorDot, Tb14, MyByteAry);
             Button15.Click += (s, e) => MyExe(Test15_IntegerVectorDot, Tb15, MyByteAry);
-            Button16.Click += (s, e) => MyExe(Test16_ByteVectorDot, Tb16, MyByteAry);
-            Button17.Click += (s, e) => MyExe(Test17_ShortVectorDot, Tb17, MyByteAry);
+            Button16.Click += (s, e) => MyExe(Test16_ByteVectorDot_Overflow, Tb16, MyByteAry);
+            Button17.Click += (s, e) => MyExe(Test17_ShortVectorDot_Overflow, Tb17, MyByteAry);
             Button18.Click += (s, e) => MyExe(Test18_FloatVector4, Tb18, MyByteAry);
 
-            Button19.Click += (s, e) => MyExe(Test161_ByteVectorDot, Tb19, MyByteAry);
-            Button20.Click += (s, e) => MyExe(Test062_ByteVectorDot, Tb20, MyByteAry);
+            Button19.Click += (s, e) => MyExe(Test19_Byte_ushort_uintVectorDot, Tb19, MyByteAry);
+            Button20.Click += (s, e) => MyExe(Test20_Byte_ushort_uintVectorDot, Tb20, MyByteAry);
         }
         private void MyInitialize()
         {
@@ -75,13 +68,13 @@ namespace _20200210_配列の分散_VectorDot
             var r = new Random();
             r.NextBytes(MyByteAry);
             //要素の平均値
+            //MyByteAry = new byte[] { 20, 21, 7, 12 };
             MyAverage = GetAverage(MyByteAry);
-
         }
 
         private double Test01_Double_ForLoop(byte[] ary)
         {
-            //平均との差の2乗を合計
+            //平均との差(偏差)の2乗を合計
             double total = 0;
             for (int i = 0; i < ary.Length; i++)
             {
@@ -177,7 +170,7 @@ namespace _20200210_配列の分散_VectorDot
         }
 
         //Vector<byte>で計算、ドット積でオーバーフロー
-        private double Test06_ByteVectorSubtractDot(byte[] ary)
+        private double Test06_ByteVectorSubtractDot_Overflow(byte[] ary)
         {
             var vAverage = new Vector<byte>((byte)MyAverage);
             int simdLength = Vector<byte>.Count;
@@ -196,7 +189,7 @@ namespace _20200210_配列の分散_VectorDot
         }
 
         //Vector<short>で計算はドット積でオーバーフロー
-        private double Test07_ShortVectorSubtractDot(byte[] ary)
+        private double Test07_ShortVectorSubtractDot_Overflow(byte[] ary)
         {
             var vAverage = new Vector<short>((short)MyAverage);
             int simdLength = Vector<short>.Count;
@@ -255,10 +248,6 @@ namespace _20200210_配列の分散_VectorDot
                 v = new Vector<int>(ii);
                 total += System.Numerics.Vector.Dot(v, v);
             }
-            //for (int i = lastIndex; i < ary.Length; i++)
-            //{
-            //    total += ary[i];
-            //}
             return total / (double)ary.Length;
         }
 
@@ -281,20 +270,17 @@ namespace _20200210_配列の分散_VectorDot
                 v = new Vector<double>(ii);
                 total += System.Numerics.Vector.Dot(v, v);
             }
-            //for (int i = lastIndex; i < ary.Length; i++)
-            //{
-            //    total += ary[i];
-            //}
             return total / ary.Length;
         }
 
-      
 
-        
+
+
 
         #region 分散 = 2乗和の平均 - 平均の2乗
-        //        分散の意味と二通りの計算方法 | 高校数学の美しい物語
-        //https://mathtrain.jp/variance
+        //分散の意味と求め方、分散公式の使い方
+        //https://sci-pursuit.com/math/statistics/variance.html
+
 
 
         private double Test11_Double_ForLoop(byte[] ary)
@@ -335,6 +321,7 @@ namespace _20200210_配列の分散_VectorDot
             var ss = new float[simdLength];
             double total = 0;
             for (int i = 0; i < lastIndex; i += simdLength)
+            //配列を作成してVector作成してドット積
             {
                 for (int j = 0; j < simdLength; j++)
                 {
@@ -343,6 +330,7 @@ namespace _20200210_配列の分散_VectorDot
                 v = new Vector<float>(ss);
                 total += System.Numerics.Vector.Dot(v, v);
             }
+            //2乗和の平均 - 平均の2乗
             return (total / ary.Length) - (MyAverage * MyAverage);
         }
 
@@ -388,7 +376,7 @@ namespace _20200210_配列の分散_VectorDot
         }
 
         //Vector<byte>で計算、ドット積でオーバーフロー
-        private double Test16_ByteVectorDot(byte[] ary)
+        private double Test16_ByteVectorDot_Overflow(byte[] ary)
         {
             int simdLength = Vector<byte>.Count;
             int lastIndex = ary.Length - (ary.Length % simdLength);
@@ -404,7 +392,7 @@ namespace _20200210_配列の分散_VectorDot
         }
 
         //Vector<short>で計算はドット積でオーバーフロー
-        private double Test17_ShortVectorDot(byte[] ary)
+        private double Test17_ShortVectorDot_Overflow(byte[] ary)
         {
             int simdLength = Vector<short>.Count;
             int lastIndex = ary.Length - (ary.Length % simdLength);
@@ -426,9 +414,8 @@ namespace _20200210_配列の分散_VectorDot
         //Vector4
         private double Test18_FloatVector4(byte[] ary)
         {
-            int lastIndex = ary.Length - (ary.Length % 4);
-            //var vAverage = new Vector4((float)MyAverage);
-            Vector4 v;// = new Vector4();
+            int lastIndex = ary.Length - (ary.Length % 4);;
+            Vector4 v;
             double total = 0;
             for (int i = 0; i < lastIndex; i += 4)
             {
@@ -441,8 +428,8 @@ namespace _20200210_配列の分散_VectorDot
 
 
         //Vector<byte>をWidenでVector<ushort>にしてドット積計算はオーバーフローだったので
-        //Vector<ushort>からVector<uint>にしてドット積
-        private double Test161_ByteVectorDot(byte[] ary)
+        //Vector<ushort>からさらにVector<uint>にしてドット積
+        private double Test19_Byte_ushort_uintVectorDot(byte[] ary)
         {
             int simdLength = Vector<byte>.Count;
             int lastIndex = ary.Length - (ary.Length % simdLength);
@@ -465,7 +452,7 @@ namespace _20200210_配列の分散_VectorDot
         }
 
         //↑と同じ、インライン化しただけ
-        private double Test062_ByteVectorDot(byte[] ary)
+        private double Test20_Byte_ushort_uintVectorDot(byte[] ary)
         {
             int simdLength = Vector<byte>.Count;
             int lastIndex = ary.Length - (ary.Length % simdLength);
@@ -496,7 +483,7 @@ namespace _20200210_配列の分散_VectorDot
 
 
 
-
+        //平均値
         private double GetAverage(byte[] ary)
         {
             long total = 0;

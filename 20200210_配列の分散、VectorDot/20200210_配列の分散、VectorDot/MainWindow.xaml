@@ -21,6 +21,7 @@
       </StackPanel.Resources>
       <TextBlock x:Name="MyTextBlock" Text="text" HorizontalAlignment="Center"/>
       <TextBlock x:Name="MyTextBlockVectorCount" Text="vectorCount" HorizontalAlignment="Center"/>
+      <TextBlock x:Name="MyTextBlockCpuThreadCount" Text="threadCount" HorizontalAlignment="Center"/>
       <StackPanel Orientation="Horizontal">
         <Button x:Name="Button1" Content="test1"/>
         <TextBlock x:Name="Tb1" Text="time"/>

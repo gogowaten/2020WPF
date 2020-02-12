@@ -93,20 +93,33 @@ namespace _20200122
             //var total = vp1 + vp2;
 
 
-            var ii = new int[] { 3, 0, 10, 0, 0, 0, 0, 0 };
-            var v = new Vector<int>(ii);
-            var l = System.Numerics.Vector.AsVectorUInt64(v);
-            int[] i = Enumerable.Range(1, 32).ToArray();
-            byte[] b =  new byte[] {1,1,1,1,1,11,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,22,2,2,2,2,2,2,2,2,2,2,22,2 };
+            //var ii = new int[] { 3, 0, 10, 0, 0, 0, 0, 0 };
+            //var v = new Vector<int>(ii);
+            //var l = System.Numerics.Vector.AsVectorUInt64(v);
+            //int[] i = Enumerable.Range(1, 32).ToArray();
+            //byte[] b =  new byte[] {1,1,1,1,1,11,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,22,2,2,2,2,2,2,2,2,2,2,22,2 };
 
 
-            var vv = new Vector<int>(Enumerable.Range(1, 8).ToArray());
-            Vector<long> vs1;
-            Vector<long> vs2;
-            System.Numerics.Vector.Widen(vv, out vs1,out vs2);
-            Vector<long> neko = System.Numerics.Vector.Add(vs1, vs2);
-            long[] ll = new long[5];
-            neko.CopyTo(ll);
+            //var vv = new Vector<int>(Enumerable.Range(1, 8).ToArray());
+            //Vector<long> vs1;
+            //Vector<long> vs2;
+            //System.Numerics.Vector.Widen(vv, out vs1,out vs2);
+            //Vector<long> neko = System.Numerics.Vector.Add(vs1, vs2);
+            //long[] ll = new long[5];
+            //neko.CopyTo(ll);
+
+
+            //var v = new Vector<double>(new double[] { 5, 6, -8, -3 });
+            //var dot = System.Numerics.Vector.Dot(v, v);
+
+
+
+            var v1 = new Vector<double>(new double[] { 1, 3, 5, 7 });
+            var v2 = new Vector<double>(new double[] { 16, 8, 2, 4 });
+            var dot = System.Numerics.Vector.Dot(v1, v2);
+
+
+
 
 
 
