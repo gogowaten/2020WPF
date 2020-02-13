@@ -68,7 +68,7 @@ namespace _20200210_配列の分散_VectorDot
             var r = new Random();
             r.NextBytes(MyByteAry);
             //要素の平均値
-            //MyByteAry = new byte[] { 20, 21, 7, 12 };
+            //MyByteAry = new byte[] { 0, 21, 7, 255 };
             MyAverage = GetAverage(MyByteAry);
         }
 

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20200213_分散を求めるマルチスレッド編", "20200213_分散を求めるマルチスレッド編\20200213_分散を求めるマルチスレッド編.csproj", "{50B6BACE-C336-41BF-ABE5-46D00FC8EBF5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{50B6BACE-C336-41BF-ABE5-46D00FC8EBF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50B6BACE-C336-41BF-ABE5-46D00FC8EBF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50B6BACE-C336-41BF-ABE5-46D00FC8EBF5}.Debug|x64.ActiveCfg = Debug|x64
+		{50B6BACE-C336-41BF-ABE5-46D00FC8EBF5}.Debug|x64.Build.0 = Debug|x64
+		{50B6BACE-C336-41BF-ABE5-46D00FC8EBF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50B6BACE-C336-41BF-ABE5-46D00FC8EBF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50B6BACE-C336-41BF-ABE5-46D00FC8EBF5}.Release|x64.ActiveCfg = Release|x64
+		{50B6BACE-C336-41BF-ABE5-46D00FC8EBF5}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1EF26B51-86A8-49AF-9A57-BE2BCF2612A2}
+	EndGlobalSection
+EndGlobal
