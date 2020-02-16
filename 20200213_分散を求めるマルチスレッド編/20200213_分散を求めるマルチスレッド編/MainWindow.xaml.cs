@@ -23,6 +23,8 @@ namespace _20200213_分散を求めるマルチスレッド編
         //private const int ELEMENT_COUNT = 7680 * 4320;//33,177,600、8K解像度
         private double MyAverage;
 
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -32,6 +34,7 @@ namespace _20200213_分散を求めるマルチスレッド編
             SetRandomByte();
 
             ButtonReset.Click += (s, e) => MyReset();
+            ButtonAll.Click += (s, e) => MyExeAll();
 
             Button1.Click += (s, e) => MyExe(Test01_V1ST_ForLoop_double, Tb1, MyByteAry);//遅すぎ
             Button2.Click += (s, e) => MyExe(Test02_V1ST_ForLoop_int, Tb2, MyByteAry);
@@ -58,7 +61,8 @@ namespace _20200213_分散を求めるマルチスレッド編
 
             Button21.Click += (s, e) => MyExe(Test21_V1_ParallelLinq, Tb21, MyByteAry);
             Button22.Click += (s, e) => MyExe(Test22_V2_ParallelLinq, Tb22, MyByteAry);
-            //Button23.Click += (s, e) => MyExe(Test20_V2_ParallelForE_Vector4, Tb23, MyByteAry);
+
+
             //Button24.Click += (s, e) => MyExe(Test22_V2_ParallelLinq, Tb24, MyByteAry);
             //Button25.Click += (s, e) => MyExe(Test21_V1_ParallelLinq, Tb25, MyByteAry);
         }
@@ -70,7 +74,7 @@ namespace _20200213_分散を求めるマルチスレッド編
             string str = $"VectorCount : Long={Vector<long>.Count}, Double={Vector<double>.Count}, int={Vector<int>.Count}, flort={Vector<float>.Count}, short={Vector<short>.Count}, byte={Vector<byte>.Count}";
             MyTextBlockVectorCount.Text = str;
             MyTextBlockCpuThreadCount.Text = $"CPUスレッド数：{Environment.ProcessorCount.ToString()} thread";
-            
+
         }
         private void SetRandomByte()
         {
@@ -78,11 +82,19 @@ namespace _20200213_分散を求めるマルチスレッド編
             var r = new Random();
             r.NextBytes(MyByteAry);
             //MyByteAry = new byte[] { 20, 21, 7, 12 };
+
             //Span<byte> span = new Span<byte>(MyByteAry);
-            //span.Fill(2);
+            //span.Fill(0);
             //MyByteAry = span.ToArray();
+            //MyByteAry[0] = 1;
+
+            //var span = new Span<byte>(MyByteAry);
+            //span.Fill(2);
+            //MyByteAry[ELEMENT_COUNT - 1] = 1;
 
             MyAverage = GetAverage(MyByteAry);//要素の平均値
+
+
         }
 
         //平均値
@@ -101,6 +113,7 @@ namespace _20200213_分散を求めるマルチスレッド編
                 });
             return total / (double)ary.Length;
         }
+
 
 
         #region 分散の求め方その1
@@ -483,6 +496,7 @@ namespace _20200213_分散を求めるマルチスレッド編
             return ((double)total / ary.Length) - Math.Pow(MyAverage, 2.0);//2乗の平均 - 平均の2乗
         }
 
+        //整数で計算
         private double Test15_V2_ParallelForE(byte[] ary)
         {
             //2乗和            
@@ -500,6 +514,8 @@ namespace _20200213_分散を求めるマルチスレッド編
             long total = myBag.Sum();//合計
             return ((double)total / ary.Length) - Math.Pow(MyAverage, 2.0);//2乗の平均 - 平均の2乗
         }
+
+
 
         //ここからVector
         private double Test16_V2ST_VectorDouble(byte[] ary)
@@ -639,6 +655,14 @@ namespace _20200213_分散を求めるマルチスレッド編
             return (total / ary.Length) - (MyAverage * MyAverage);
         }
 
+
+
+
+
+        #endregion 分散の求め方その2ここまで
+
+
+        //Linq
         private double Test21_V1_ParallelLinq(byte[] ary)
         {
             return ary.AsParallel().Select(x => Math.Pow(x - MyAverage, 2)).Sum() / ary.Length;
@@ -647,13 +671,6 @@ namespace _20200213_分散を求めるマルチスレッド編
         {
             return (ary.AsParallel().Select(x => x * x).Sum(x => (long)x) / (double)ary.Length) - (MyAverage * MyAverage);
         }
-
-
-
-
-        #endregion 分散の求め方その2ここまで
-
-
 
 
 
@@ -721,6 +738,7 @@ namespace _20200213_分散を求めるマルチスレッド編
         {
             //あまりの位置のインデックス
             int lastIndex = endIndex - (endIndex - beginIndex) % simdLength;
+            //2乗して合計
             int total = 0;
             for (int i = lastIndex; i < endIndex; i++)
             {
@@ -746,7 +764,45 @@ namespace _20200213_分散を求めるマルチスレッド編
                 total = func(ary);
             }
             sw.Stop();
-            tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒  分散 = {total.ToString("F10")}  {System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}";
+            //tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒  分散 = {total.ToString("F10")}  {System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}";
+            this.Dispatcher.Invoke(() =>
+            {
+                tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒  分散 = {total.ToString("F15")}  {System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}";
+            });
+        }
+
+        private async void MyExeAll()
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            this.IsEnabled = false;
+            await Task.Run(() => MyExe(Test02_V1ST_ForLoop_int, Tb2, MyByteAry));
+            await Task.Run(() => MyExe(Test03_V1_ParallelFor_double_ConcurrentBag, Tb3, MyByteAry));
+            await Task.Run(() => MyExe(Test04_V1_ParallelFor_Integer_ConcurrentBag, Tb4, MyByteAry));
+            await Task.Run(() => MyExe(Test05_V1_ParallelFor_Integer_InterlockedAdd, Tb5, MyByteAry));
+            await Task.Run(() => MyExe(Test06_V1_ParallelForE_double, Tb6, MyByteAry));
+            await Task.Run(() => MyExe(Test07_V1_ParallelForE_Integer, Tb7, MyByteAry));
+            await Task.Run(() => MyExe(Test08_V1ST_VectorDouble, Tb8, MyByteAry));
+            await Task.Run(() => MyExe(Test09_V1_ParallelForE_VectorDouble, Tb9, MyByteAry));
+            await Task.Run(() => MyExe(Test10_V1_ParallelForE_VectorInteger, Tb10, MyByteAry));
+            await Task.Run(() => MyExe(Test11_V1_ParallelForE_VectorFloat, Tb11, MyByteAry));
+            await Task.Run(() => MyExe(Test12_V1_ParallelForE_Vector4, Tb12, MyByteAry));
+            await Task.Run(() => MyExe(Test13_V2ST_ForLoop, Tb13, MyByteAry));
+            await Task.Run(() => MyExe(Test14_V2_ParallelFor, Tb14, MyByteAry));
+            await Task.Run(() => MyExe(Test15_V2_ParallelForE, Tb15, MyByteAry));
+            await Task.Run(() => MyExe(Test16_V2ST_VectorDouble, Tb16, MyByteAry));
+            await Task.Run(() => MyExe(Test17_V2_ParallelForE_VectorDouble, Tb17, MyByteAry));
+            await Task.Run(() => MyExe(Test18_V2_ParallelForE_VectorInt, Tb18, MyByteAry));
+            await Task.Run(() => MyExe(Test19_V2_ParallelForE_VectorByteWiden, Tb19, MyByteAry));
+            await Task.Run(() => MyExe(Test20_V2_ParallelForE_Vector4, Tb20, MyByteAry));
+            await Task.Run(() => MyExe(Test21_V1_ParallelLinq, Tb21, MyByteAry));
+            await Task.Run(() => MyExe(Test22_V2_ParallelLinq, Tb22, MyByteAry));
+            //await Task.Run(() => MyExe(Test08_V1ST_VectorDouble, Tb23, MyByteAry));
+            //await Task.Run(() => MyExe(Test08_V1ST_VectorDouble, Tb24, MyByteAry));
+            this.IsEnabled = true;
+            sw.Stop();
+            TbAll.Text = $"一斉テスト時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒";
+
         }
 
     }

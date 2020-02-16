@@ -1,11 +1,11 @@
-﻿<Window x:Class="_20200213_分散を求めるマルチスレッド編.MainWindow"
+﻿<Window x:Class="_20200216_分散を求めるマルチスレッド編double型.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:_20200213_分散を求めるマルチスレッド編"
+        xmlns:local="clr-namespace:_20200216_分散を求めるマルチスレッド編double型"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="614">
+       Title="MainWindow" Height="700" Width="614">
   <Grid>
     <StackPanel>
       <StackPanel.Resources>
@@ -22,17 +22,12 @@
       <TextBlock x:Name="MyTextBlock" Text="text" HorizontalAlignment="Center"/>
       <TextBlock x:Name="MyTextBlockVectorCount" Text="vectorCount" HorizontalAlignment="Center"/>
       <TextBlock x:Name="MyTextBlockCpuThreadCount" Text="threadCount" HorizontalAlignment="Center"/>
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-        <Button x:Name="ButtonAll" Content="一斉テスト(test1以外)" Margin="20,0" Width="120"/>
-        <TextBlock x:Name="TbAll" Text="time"/>
-        <Button x:Name="ButtonReset" Content="reset" Margin="20,0"/>
-
-      </StackPanel>
-      <StackPanel Orientation="Horizontal" Background="#100000FF">
+      <Button x:Name="ButtonReset" Content="reset"/>
+      <StackPanel Orientation="Horizontal">
         <Button x:Name="Button1" Content="test1"/>
         <TextBlock x:Name="Tb1" Text="time"/>
       </StackPanel>
-      <StackPanel Orientation="Horizontal" Background="#100000FF">
+      <StackPanel Orientation="Horizontal">
         <Button x:Name="Button2" Content="test2"/>
         <TextBlock x:Name="Tb2" Text="time"/>
       </StackPanel>
@@ -56,7 +51,7 @@
         <Button x:Name="Button7" Content="test7"/>
         <TextBlock x:Name="Tb7" Text="time"/>
       </StackPanel>
-      <StackPanel Orientation="Horizontal" Background="#100000FF">
+      <StackPanel Orientation="Horizontal">
         <Button x:Name="Button8" Content="test8"/>
         <TextBlock x:Name="Tb8" Text="time"/>
       </StackPanel>
@@ -76,8 +71,8 @@
         <Button x:Name="Button12" Content="test12"/>
         <TextBlock x:Name="Tb12" Text="time"/>
       </StackPanel>
-      <Border Height="1" Background="Orange" UseLayoutRounding="True"/>
-      <StackPanel Orientation="Horizontal" Background="#100000FF">
+      <!--<Border Height="1" Background="Orange" UseLayoutRounding="True"/>-->
+      <StackPanel Orientation="Horizontal">
         <Button x:Name="Button13" Content="test13"/>
         <TextBlock x:Name="Tb13" Text="time"/>
       </StackPanel>
@@ -89,7 +84,7 @@
         <Button x:Name="Button15" Content="test15"/>
         <TextBlock x:Name="Tb15" Text="time"/>
       </StackPanel>
-      <StackPanel Orientation="Horizontal" Background="#100000FF">
+      <StackPanel Orientation="Horizontal">
         <Button x:Name="Button16" Content="test16"/>
         <TextBlock x:Name="Tb16" Text="time"/>
       </StackPanel>
@@ -109,7 +104,7 @@
         <Button x:Name="Button20" Content="test20"/>
         <TextBlock x:Name="Tb20" Text="time"/>
       </StackPanel>
-      <Border Height="1" Background="Orange" UseLayoutRounding="True"/>
+      <!--<Border Height="1" Background="Orange" UseLayoutRounding="True"/>-->
       <StackPanel Orientation="Horizontal">
         <Button x:Name="Button21" Content="test21"/>
         <TextBlock x:Name="Tb21" Text="time"/>
