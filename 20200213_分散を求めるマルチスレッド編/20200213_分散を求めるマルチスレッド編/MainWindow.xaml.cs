@@ -86,7 +86,7 @@ namespace _20200213_分散を求めるマルチスレッド編
             //Span<byte> span = new Span<byte>(MyByteAry);
             //span.Fill(0);
             //MyByteAry = span.ToArray();
-            //MyByteAry[0] = 1;
+            //MyByteAry[0] = 255;
 
             //var span = new Span<byte>(MyByteAry);
             //span.Fill(2);
@@ -124,7 +124,9 @@ namespace _20200213_分散を求めるマルチスレッド編
             double total = 0;
             for (int i = 0; i < ary.Length; i++)
             {
-                total += Math.Pow(ary[i] - MyAverage, 2.0);
+                //total += Math.Pow(ary[i] - MyAverage, 2.0);//遅い33秒
+                double diff = ary[i] - MyAverage;//速い0.9秒
+                total += diff * diff;
             }
             //合計 / 要素数 = 分散
             return total / ary.Length;
@@ -223,7 +225,9 @@ namespace _20200213_分散を求めるマルチスレッド編
                     double subtotal = 0;
                     for (int i = range.Item1; i < range.Item2; i++)
                     {
-                        subtotal += Math.Pow(ary[i] - MyAverage, 2.0);
+                        //subtotal += Math.Pow(ary[i] - MyAverage, 2.0);
+                        double diff = ary[i] - MyAverage;
+                        subtotal += diff * diff;
                     }
                     myBag.Add(subtotal);//小計を追加
                 });
@@ -665,7 +669,8 @@ namespace _20200213_分散を求めるマルチスレッド編
         //Linq
         private double Test21_V1_ParallelLinq(byte[] ary)
         {
-            return ary.AsParallel().Select(x => Math.Pow(x - MyAverage, 2)).Sum() / ary.Length;
+            //return ary.AsParallel().Select(x => Math.Pow(x - MyAverage, 2)).Sum() / ary.Length;//遅い11秒
+            return ary.AsParallel().Select(x => (x - MyAverage) * (x - MyAverage)).Sum() / ary.Length;//3.5秒
         }
         private double Test22_V2_ParallelLinq(byte[] ary)
         {
