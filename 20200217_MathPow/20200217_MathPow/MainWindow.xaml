@@ -38,6 +38,7 @@
         <Button x:Name="Button3" Content="test3"/>
         <TextBlock x:Name="Tb3" Text="time"/>
       </StackPanel>
+      <Border Height="1" Background="Orange" UseLayoutRounding="True"/>
       <StackPanel Orientation="Horizontal">
         <Button x:Name="Button4" Content="test4"/>
         <TextBlock x:Name="Tb4" Text="time"/>
@@ -74,7 +75,7 @@
         <Button x:Name="Button12" Content="test12"/>
         <TextBlock x:Name="Tb12" Text="time"/>
       </StackPanel>
-      <Border Height="1" Background="Orange" UseLayoutRounding="True"/>
+      
       <StackPanel Orientation="Horizontal">
         <Button x:Name="Button13" Content="test13"/>
         <TextBlock x:Name="Tb13" Text="time"/>
