@@ -20,7 +20,7 @@ namespace _20200217_MathPow
         {
             InitializeComponent();
 
-            this.Title = this.Name;
+            this.Title = this.ToString();
             MyTextBlock.Text = $"Math.Powは速くない？\nべき乗計算{MY_COUNT.ToString("N0")} * {MY_COUNT.ToString("N0")}回の処理時間";
             MyArray = new double[MY_COUNT];
             var span = new Span<double>(MyArray);
