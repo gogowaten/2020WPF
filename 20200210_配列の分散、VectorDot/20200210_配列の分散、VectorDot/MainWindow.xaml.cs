@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+
 
 namespace _20200210_配列の分散_VectorDot
 {
@@ -18,7 +20,7 @@ namespace _20200210_配列の分散_VectorDot
         //private int[] MyIntAry;
         //private long[] MyLongAry;
         private const int LOOP_COUNT = 100;
-        private const int ELEMENT_COUNT = 1_000_000;
+        private const int ELEMENT_COUNT = 10_000_000;
         private double MyAverage;
 
         public MainWindow()
@@ -31,13 +33,15 @@ namespace _20200210_配列の分散_VectorDot
             MyTextBlockVectorCount.Text = $"Vector<long>.Count = {Vector<long>.Count}";
             string str = $"VectorCount : Long={Vector<long>.Count}, Double={Vector<double>.Count}, int={Vector<int>.Count}, flort={Vector<float>.Count}, short={Vector<short>.Count}, byte={Vector<byte>.Count}";
             MyTextBlockVectorCount.Text = str;
-            MyTextBlockCpuThreadCount.Text =$"CPUスレッド数：{Environment.ProcessorCount.ToString()} thread";
+            MyTextBlockCpuThreadCount.Text = $"CPUスレッド数：{Environment.ProcessorCount.ToString()} thread";
             //MyIntAry = Enumerable.Range(1, ELEMENT_COUNT).ToArray();//連番値
             //MyIntAry = Enumerable.Repeat(1, ELEMENT_COUNT).ToArray();//全値1
             //MyLongAry = new long[MyIntAry.Length];//long型配列作成
             //MyIntAry.CopyTo(MyLongAry, 0);
             MyInitialize();
 
+            ButtonAll.Click += async (s, e) => await MyExeAll();
+            ButtonReset.Click += (s, e) => MyReset();
 
             Button1.Click += (s, e) => MyExe(Test01_Double_ForLoop, Tb1, MyByteAry);
             Button2.Click += (s, e) => MyExe(Test02_Integer_ForLoop, Tb2, MyByteAry);
@@ -76,9 +80,12 @@ namespace _20200210_配列の分散_VectorDot
         {
             //平均との差(偏差)の2乗を合計
             double total = 0;
+            double temp;
             for (int i = 0; i < ary.Length; i++)
             {
-                total += Math.Pow(ary[i] - MyAverage, 2.0);
+                //total += Math.Pow(ary[i] - MyAverage, 2.0);//遅すぎ
+                temp = ary[i] - MyAverage;
+                total += temp * temp;
             }
             //合計 / 要素数 = 分散
             return total / ary.Length;
@@ -289,12 +296,13 @@ namespace _20200210_配列の分散_VectorDot
             double total = 0;
             for (int i = 0; i < ary.Length; i++)
             {
-                total += Math.Pow(ary[i], 2.0);
+                //total += Math.Pow(ary[i], 2.0);//遅すぎ
+                total += ary[i] * ary[i];
             }
             //2乗和の平均
             total /= ary.Length;
             //2乗和の平均 - 平均の2乗
-            return total - Math.Pow(MyAverage, 2.0);
+            return total - (MyAverage * MyAverage);// Math.Pow(MyAverage, 2.0);
         }
 
         private double Test12_Integer_ForLoop(byte[] ary)
@@ -414,7 +422,7 @@ namespace _20200210_配列の分散_VectorDot
         //Vector4
         private double Test18_FloatVector4(byte[] ary)
         {
-            int lastIndex = ary.Length - (ary.Length % 4);;
+            int lastIndex = ary.Length - (ary.Length % 4); ;
             Vector4 v;
             double total = 0;
             for (int i = 0; i < lastIndex; i += 4)
@@ -478,9 +486,64 @@ namespace _20200210_配列の分散_VectorDot
 
 
 
+        //一斉テスト
+        private async Task MyExeAll()
+        {
+            this.IsEnabled = false;
+            var sw = new Stopwatch();
+            sw.Start();
+            await Task.Run(() => MyExe(Test01_Double_ForLoop, Tb1, MyByteAry));
+            await Task.Run(() => MyExe(Test02_Integer_ForLoop, Tb2, MyByteAry));
+            await Task.Run(() => MyExe(Test03_FloatVectorSubtractDot, Tb3, MyByteAry));
+            await Task.Run(() => MyExe(Test04_DoubleVectorSubtractDot, Tb4, MyByteAry));
+            await Task.Run(() => MyExe(Test05_IntegerVectorSubtractDot, Tb5, MyByteAry));
+            await Task.Run(() => MyExe(Test06_ByteVectorSubtractDot_Overflow, Tb6, MyByteAry));
+            await Task.Run(() => MyExe(Test07_ShortVectorSubtractDot_Overflow, Tb7, MyByteAry));
+            await Task.Run(() => MyExe(Test08_FloatVector4, Tb8, MyByteAry));
+            await Task.Run(() => MyExe(Test09_IntegerVectorDot, Tb9, MyByteAry));
+            await Task.Run(() => MyExe(Test10_DoubleVectorDot, Tb10, MyByteAry));
+            await Task.Run(() => MyExe(Test11_Double_ForLoop, Tb11, MyByteAry));
+            await Task.Run(() => MyExe(Test12_Integer_ForLoop, Tb12, MyByteAry));
+            await Task.Run(() => MyExe(Test13_FloatVectorDot, Tb13, MyByteAry));
+            await Task.Run(() => MyExe(Test14_DoubleVectorDot, Tb14, MyByteAry));
+            await Task.Run(() => MyExe(Test15_IntegerVectorDot, Tb15, MyByteAry));
+            await Task.Run(() => MyExe(Test16_ByteVectorDot_Overflow, Tb16, MyByteAry));
+            await Task.Run(() => MyExe(Test17_ShortVectorDot_Overflow, Tb17, MyByteAry));
+            await Task.Run(() => MyExe(Test18_FloatVector4, Tb18, MyByteAry));
+            await Task.Run(() => MyExe(Test19_Byte_ushort_uintVectorDot, Tb19, MyByteAry));
+            await Task.Run(() => MyExe(Test20_Byte_ushort_uintVectorDot, Tb20, MyByteAry));
 
+            sw.Stop();
+            this.IsEnabled = true;
+            TbAll.Text = $"一斉テスト処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒";
+        }
 
-
+        //全てのtextblockのTextを空白にする
+        private void MyReset()
+        {
+            var tbs = GetObjects<TextBlock>(this);
+            foreach (var item in tbs)
+            {
+                item.Text = "";
+            }
+        }
+        //コントロールの列挙
+        private static List<T> GetObjects<T>(DependencyObject obj) where T : DependencyObject
+        {
+            var lo = new List<T>();
+            foreach (var item in LogicalTreeHelper.GetChildren(obj))
+            {
+                if (item is T) { lo.Add((T)item); }
+                if(item is DependencyObject dObj)
+                {
+                    foreach (var item2 in GetObjects<T>(dObj))
+                    {
+                        lo.Add(item2);
+                    }
+                }
+            }
+            return lo;
+        }
 
 
         //平均値
@@ -519,7 +582,10 @@ namespace _20200210_配列の分散_VectorDot
                 total = func(ary);
             }
             sw.Stop();
-            tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒  分散 = {total.ToString("F4")}  {System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}";
+            this.Dispatcher.Invoke(() =>
+            {
+                tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒  分散 = {total.ToString("F4")}  {System.Reflection.RuntimeReflectionExtensions.GetMethodInfo(func).Name}";
+            });
         }
 
 

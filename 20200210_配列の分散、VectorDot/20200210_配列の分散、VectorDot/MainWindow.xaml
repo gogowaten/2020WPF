@@ -22,6 +22,11 @@
       <TextBlock x:Name="MyTextBlock" Text="text" HorizontalAlignment="Center"/>
       <TextBlock x:Name="MyTextBlockVectorCount" Text="vectorCount" HorizontalAlignment="Center"/>
       <TextBlock x:Name="MyTextBlockCpuThreadCount" Text="threadCount" HorizontalAlignment="Center"/>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+        <Button x:Name="ButtonAll" Content="一斉テスト" Margin="20,0" Width="120"/>
+        <TextBlock x:Name="TbAll" Text="time"/>
+        <Button x:Name="ButtonReset" Content="reset" Margin="20,0"/>
+      </StackPanel>
       <StackPanel Orientation="Horizontal">
         <Button x:Name="Button1" Content="test1"/>
         <TextBlock x:Name="Tb1" Text="time"/>

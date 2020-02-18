@@ -5,6 +5,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Diagnostics;
 
+//C#.NETのMathPowは速くない？べき乗計算は掛け算を繰り返したほうが速い場合もあった - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/02/18/130738
+
 namespace _20200217_MathPow
 {
     /// <summary>
