@@ -42,28 +42,28 @@ namespace _20200213_分散を求めるマルチスレッド編
             ButtonReset.Click += (s, e) => MyReset();
             ButtonAll.Click += (s, e) => MyExeAll();
 
-            Button1.Click += (s, e) => MyExe(Test01_V1ST_ForLoop_double, Tb1, MyByteAry);
-            Button2.Click += (s, e) => MyExe(Test02_V1ST_ForLoop_int, Tb2, MyByteAry);
+            Button1.Click += (s, e) => MyExe(Test01_V1_ForLoop_double, Tb1, MyByteAry);
+            Button2.Click += (s, e) => MyExe(Test02_V1_ForLoop_int, Tb2, MyByteAry);
             Button3.Click += (s, e) => MyExe(Test03_V1_ParallelFor_double_ConcurrentBag, Tb3, MyByteAry);
             Button4.Click += (s, e) => MyExe(Test04_V1_ParallelFor_Integer_ConcurrentBag, Tb4, MyByteAry);
             Button5.Click += (s, e) => MyExe(Test05_V1_ParallelFor_Integer_InterlockedAdd, Tb5, MyByteAry);
-            Button6.Click += (s, e) => MyExe(Test06_V1_ParallelForE_double, Tb6, MyByteAry);
-            Button7.Click += (s, e) => MyExe(Test07_V1_ParallelForE_Integer, Tb7, MyByteAry);
+            Button6.Click += (s, e) => MyExe(Test06_V1_ParallelForEech_double, Tb6, MyByteAry);
+            Button7.Click += (s, e) => MyExe(Test07_V1_ParallelForEech_Integer, Tb7, MyByteAry);
             //vector
-            Button8.Click += (s, e) => MyExe(Test08_V1ST_VectorDouble, Tb8, MyByteAry);
-            Button9.Click += (s, e) => MyExe(Test09_V1_ParallelForE_VectorDouble, Tb9, MyByteAry);
-            Button10.Click += (s, e) => MyExe(Test10_V1_ParallelForE_VectorInteger, Tb10, MyByteAry);
-            Button11.Click += (s, e) => MyExe(Test11_V1_ParallelForE_VectorFloat, Tb11, MyByteAry);
-            Button12.Click += (s, e) => MyExe(Test12_V1_ParallelForE_Vector4, Tb12, MyByteAry);
+            Button8.Click += (s, e) => MyExe(Test08_V1_ForLoop_VectorDouble, Tb8, MyByteAry);
+            Button9.Click += (s, e) => MyExe(Test09_V1_ParallelForEech_VectorDouble, Tb9, MyByteAry);
+            Button10.Click += (s, e) => MyExe(Test10_V1_ParallelForEech_VectorInteger, Tb10, MyByteAry);
+            Button11.Click += (s, e) => MyExe(Test11_V1_ParallelForEech_VectorFloat, Tb11, MyByteAry);
+            Button12.Click += (s, e) => MyExe(Test12_V1_ParallelForEech_Vector4, Tb12, MyByteAry);
 
-            Button13.Click += (s, e) => MyExe(Test13_V2ST_ForLoop, Tb13, MyByteAry);
+            Button13.Click += (s, e) => MyExe(Test13_V2_ForLoop, Tb13, MyByteAry);
             Button14.Click += (s, e) => MyExe(Test14_V2_ParallelFor, Tb14, MyByteAry);
-            Button15.Click += (s, e) => MyExe(Test15_V2_ParallelForE, Tb15, MyByteAry);
-            Button16.Click += (s, e) => MyExe(Test16_V2ST_VectorDouble, Tb16, MyByteAry);
-            Button17.Click += (s, e) => MyExe(Test17_V2_ParallelForE_VectorDouble, Tb17, MyByteAry);
-            Button18.Click += (s, e) => MyExe(Test18_V2_ParallelForE_VectorInt, Tb18, MyByteAry);
-            Button19.Click += (s, e) => MyExe(Test19_V2_ParallelForE_VectorByteWiden, Tb19, MyByteAry);
-            Button20.Click += (s, e) => MyExe(Test20_V2_ParallelForE_Vector4, Tb20, MyByteAry);
+            Button15.Click += (s, e) => MyExe(Test15_V2_ParallelForEech, Tb15, MyByteAry);
+            Button16.Click += (s, e) => MyExe(Test16_V2_ForLoop_VectorDouble, Tb16, MyByteAry);
+            Button17.Click += (s, e) => MyExe(Test17_V2_ParallelForEech_VectorDouble, Tb17, MyByteAry);
+            Button18.Click += (s, e) => MyExe(Test18_V2_ParallelForEech_VectorInt, Tb18, MyByteAry);
+            Button19.Click += (s, e) => MyExe(Test19_V2_ParallelForEech_VectorByteWiden, Tb19, MyByteAry);
+            Button20.Click += (s, e) => MyExe(Test20_V2_ParallelForEech_Vector4, Tb20, MyByteAry);
 
             Button21.Click += (s, e) => MyExe(Test21_V1_ParallelLinq, Tb21, MyByteAry);
             Button22.Click += (s, e) => MyExe(Test22_V2_ParallelLinq, Tb22, MyByteAry);
@@ -75,6 +75,7 @@ namespace _20200213_分散を求めるマルチスレッド編
 
         private void MyInitialize()
         {
+            this.Title = this.ToString();
             MyTextBlock.Text = $"byte型配列の値の分散、要素数{ELEMENT_COUNT.ToString("N0")}の分散を{LOOP_COUNT}回求める";
             MyTextBlockVectorCount.Text = $"Vector<long>.Count = {Vector<long>.Count}";
             string str = $"VectorCount : Long={Vector<long>.Count}, Double={Vector<double>.Count}, int={Vector<int>.Count}, flort={Vector<float>.Count}, short={Vector<short>.Count}, byte={Vector<byte>.Count}";
@@ -90,13 +91,17 @@ namespace _20200213_分散を求めるマルチスレッド編
             //MyByteAry = new byte[] { 20, 21, 7, 12 };
 
             //Span<byte> span = new Span<byte>(MyByteAry);
-            //span.Fill(0);
+            //span.Fill(255);
             //MyByteAry = span.ToArray();
-            //MyByteAry[0] = 255;
+            //MyByteAry[0] = 0;
+
 
             //var span = new Span<byte>(MyByteAry);
             //span.Fill(2);
             //MyByteAry[ELEMENT_COUNT - 1] = 1;
+
+
+
 
             MyAverage = GetAverage(MyByteAry);//要素の平均値
 
@@ -121,9 +126,9 @@ namespace _20200213_分散を求めるマルチスレッド編
 
 
 
-        #region 分散の求め方その1
+        #region 分散の求め方その1 = 偏差の2乗の平均
         //普通のForループ、double型
-        private double Test01_V1ST_ForLoop_double(byte[] ary)
+        private double Test01_V1_ForLoop_double(byte[] ary)
         {
             //平均との差(偏差)の2乗を合計
             double total = 0;
@@ -138,7 +143,7 @@ namespace _20200213_分散を求めるマルチスレッド編
         }
 
         //普通のForループ、int型
-        private double Test02_V1ST_ForLoop_int(byte[] ary)
+        private double Test02_V1_ForLoop_int(byte[] ary)
         {
             //平均との差の2乗を合計
             long total = 0;
@@ -218,10 +223,9 @@ namespace _20200213_分散を求めるマルチスレッド編
         //        c# — C＃で整数の配列を合計する方法
         //https://www.it-swarm.dev/ja/c%23/c%EF%BC%83%E3%81%A7%E6%95%B4%E6%95%B0%E3%81%AE%E9%85%8D%E5%88%97%E3%82%92%E5%90%88%E8%A8%88%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95/968057375/
         //Paralle.ForEach、double型
-        private double Test06_V1_ParallelForE_double(byte[] ary)
+        private double Test06_V1_ParallelForEech_double(byte[] ary)
         {
             //平均との差(偏差)の2乗を合計
-
             var myBag = new ConcurrentBag<double>();
             Parallel.ForEach(
                 Partitioner.Create(0, ary.Length),
@@ -230,7 +234,6 @@ namespace _20200213_分散を求めるマルチスレッド編
                     double subtotal = 0;
                     for (int i = range.Item1; i < range.Item2; i++)
                     {
-                        //subtotal += Math.Pow(ary[i] - MyAverage, 2.0);
                         double diff = ary[i] - MyAverage;
                         subtotal += diff * diff;
                     }
@@ -240,8 +243,9 @@ namespace _20200213_分散を求めるマルチスレッド編
             //合計 / 要素数 = 分散
             return total / ary.Length;
         }
+
         //Paralle.ForEach、整数型で計算
-        private double Test07_V1_ParallelForE_Integer(byte[] ary)
+        private double Test07_V1_ParallelForEech_Integer(byte[] ary)
         {
             //平均との差(偏差)の2乗を合計
             long total = 0;
@@ -267,9 +271,9 @@ namespace _20200213_分散を求めるマルチスレッド編
 
         //ここからVector
         //Vector<double>で計算、シングルスレッド
-        private double Test08_V1ST_VectorDouble(byte[] ary)
+        private double Test08_V1_ForLoop_VectorDouble(byte[] ary)
         {
-            var vAverage = new Vector<double>(MyAverage);
+            //var vAverage = new Vector<double>(MyAverage);
             int simdLength = Vector<double>.Count;
             int lastIndex = ary.Length - (ary.Length % simdLength);
             Vector<double> v;
@@ -279,10 +283,12 @@ namespace _20200213_分散を求めるマルチスレッド編
             {
                 for (int j = 0; j < simdLength; j++)
                 {
-                    ss[j] = ary[i + j];
+                    //ss[j] = ary[i + j];
+                    ss[j] = ary[i + j] - MyAverage;//平均との差
                 }
-                //平均との差
-                v = System.Numerics.Vector.Subtract(vAverage, new Vector<double>(ss));
+                v = new Vector<double>(ss);
+                //平均との差はVector.Subtractを使うより個別に引き算したほうが気持ち速い
+                //v = System.Numerics.Vector.Subtract(vAverage, new Vector<double>(ss));
                 //差の2乗を合計
                 total += System.Numerics.Vector.Dot(v, v);
             }
@@ -291,6 +297,7 @@ namespace _20200213_分散を求めるマルチスレッド編
             return total / ary.Length;
         }
 
+
         //マルチスレッド
         //Vector<double>で計算、スレッドごとの集計もdouble型
         //ConcurentBagならdouble型も扱える
@@ -298,7 +305,7 @@ namespace _20200213_分散を求めるマルチスレッド編
         //分けた後の要素数がVectorCountより小さいとエラーになる
         //例えばCPUスレッド数8、Vector<double>.Countが4の環境だと
         //8*4=32、要素数32以上の配列じゃないとエラーになる
-        private double Test09_V1_ParallelForE_VectorDouble(byte[] ary)
+        private double Test09_V1_ParallelForEech_VectorDouble(byte[] ary)
         {
             int simdLength = Vector<double>.Count;
             var bag = new ConcurrentBag<double>();
@@ -321,7 +328,7 @@ namespace _20200213_分散を求めるマルチスレッド編
                         //偏差の配列からVector作成
                         v = new Vector<double>(aa);
                         subtotal += System.Numerics.Vector.Dot(v, v);
-                        //VectorCountで割り切れなかった余りの2乗和も加算
+                        //VectorCountで割り切れなかった余り要素の2乗和も加算
                         subtotal += MySuquareSumOfDeviation偏差の2乗和(ary, lastIndex, range.Item2, MyAverage);
                     }
                     //排他処理でスレッドごとの小計をコレクションに追加
@@ -334,7 +341,7 @@ namespace _20200213_分散を求めるマルチスレッド編
 
 
         //Vector<int>で計算、小計、合計はlongで計算、intだと小計でもオーバーフローした
-        private double Test10_V1_ParallelForE_VectorInteger(byte[] ary)
+        private double Test10_V1_ParallelForEech_VectorInteger(byte[] ary)
         {
             int simdLength = Vector<int>.Count;
             long total = 0;
@@ -397,7 +404,7 @@ namespace _20200213_分散を求めるマルチスレッド編
 
         //Vector<float>で計算、小計はdouble、合計もdouble
         //ConcurentBagで排他処理合計
-        private double Test11_V1_ParallelForE_VectorFloat(byte[] ary)
+        private double Test11_V1_ParallelForEech_VectorFloat(byte[] ary)
         {
             int simdLength = Vector<float>.Count;
             var bag = new ConcurrentBag<double>();
@@ -428,7 +435,7 @@ namespace _20200213_分散を求めるマルチスレッド編
         }
 
         //Vector4
-        private double Test12_V1_ParallelForE_Vector4(byte[] ary)
+        private double Test12_V1_ParallelForEech_Vector4(byte[] ary)
         {
             int simdLength = 4;
             var bag = new ConcurrentBag<double>();
@@ -471,11 +478,11 @@ namespace _20200213_分散を求めるマルチスレッド編
 
         //-------------------------------------------------------------
 
-        #region 分散の求め方その2ここから
+        #region 分散の求め方その2 = 2乗の平均 - 平均の2乗
         //分散 = 2乗の平均 - 平均の2乗
 
         //シングルスレッド
-        private double Test13_V2ST_ForLoop(byte[] ary)
+        private double Test13_V2_ForLoop(byte[] ary)
         {
             //2乗和
             double total = 0;
@@ -493,23 +500,22 @@ namespace _20200213_分散を求めるマルチスレッド編
         //マルチスレッドここから
         private double Test14_V2_ParallelFor(byte[] ary)
         {
-            //2乗和            
-            var myBag = new ConcurrentBag<long>();
+            //2乗和
+            long total = 0;
             //var options = new ParallelOptions();
             //options.MaxDegreeOfParallelism = Environment.ProcessorCount;
             Parallel.For<long>(0, ary.Length,
                 () => 0,
                 (j, state, subtotal) => { return subtotal += ary[j] * ary[j]; },
-                (x) => myBag.Add(x));
-            long total = myBag.Sum();
+                (x) => Interlocked.Add(ref total, x));
             return ((double)total / ary.Length) - (MyAverage * MyAverage);//2乗の平均 - 平均の2乗
         }
 
         //整数で計算
-        private double Test15_V2_ParallelForE(byte[] ary)
+        private double Test15_V2_ParallelForEech(byte[] ary)
         {
-            //2乗和            
-            var myBag = new ConcurrentBag<long>();
+            //2乗和
+            long total = 0;
             var partition = Partitioner.Create(0, ary.Length, ary.Length / Environment.ProcessorCount);
             Parallel.ForEach(partition, (range) =>
             {
@@ -518,16 +524,16 @@ namespace _20200213_分散を求めるマルチスレッド編
                 {
                     subtotal += ary[i] * ary[i];
                 }
-                myBag.Add(subtotal);//スレッドごとの小計
+                Interlocked.Add(ref total, subtotal);//スレッドごとの小計
             });
-            long total = myBag.Sum();//合計
-            return ((double)total / ary.Length) - (MyAverage * MyAverage);////2乗の平均 - 平均の2乗
+
+            return ((double)total / ary.Length) - (MyAverage * MyAverage);//2乗の平均 - 平均の2乗
         }
 
 
 
         //ここからVector
-        private double Test16_V2ST_VectorDouble(byte[] ary)
+        private double Test16_V2_ForLoop_VectorDouble(byte[] ary)
         {
             int simdLength = Vector<double>.Count;
             int lastIndex = ary.Length - (ary.Length % simdLength);
@@ -548,7 +554,7 @@ namespace _20200213_分散を求めるマルチスレッド編
             return (total / ary.Length) - (MyAverage * MyAverage);
         }
         //Vector<double>で計算、byte型の2乗和を求めるからdouble型はあんまり意味ない
-        private double Test17_V2_ParallelForE_VectorDouble(byte[] ary)
+        private double Test17_V2_ParallelForEech_VectorDouble(byte[] ary)
         {
             var myBag = new ConcurrentBag<double>();
             var partition = Partitioner.Create(0, ary.Length, ary.Length / Environment.ProcessorCount);
@@ -577,9 +583,9 @@ namespace _20200213_分散を求めるマルチスレッド編
             return (total / ary.Length) - (MyAverage * MyAverage);
         }
         //Vector<int>で計算、整数で計算
-        private double Test18_V2_ParallelForE_VectorInt(byte[] ary)
+        private double Test18_V2_ParallelForEech_VectorInt(byte[] ary)
         {
-            var myBag = new ConcurrentBag<long>();
+            long total = 0;
             int simdLength = Vector<int>.Count;
             Parallel.ForEach(
                 Partitioner.Create(0, ary.Length, ary.Length / Environment.ProcessorCount),
@@ -600,20 +606,19 @@ namespace _20200213_分散を求めるマルチスレッド編
                     }
                     //配列とVectorCountの剰余分も加算
                     subtotal += MySuquareSum2乗和(ary, range.Item1, range.Item2, simdLength);
-                    myBag.Add(subtotal);
+                    Interlocked.Add(ref total, subtotal);
                 });
 
-            double total = myBag.Sum();
-            return (total / ary.Length) - (MyAverage * MyAverage);
+            return ((double)total / ary.Length) - (MyAverage * MyAverage);
         }
 
 
         //Widen
         //uint 4,294,967,295まで、ushort 65535まで
         //ushortでもオーバーフローするのでuintまで伸長してからドット積
-        private double Test19_V2_ParallelForE_VectorByteWiden(byte[] ary)
+        private double Test19_V2_ParallelForEech_VectorByteWiden(byte[] ary)
         {
-            var myBag = new ConcurrentBag<long>();
+            long total = 0;
             var partition = Partitioner.Create(0, ary.Length, ary.Length / Environment.ProcessorCount);
             int simdLength = Vector<byte>.Count;
             Parallel.ForEach(partition, (range) =>
@@ -632,15 +637,14 @@ namespace _20200213_分散を求めるマルチスレッド編
                 }
                 //配列とVectorCountの剰余分も加算
                 subtotal += MySuquareSum2乗和(ary, range.Item1, range.Item2, simdLength);
-                myBag.Add(subtotal);
+                Interlocked.Add(ref total, subtotal);
             });
 
-            long total = myBag.Sum();
             return ((double)total / ary.Length) - (MyAverage * MyAverage);
         }
 
         //Vector4はfloat型で計算
-        private double Test20_V2_ParallelForE_Vector4(byte[] ary)
+        private double Test20_V2_ParallelForEech_Vector4(byte[] ary)
         {
             var myBag = new ConcurrentBag<double>();
             var partition = Partitioner.Create(0, ary.Length, ary.Length / Environment.ProcessorCount);
@@ -789,25 +793,26 @@ namespace _20200213_分散を求めるマルチスレッド編
             var sw = new Stopwatch();
             sw.Start();
             this.IsEnabled = false;
-            await Task.Run(() => MyExe(Test02_V1ST_ForLoop_int, Tb2, MyByteAry));
+            await Task.Run(() => MyExe(Test01_V1_ForLoop_double, Tb1, MyByteAry));
+            await Task.Run(() => MyExe(Test02_V1_ForLoop_int, Tb2, MyByteAry));
             await Task.Run(() => MyExe(Test03_V1_ParallelFor_double_ConcurrentBag, Tb3, MyByteAry));
             await Task.Run(() => MyExe(Test04_V1_ParallelFor_Integer_ConcurrentBag, Tb4, MyByteAry));
             await Task.Run(() => MyExe(Test05_V1_ParallelFor_Integer_InterlockedAdd, Tb5, MyByteAry));
-            await Task.Run(() => MyExe(Test06_V1_ParallelForE_double, Tb6, MyByteAry));
-            await Task.Run(() => MyExe(Test07_V1_ParallelForE_Integer, Tb7, MyByteAry));
-            await Task.Run(() => MyExe(Test08_V1ST_VectorDouble, Tb8, MyByteAry));
-            await Task.Run(() => MyExe(Test09_V1_ParallelForE_VectorDouble, Tb9, MyByteAry));
-            await Task.Run(() => MyExe(Test10_V1_ParallelForE_VectorInteger, Tb10, MyByteAry));
-            await Task.Run(() => MyExe(Test11_V1_ParallelForE_VectorFloat, Tb11, MyByteAry));
-            await Task.Run(() => MyExe(Test12_V1_ParallelForE_Vector4, Tb12, MyByteAry));
-            await Task.Run(() => MyExe(Test13_V2ST_ForLoop, Tb13, MyByteAry));
+            await Task.Run(() => MyExe(Test06_V1_ParallelForEech_double, Tb6, MyByteAry));
+            await Task.Run(() => MyExe(Test07_V1_ParallelForEech_Integer, Tb7, MyByteAry));
+            await Task.Run(() => MyExe(Test08_V1_ForLoop_VectorDouble, Tb8, MyByteAry));
+            await Task.Run(() => MyExe(Test09_V1_ParallelForEech_VectorDouble, Tb9, MyByteAry));
+            await Task.Run(() => MyExe(Test10_V1_ParallelForEech_VectorInteger, Tb10, MyByteAry));
+            await Task.Run(() => MyExe(Test11_V1_ParallelForEech_VectorFloat, Tb11, MyByteAry));
+            await Task.Run(() => MyExe(Test12_V1_ParallelForEech_Vector4, Tb12, MyByteAry));
+            await Task.Run(() => MyExe(Test13_V2_ForLoop, Tb13, MyByteAry));
             await Task.Run(() => MyExe(Test14_V2_ParallelFor, Tb14, MyByteAry));
-            await Task.Run(() => MyExe(Test15_V2_ParallelForE, Tb15, MyByteAry));
-            await Task.Run(() => MyExe(Test16_V2ST_VectorDouble, Tb16, MyByteAry));
-            await Task.Run(() => MyExe(Test17_V2_ParallelForE_VectorDouble, Tb17, MyByteAry));
-            await Task.Run(() => MyExe(Test18_V2_ParallelForE_VectorInt, Tb18, MyByteAry));
-            await Task.Run(() => MyExe(Test19_V2_ParallelForE_VectorByteWiden, Tb19, MyByteAry));
-            await Task.Run(() => MyExe(Test20_V2_ParallelForE_Vector4, Tb20, MyByteAry));
+            await Task.Run(() => MyExe(Test15_V2_ParallelForEech, Tb15, MyByteAry));
+            await Task.Run(() => MyExe(Test16_V2_ForLoop_VectorDouble, Tb16, MyByteAry));
+            await Task.Run(() => MyExe(Test17_V2_ParallelForEech_VectorDouble, Tb17, MyByteAry));
+            await Task.Run(() => MyExe(Test18_V2_ParallelForEech_VectorInt, Tb18, MyByteAry));
+            await Task.Run(() => MyExe(Test19_V2_ParallelForEech_VectorByteWiden, Tb19, MyByteAry));
+            await Task.Run(() => MyExe(Test20_V2_ParallelForEech_Vector4, Tb20, MyByteAry));
             await Task.Run(() => MyExe(Test21_V1_ParallelLinq, Tb21, MyByteAry));
             await Task.Run(() => MyExe(Test22_V2_ParallelLinq, Tb22, MyByteAry));
             //await Task.Run(() => MyExe(Test08_V1ST_VectorDouble, Tb23, MyByteAry));
