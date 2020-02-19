@@ -8,6 +8,8 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
+//C#.NETで分散を求める2回め、System.Numerics.Vector.Dotも使ってみたけど… - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/02/19/135134
 
 namespace _20200210_配列の分散_VectorDot
 {
