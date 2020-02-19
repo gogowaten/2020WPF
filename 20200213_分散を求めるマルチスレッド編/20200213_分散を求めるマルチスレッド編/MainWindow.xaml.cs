@@ -8,7 +8,13 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Collections.Generic;
+//System.Numerics.Vector.Count AVX - Google 検索
+//https://www.google.com/search?q=System.Numerics.Vector.Count+AVX&oq=System.Numerics.Vector.Count+AVX&aqs=chrome..69i57&sourceid=chrome&ie=UTF-8
 
+//            Hardware Intrinsics in .NET Core | .NET Blog
+//https://devblogs.microsoft.com/dotnet/hardware-intrinsics-in-net-core/
+
+//            System.Runtime.Intrinsics.X86.Avx.
 namespace _20200213_分散を求めるマルチスレッド編
 {
     /// <summary>
@@ -18,9 +24,9 @@ namespace _20200213_分散を求めるマルチスレッド編
     {
         private byte[] MyByteAry;
         private const int LOOP_COUNT = 100;
-        private const int ELEMENT_COUNT = 10_000_000;
-        //private const int ELEMENT_COUNT = 3264 * 2448;//7,990,272、今使っているスマカメ
-        //private const int ELEMENT_COUNT = 7680 * 4320;//33,177,600、8K解像度
+        private const int ELEMENT_COUNT = 10_000_000;//1000万
+        //private const int ELEMENT_COUNT = 3264 * 2448;//7,990,272、今使っているスマカメは800万
+        //private const int ELEMENT_COUNT = 7680 * 4320;//33,177,600、8K解像度は、3300万
         private double MyAverage;
 
 
@@ -36,7 +42,7 @@ namespace _20200213_分散を求めるマルチスレッド編
             ButtonReset.Click += (s, e) => MyReset();
             ButtonAll.Click += (s, e) => MyExeAll();
 
-            Button1.Click += (s, e) => MyExe(Test01_V1ST_ForLoop_double, Tb1, MyByteAry);//遅すぎ
+            Button1.Click += (s, e) => MyExe(Test01_V1ST_ForLoop_double, Tb1, MyByteAry);
             Button2.Click += (s, e) => MyExe(Test02_V1ST_ForLoop_int, Tb2, MyByteAry);
             Button3.Click += (s, e) => MyExe(Test03_V1_ParallelFor_double_ConcurrentBag, Tb3, MyByteAry);
             Button4.Click += (s, e) => MyExe(Test04_V1_ParallelFor_Integer_ConcurrentBag, Tb4, MyByteAry);
@@ -93,7 +99,6 @@ namespace _20200213_分散を求めるマルチスレッド編
             //MyByteAry[ELEMENT_COUNT - 1] = 1;
 
             MyAverage = GetAverage(MyByteAry);//要素の平均値
-
 
         }
 
@@ -297,7 +302,7 @@ namespace _20200213_分散を求めるマルチスレッド編
         {
             int simdLength = Vector<double>.Count;
             var bag = new ConcurrentBag<double>();
-            //パーティションサイズ、要素数をCPUスレッド数で割った数値
+            //パーティションサイズ、要素数をCPUスレッド数で割ったサイズに設定した
             int rangeSize = ary.Length / Environment.ProcessorCount;
             Parallel.ForEach(Partitioner.Create(0, ary.Length, rangeSize),
                 (range) =>
@@ -476,12 +481,12 @@ namespace _20200213_分散を求めるマルチスレッド編
             double total = 0;
             for (int i = 0; i < ary.Length; i++)
             {
-                total += ary[i] * ary[i];// Math.Pow(ary[i], 2.0);
+                total += ary[i] * ary[i];
             }
             //2乗の平均
             total /= ary.Length;
             //2乗の平均 - 平均の2乗
-            return total - Math.Pow(MyAverage, 2.0);
+            return total - (MyAverage * MyAverage);
         }
 
 
@@ -497,7 +502,7 @@ namespace _20200213_分散を求めるマルチスレッド編
                 (j, state, subtotal) => { return subtotal += ary[j] * ary[j]; },
                 (x) => myBag.Add(x));
             long total = myBag.Sum();
-            return ((double)total / ary.Length) - Math.Pow(MyAverage, 2.0);//2乗の平均 - 平均の2乗
+            return ((double)total / ary.Length) - (MyAverage * MyAverage);//2乗の平均 - 平均の2乗
         }
 
         //整数で計算
@@ -516,7 +521,7 @@ namespace _20200213_分散を求めるマルチスレッド編
                 myBag.Add(subtotal);//スレッドごとの小計
             });
             long total = myBag.Sum();//合計
-            return ((double)total / ary.Length) - Math.Pow(MyAverage, 2.0);//2乗の平均 - 平均の2乗
+            return ((double)total / ary.Length) - (MyAverage * MyAverage);////2乗の平均 - 平均の2乗
         }
 
 
@@ -674,7 +679,8 @@ namespace _20200213_分散を求めるマルチスレッド編
         }
         private double Test22_V2_ParallelLinq(byte[] ary)
         {
-            return (ary.AsParallel().Select(x => x * x).Sum(x => (long)x) / (double)ary.Length) - (MyAverage * MyAverage);
+            return (ary.AsParallel().Select(x => x * x).Sum(x => (long)x) / (double)ary.Length) - (MyAverage * MyAverage);//こっちのほうが↓より3割速い、精度は同じ
+            //return (ary.AsParallel().Select(x => x * x).Sum(x => (double)x) / ary.Length) - (MyAverage * MyAverage);
         }
 
 
@@ -726,7 +732,9 @@ namespace _20200213_分散を求めるマルチスレッド編
             double total = 0;
             for (int i = beginIndex; i < endIndex; i++)
             {
-                total += Math.Pow(ary[i] - average, 2.0);
+                //total += Math.Pow(ary[i] - average, 2.0);//MathPowは遅い
+                var deviation = ary[i] - average;//偏差
+                total += deviation * deviation;
             }
             return total;
         }
