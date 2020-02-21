@@ -8,6 +8,8 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Runtime.Intrinsics;
+
 //System.Numerics.Vector.Count AVX - Google 検索
 //https://www.google.com/search?q=System.Numerics.Vector.Count+AVX&oq=System.Numerics.Vector.Count+AVX&aqs=chrome..69i57&sourceid=chrome&ie=UTF-8
 

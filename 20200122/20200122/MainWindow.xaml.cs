@@ -14,6 +14,11 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using static System.Runtime.Intrinsics.X86.Avx;
+using static System.Runtime.Intrinsics.X86.Avx2;
+
 
 namespace _20200122
 {
@@ -29,6 +34,12 @@ namespace _20200122
         {
             InitializeComponent();
 
+            //var avx = Avx.IsSupported;
+            
+            Vector128<int> vInt = Vector128.Create(2);
+            int bCount = Vector128<byte>.Count;
+            Vector128<int> v = Vector128.CreateScalarUnsafe(2);
+            
             //var v1 = new Vector<int>(10);
             //var v2 = new Vector<int>(Enumerable.Range(20, 8).ToArray());
             //var add = System.Numerics.Vector.Add(v1, v2);         //足し算
@@ -114,9 +125,11 @@ namespace _20200122
 
 
 
-            var v1 = new Vector<double>(new double[] { 1, 3, 5, 7 });
-            var v2 = new Vector<double>(new double[] { 16, 8, 2, 4 });
-            var dot = System.Numerics.Vector.Dot(v1, v2);
+            //var v1 = new Vector<double>(new double[] { double.MaxValue, 3, 5, 7 });
+            //var v2 = new Vector<double>(new double[] { 16, 8, 2, 4 });
+            //var dot = System.Numerics.Vector.Dot(v1, v2);
+
+            //var v = new Vector<byte>(255) + new Vector<byte>(2);
 
 
 
@@ -124,8 +137,7 @@ namespace _20200122
 
 
 
-
-            var inu = 1;
+            //var inu = 1;
 
             //int[] ri = new int[10000000];
             //var r = new Random();
