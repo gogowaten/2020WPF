@@ -18,17 +18,22 @@ using System.Runtime.InteropServices;
 using System.Collections.Immutable;
 using System.Diagnostics;
 
+
+
 namespace _20200220_Vector256
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+
     public partial class MainWindow : Window
     {
+        //[StructLayout(LayoutKind.Sequential)]
+        //struct MyStruct
+        //{
+        //    public int[] vs;
+        //}
         byte[] MyByteArray;
-        const int ElEMENT_COUNT = 1_000;
+        int[] MyIntArray;
+        const int ElEMENT_COUNT = 1_000_001;
         const int LOOP_COUNT = 100;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -65,6 +70,7 @@ namespace _20200220_Vector256
             var span = new ReadOnlySpan<byte>(bb);
             var neko = MemoryMarshal.Cast<byte, int>(span);
 
+
             var inu = a;
 
 
@@ -100,13 +106,24 @@ namespace _20200220_Vector256
             }
         }
 
-        private void MyInitialize()
+        private unsafe void MyInitialize()
         {
             MyByteArray = new byte[ElEMENT_COUNT];
             var r = new Random();
             r.NextBytes(MyByteArray);
 
-            Button1.Click += (s, e) => MyExe(MyTestAddP, Tb1);
+            MyIntArray = Enumerable.Range(1, ElEMENT_COUNT).ToArray();
+
+            //MyStruct myStruct = new MyStruct();
+            //myStruct.vs = Enumerable.Range(1, ElEMENT_COUNT).ToArray();
+
+
+
+            Button1.Click += (s, e) => MyExe(MyTestAddByte, Tb1);
+            Button2.Click += (s, e) => MyExe(MyTestAddIntLong, Tb2, MyIntArray);
+            Button3.Click += (s, e) => MyExe(MyTestAddIntInt, Tb3, MyIntArray);
+            
+
 
         }
         private void MyTest1()
@@ -293,7 +310,7 @@ namespace _20200220_Vector256
             return temp.Sum();//LINQで配列の合計
         }
 
-        private unsafe long MyTestAddP(byte[] a)
+        private unsafe long MyTestAddByte(byte[] a)
         {
             var vz = Vector256<int>.Zero;//0で初期化したVector256
             int simdLength = Vector256<int>.Count;
@@ -326,12 +343,116 @@ namespace _20200220_Vector256
             return total;
         }
 
+        private unsafe long MyTestAddIntLong(int[] a)
+        {
+            var vz = Vector256<long>.Zero;//0で初期化したVector256
+            int simdLength = Vector256<long>.Count;
+            int i = 0;
+            fixed (int* ptrA = a)
+            {
+                for (i = 0; i < a.Length; i += simdLength)
+                {
+
+                    //int型配列のポインタからint型のVector256作成
+                    //var v2 = Avx.LoadVector256(ptrA + i);//合計値がint型で収まるならこれでいい
+                    //int型配列のポインタからlong型のVector256作成
+                    var v2 = Avx2.ConvertToVector256Int64(ptrA + i);
+                    //Vectorで足し算
+                    vz = Avx2.Add(vz, v2);
+                }
+            }
+
+            var temp = new long[simdLength];
+            //Vectorの値を配列にStore(コピー？)
+            fixed (long* ptrI = temp)
+            {
+                Avx.Store(ptrI, vz);
+            }
+
+            //long型だと要素数は4つだから合計はLINQのSumで十分、どれも速度は同じだった
+            //LINQで合計
+            long total = temp.Sum();
+
+            //Forで合計
+            //long total = 0;
+            //for (int j = 0; j < simdLength; j++)
+            //{
+            //    total += temp[j];
+            //}
+
+            //決め打ちで合計
+            //long total = 0;
+            //total += temp[0];
+            //total += temp[1];
+            //total += temp[2];
+            //total += temp[3];
+
+            //SIMDLengthで割り切れなかった余りの要素を合計
+            for (; i < a.Length; i++)
+            {
+                total += a[i];
+            }
+
+            return total;
+        }
+
+        private unsafe long MyTestAddIntInt(int[] a)
+        {
+            var vz = Vector256<int>.Zero;//0で初期化したVector256
+            int simdLength = Vector256<int>.Count;
+            int i = 0;
+            fixed (int* ptrA = a)
+            {
+                for (i = 0; i < a.Length; i += simdLength)
+                {
+                    //int型配列のポインタからint型のVector256作成
+                    var v2 = Avx.LoadVector256(ptrA + i);//合計値がint型で収まるならこれでいい
+                    //var v2 = Avx.LoadAlignedVector256(ptrA + i);
+                    //Vectorで足し算
+                    vz = Avx2.Add(vz, v2);
+                }
+            }
+
+            var temp = new int[simdLength];
+            //Vectorの値を配列にStore(コピー？)
+            fixed (int* ptrI = temp)
+            {
+                Avx.Store(ptrI, vz);
+            }
 
 
+            //LINQで合計
+            long total = temp.Sum(x => (long)x);
+
+            //Forで合計
+            //long total = 0;
+            //for (int j = 0; j < simdLength; j++)
+            //{
+            //    total += temp[j];
+            //}
+
+            //決め打ちで合計
+            //long total = 0;
+            //total += temp[0];
+            //total += temp[1];
+            //total += temp[2];
+            //total += temp[3];
+            //total += temp[4];
+            //total += temp[5];
+            //total += temp[6];
+            //total += temp[7];
 
 
+            //SIMDLengthで割り切れなかった余りの要素を合計
+            for (; i < a.Length; i++)
+            {
+                total += a[i];
+            }
 
+            return total;
+        }
 
+     
 
 
 
@@ -351,18 +472,20 @@ namespace _20200220_Vector256
             sw.Stop();
             tb.Text = $"合計値={total} {sw.Elapsed.TotalSeconds.ToString("00.000")}秒";
         }
-        private void MyExe(Func<int[], long> func, TextBlock tb)
+        private void MyExe(Func<int[], long> func, TextBlock tb, int[] vs)
         {
             long total = 0;
             var sw = new Stopwatch();
             sw.Start();
             for (int i = 0; i < LOOP_COUNT; i++)
             {
-                total = func(MyByteArray);
+                total = func(vs);
             }
             sw.Stop();
             tb.Text = $"合計値={total} {sw.Elapsed.TotalSeconds.ToString("00.000")}秒";
         }
+
+       
 
 
     }
