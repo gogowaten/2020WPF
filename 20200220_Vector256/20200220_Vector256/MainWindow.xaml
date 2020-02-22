@@ -5,8 +5,132 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20200220_Vector256"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+       Title="MainWindow" Height="600" Width="614">
+  <Grid>
+    <StackPanel>
+      <StackPanel.Resources>
+        <Style TargetType="StackPanel">
+          <Setter Property="Margin" Value="2"/>
+        </Style>
+        <Style TargetType="Button">
+          <Setter Property="Width" Value="60"/>
+        </Style>
+        <Style TargetType="TextBlock">
+          <Setter Property="Margin" Value="2,0"/>
+        </Style>
+      </StackPanel.Resources>
+      <TextBlock x:Name="MyTextBlock" Text="text" HorizontalAlignment="Center"/>
+      <TextBlock x:Name="MyTextBlockVectorCount" Text="vectorCount" HorizontalAlignment="Center"/>
+      <TextBlock x:Name="MyTextBlockCpuThreadCount" Text="threadCount" HorizontalAlignment="Center"/>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+        <Button x:Name="ButtonAll" Content="一斉テスト" Margin="20,0" Width="120"/>
+        <TextBlock x:Name="TbAll" Text="time"/>
+        <Button x:Name="ButtonReset" Content="reset" Margin="20,0"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button1" Content="test1"/>
+        <TextBlock x:Name="Tb1" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button2" Content="test2"/>
+        <TextBlock x:Name="Tb2" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button3" Content="test3"/>
+        <TextBlock x:Name="Tb3" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button4" Content="test4"/>
+        <TextBlock x:Name="Tb4" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button5" Content="test5"/>
+        <TextBlock x:Name="Tb5" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button6" Content="test6"/>
+        <TextBlock x:Name="Tb6" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button7" Content="test7"/>
+        <TextBlock x:Name="Tb7" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button8" Content="test8"/>
+        <TextBlock x:Name="Tb8" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button9" Content="test9"/>
+        <TextBlock x:Name="Tb9" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button10" Content="test10"/>
+        <TextBlock x:Name="Tb10" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button11" Content="test11"/>
+        <TextBlock x:Name="Tb11" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button12" Content="test12"/>
+        <TextBlock x:Name="Tb12" Text="time"/>
+      </StackPanel>
+      <!--<Border Height="1" Background="Orange" UseLayoutRounding="True"/>-->
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button13" Content="test13"/>
+        <TextBlock x:Name="Tb13" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button14" Content="test14"/>
+        <TextBlock x:Name="Tb14" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button15" Content="test15"/>
+        <TextBlock x:Name="Tb15" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button16" Content="test16"/>
+        <TextBlock x:Name="Tb16" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button17" Content="test17"/>
+        <TextBlock x:Name="Tb17" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button18" Content="test18"/>
+        <TextBlock x:Name="Tb18" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button19" Content="test19"/>
+        <TextBlock x:Name="Tb19" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button20" Content="test20"/>
+        <TextBlock x:Name="Tb20" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button21" Content="test21"/>
+        <TextBlock x:Name="Tb21" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button22" Content="test22"/>
+        <TextBlock x:Name="Tb22" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button23" Content="test23"/>
+        <TextBlock x:Name="Tb23" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button24" Content="test24"/>
+        <TextBlock x:Name="Tb24" Text="time"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="Button25" Content="test25"/>
+        <TextBlock x:Name="Tb25" Text="time"/>
+      </StackPanel>
 
-    </Grid>
+
+
+    </StackPanel>
+  </Grid>
 </Window>

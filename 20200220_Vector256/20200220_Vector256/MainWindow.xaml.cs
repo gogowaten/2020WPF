@@ -16,6 +16,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.InteropServices;
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace _20200220_Vector256
 {
@@ -24,11 +25,16 @@ namespace _20200220_Vector256
     /// </summary>
     public partial class MainWindow : Window
     {
+        byte[] MyByteArray;
+        const int ElEMENT_COUNT = 1_000;
+        const int LOOP_COUNT = 100;
+
         public MainWindow()
         {
             InitializeComponent();
 
-         
+            MyInitialize();
+
             MyTest1();
 
             float[] sum;
@@ -88,12 +94,21 @@ namespace _20200220_Vector256
             fixed (float* ptrA = a, ptrB = b)
             {
                 for (int i = 0; i < lastIndex; i += Vector256<float>.Count)
-                {                    
+                {
                     v = Avx.Add(v, Avx.LoadVector256(ptrA + i));
                 }
             }
         }
 
+        private void MyInitialize()
+        {
+            MyByteArray = new byte[ElEMENT_COUNT];
+            var r = new Random();
+            r.NextBytes(MyByteArray);
+
+            Button1.Click += (s, e) => MyExe(MyTestAddP, Tb1);
+
+        }
         private void MyTest1()
         {
             byte[] aa = new byte[1000];
@@ -105,12 +120,20 @@ namespace _20200220_Vector256
             //var r = new Random();
             //r.NextBytes(aa);
 
+            var temp = Enumerable.Range(1, 32).ToArray().Select(x => (byte)x).ToArray();
+
+            Vector256<int> neko = MyTestVectorAdd(temp);
+            MyTestVectorTotalAddArray(neko);
+            MyTestVectorTotalAddArrayLinq(neko);
+            MyTestVectorTotalAddStackalloc(neko);
+
+            MyTestToIntVector(temp);
             SimdAdd(aa);
             SimdAddByte2Int(aa);
 
         }
-//        A small overview of SIMD in .NET/C# / Habr
-//https://habr.com/en/post/467689/
+        //        A small overview of SIMD in .NET/C# / Habr
+        //https://habr.com/en/post/467689/
 
         static unsafe void SimdAdd(byte[] a)
         {
@@ -126,11 +149,11 @@ namespace _20200220_Vector256
                     v = Avx2.Add(v, vv);
 
                     var inu = Avx2.ConvertToVector128Int32(ptrA + i);
-                    var uma= Avx2.ConvertToVector256Int32(ptrA + i);
-                    
+                    var uma = Avx2.ConvertToVector256Int32(ptrA + i);
+
                 }
             }
-            var neko= v.ToScalar();
+            var neko = v.ToScalar();
             int result = 0;
             var temp = stackalloc byte[simdLength];
             Avx.Store(temp, v);
@@ -144,21 +167,22 @@ namespace _20200220_Vector256
             }
         }
 
+        //byte配列の合計、int型Vectorに変換してからAdd
         static unsafe void SimdAddByte2Int(byte[] a)
         {
             int simdLength = Vector256<int>.Count;
-            int lastIndex = a.Length - (a.Length % simdLength);            
+            int lastIndex = a.Length - (a.Length % simdLength);
             Vector256<int> iv = new Vector256<int>();
             int i;
             fixed (byte* ptrA = a)
             {
                 for (i = 0; i < lastIndex; i += simdLength)
-                {   
+                {
                     Vector256<int> vv = Avx2.ConvertToVector256Int32(ptrA + i);
                     iv = Avx2.Add(iv, vv);
                 }
             }
-            
+
             int result = 0;
             var temp = stackalloc int[simdLength];
             Avx.Store(temp, iv);
@@ -172,7 +196,173 @@ namespace _20200220_Vector256
             }
         }
 
+        //byte型配列からint型Vector
+        private unsafe void MyTestToIntVector(byte[] a)
+        {
+            fixed (byte* ptrA = a)
+            {
+                //byte型配列のポインタからint型のVector256作成
+                var v1 = Avx2.ConvertToVector256Int16(ptrA);
+                var v2 = Avx2.ConvertToVector256Int32(ptrA);
+                var v3 = Avx2.ConvertToVector256Int64(ptrA);
+            }
+        }
 
+        private unsafe Vector256<int> MyTestVectorAdd(byte[] a)
+        {
+            var v = new Vector256<int>();//これも↓も同じ結果みたい
+            var v0 = Vector256.Create(0);
+            var vz = Vector256<int>.Zero;//これがいい、Zeroがかっこいい
+
+            int simdLength = Vector256<int>.Count;
+            fixed (byte* ptrA = a)
+            {
+                for (int i = 0; i < a.Length; i += simdLength)
+                {
+                    //byte型配列のポインタからint型のVector256作成
+                    var v2 = Avx2.ConvertToVector256Int32(ptrA + i);
+                    //Vectorで足し算
+                    v = Avx2.Add(v, v2);
+                    v0 = Avx2.Add(v0, v2);
+                    vz = Avx2.Add(vz, v2);
+                }
+            }
+            return v;
+        }
+
+        private unsafe int MyTestVectorTotalAddArrayLinq(Vector256<int> v)
+        {
+            var ii = new int[Vector256<int>.Count];
+            fixed (int* ptrI = ii)
+            {
+                Avx2.Store(ptrI, v);
+            }
+            return ii.Sum();
+        }
+
+        private unsafe int MyTestVectorTotalAddArray(Vector256<int> v)
+        {
+            int simdLength = Vector256<int>.Count;
+            var ii = new int[simdLength];
+            fixed (int* ptrI = ii)
+            {
+                Avx2.Store(ptrI, v);
+            }
+            int total = 0;
+            for (int i = 0; i < simdLength; i++)
+            {
+                total += ii[i];
+            }
+            return total;
+
+        }
+
+        private unsafe int MyTestVectorTotalAddStackalloc(Vector256<int> v)
+        {
+            int total = 0;
+            int simdLength = Vector256<int>.Count;
+            int* temp = stackalloc int[simdLength];
+            Avx2.Store(temp, v);
+            for (int i = 0; i < simdLength; i++)
+            {
+                total += temp[i];
+            }
+            return total;
+        }
+
+        private unsafe long MyTestAdd(byte[] a)
+        {
+            var vz = Vector256<int>.Zero;//0で初期化したVector256
+            int simdLength = Vector256<int>.Count;
+            fixed (byte* ptrA = a)
+            {
+                for (int i = 0; i < a.Length; i += simdLength)
+                {
+                    //byte型配列のポインタからint型のVector256作成
+                    var v2 = Avx2.ConvertToVector256Int32(ptrA + i);
+                    //Vectorで足し算
+                    vz = Avx2.Add(vz, v2);
+                }
+            }
+            var temp = new int[simdLength];
+            //Vectorの値を配列にコピー？
+            fixed (int* ptrI = temp)
+            {
+                Avx.Store(ptrI, vz);
+            }
+            return temp.Sum();//LINQで配列の合計
+        }
+
+        private unsafe long MyTestAddP(byte[] a)
+        {
+            var vz = Vector256<int>.Zero;//0で初期化したVector256
+            int simdLength = Vector256<int>.Count;
+            int i = 0;
+            fixed (byte* ptrA = a)
+            {
+                for (i = 0; i < a.Length; i += simdLength)
+                {
+                    //byte型配列のポインタからint型のVector256作成
+                    var v2 = Avx2.ConvertToVector256Int32(ptrA + i);
+                    //Vectorで足し算
+                    vz = Avx2.Add(vz, v2);
+                }
+            }
+
+            var temp = new int[simdLength];
+            //Vectorの値を配列にStore(コピー？)
+            fixed (int* ptrI = temp)
+            {
+                Avx.Store(ptrI, vz);
+            }
+            long total = temp.Sum();//LINQで配列の合計
+
+            //SIMDLengthで割り切れなかった余りの要素を合計
+            for (; i < a.Length; i++)
+            {
+                total += a[i];
+            }
+
+            return total;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        private void MyExe(Func<byte[], long> func, TextBlock tb)
+        {
+            long total = 0;
+            var sw = new Stopwatch();
+            sw.Start();
+            for (int i = 0; i < LOOP_COUNT; i++)
+            {
+                total = func(MyByteArray);
+            }
+            sw.Stop();
+            tb.Text = $"合計値={total} {sw.Elapsed.TotalSeconds.ToString("00.000")}秒";
+        }
+        private void MyExe(Func<int[], long> func, TextBlock tb)
+        {
+            long total = 0;
+            var sw = new Stopwatch();
+            sw.Start();
+            for (int i = 0; i < LOOP_COUNT; i++)
+            {
+                total = func(MyByteArray);
+            }
+            sw.Stop();
+            tb.Text = $"合計値={total} {sw.Elapsed.TotalSeconds.ToString("00.000")}秒";
+        }
 
 
     }
