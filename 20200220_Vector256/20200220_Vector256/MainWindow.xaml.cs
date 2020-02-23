@@ -219,9 +219,9 @@ namespace _20200220_Vector256
             fixed (byte* ptrA = a)
             {
                 //byte型配列のポインタからint型のVector256作成
-                var v1 = Avx2.ConvertToVector256Int16(ptrA);
-                var v2 = Avx2.ConvertToVector256Int32(ptrA);
-                var v3 = Avx2.ConvertToVector256Int64(ptrA);
+                Vector256<short> v1 = Avx2.ConvertToVector256Int16(ptrA);
+                Vector256<int> v2 = Avx2.ConvertToVector256Int32(ptrA);
+                Vector256<long> v3 = Avx2.ConvertToVector256Int64(ptrA);
             }
         }
 
