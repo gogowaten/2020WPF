@@ -27,34 +27,37 @@ namespace _20200225_Intrinsics_MinMax
     public partial class MainWindow : Window
     {
         private byte[] MyArray;
-        private const int LOOP_COUNT = 10000;
-        private const int ELEMENT_COUNT = 10_000_000;// 538_976_319;
+        private const int LOOP_COUNT = 100;
+        private const int ELEMENT_COUNT = 100_000_001;//要素数1億
         public MainWindow()
         {
             InitializeComponent();
             MyInitialize();
 
-            MyTextBlock.Text = $"要素数{ELEMENT_COUNT.ToString("N0")} {LOOP_COUNT}回求める";
-            MyTextBlockVectorCount.Text = $"Vector256<byte>.Count={Vector256<byte>.Count}";
+            MyTextBlock.Text = $"byte型配列要素数{ELEMENT_COUNT.ToString("N0")} から最小値と最大値を {LOOP_COUNT}回求める";
+            MyTextBlockVectorCount.Text = $"Vector256<byte>.Count={Vector256<byte>.Count} Vector<byte>.Count={Vector<byte>.Count}";
+            MyTextBlockCpuThreadCount.Text = $"CPUスレッド数：{Environment.ProcessorCount}";
 
-            //var mm1 = Test1_MinMax_Intrinsics(MyArray);
-            //var mm2 = Test2_MinMax_IntrinsicsMulti(MyArray);
-            //var mm3 = Test3_MinMax_Vector(MyArray);
-            //var mm4 = Test4_MinMax_VectorMulti(MyArray);
+            //var mm1 = Test1_MinMax_IntrinsicsVector(MyArray);
+            //var mm2 = Test2_MinMax_IntrinsicsVector_Multi(MyArray);
+            //var mm3 = Test3_MinMax_NumericsVector(MyArray);
+            //var mm4 = Test4_MinMax_NumericsVector_Multi(MyArray);
             ButtonAll.Click += (s, e) => MyExeAll();
-            Button1.Click += (s, e) => MyExe(Test1_MinMax_Intrinsics, Tb1, MyArray);
-            Button2.Click += (s, e) => MyExe(Test2_MinMax_IntrinsicsMulti, Tb2, MyArray);
-            Button3.Click += (s, e) => MyExe(Test3_MinMax_Vector, Tb3, MyArray);
-            Button4.Click += (s, e) => MyExe(Test4_MinMax_VectorMulti, Tb4, MyArray);
-            Button5.Click += (s, e) => MyExeMultiLoop(Test1_MinMax_Intrinsics, Tb5, MyArray);
-            Button6.Click += (s, e) => MyExeMultiLoop(Test3_MinMax_Vector, Tb6, MyArray);
+            Button1.Click += (s, e) => MyExe(Test1_MinMax_IntrinsicsVector, Tb1, MyArray);
+            Button2.Click += (s, e) => MyExe(Test2_MinMax_IntrinsicsVector_Multi, Tb2, MyArray);
+            Button3.Click += (s, e) => MyExe(Test3_MinMax_NumericsVector, Tb3, MyArray);
+            Button4.Click += (s, e) => MyExe(Test4_MinMax_NumericsVector_Multi, Tb4, MyArray);
+            Button5.Click += (s, e) => MyExeMultiLoop(Test1_MinMax_IntrinsicsVector, Tb5, MyArray);
+            Button6.Click += (s, e) => MyExeMultiLoop(Test3_MinMax_NumericsVector, Tb6, MyArray);
             Button7.Click += (s, e) => MyExe(Test5_MinMax, Tb7, MyArray);
             Button8.Click += (s, e) => MyExe(Test6_MinMax_Multi, Tb8, MyArray);
+            Button9.Click += (s, e) => MyExe(Test7_MinMaxKai, Tb9, MyArray);
+            Button10.Click += (s, e) => MyExe(Test8_MinMax_Multi_Kai, Tb10, MyArray);
         }
 
 
         //MinMax Intrinsics
-        private unsafe (byte min, byte max) Test1_MinMax_Intrinsics(byte[] vs)
+        private unsafe (byte min, byte max) Test1_MinMax_IntrinsicsVector(byte[] vs)
         {
             var vMin = Vector256.Create(byte.MaxValue);
             var vMax = Vector256<byte>.Zero;
@@ -89,7 +92,7 @@ namespace _20200225_Intrinsics_MinMax
         }
 
         //MinMax Intrinsics + MultiThread
-        private unsafe (byte min, byte max) Test2_MinMax_IntrinsicsMulti(byte[] vs)
+        private unsafe (byte min, byte max) Test2_MinMax_IntrinsicsVector_Multi(byte[] vs)
         {
             var bag = new ConcurrentBag<byte>();
             int simdLength = Vector256<byte>.Count;
@@ -132,7 +135,7 @@ namespace _20200225_Intrinsics_MinMax
             return (bag.Min(), bag.Max());
         }
 
-        private (byte min, byte max) Test3_MinMax_Vector(byte[] vs)
+        private (byte min, byte max) Test3_MinMax_NumericsVector(byte[] vs)
         {
             int simdLength = Vector<byte>.Count;
             int lastIndex = vs.Length - simdLength;
@@ -159,7 +162,7 @@ namespace _20200225_Intrinsics_MinMax
             return (min, max);
         }
 
-        private (byte min, byte max) Test4_MinMax_VectorMulti(byte[] vs)
+        private (byte min, byte max) Test4_MinMax_NumericsVector_Multi(byte[] vs)
         {
             var bag = new ConcurrentBag<byte>();
             var rangeSize = Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount);
@@ -208,6 +211,7 @@ namespace _20200225_Intrinsics_MinMax
             }
             return (min, max);
         }
+
         private (byte min, byte max) Test6_MinMax_Multi(byte[] vs)
         {
             var bag = new ConcurrentBag<byte>();
@@ -228,6 +232,62 @@ namespace _20200225_Intrinsics_MinMax
             return (bag.Min(), bag.Max());
         }
 
+        //普通の改変、ループの中の処理を4つにした、1.25倍速になった。8個にしたら逆に遅くなった
+        private (byte min, byte max) Test7_MinMaxKai(byte[] vs)
+        {
+            var min = byte.MaxValue;
+            var max = byte.MinValue;
+            int lastIndex = vs.Length - vs.Length % 2;
+            for (int i = 0; i < lastIndex; i += 2)
+            {
+                if (min > vs[i]) min = vs[i];
+                if (min > vs[i + 1]) min = vs[i + 1];
+                //if (min > vs[i + 2]) min = vs[i + 2];
+                //if (min > vs[i + 3]) min = vs[i + 3];
+                if (max < vs[i]) max = vs[i];
+                if (max < vs[i + 1]) max = vs[i + 1];
+                //if (max < vs[i + 2]) max = vs[i + 2];
+                //if (max < vs[i + 3]) max = vs[i + 3];
+            }
+            for (int i = lastIndex; i < vs.Length; i++)
+            {
+                if (min > vs[i]) min = vs[i];
+                if (max < vs[i]) max = vs[i];
+            }
+            return (min, max);
+        }
+
+        //普通＋マルチスレッドの改変、ループの中の処理を4つにした、1.3倍速になった
+        private (byte min, byte max) Test8_MinMax_Multi_Kai(byte[] vs)
+        {
+            var bag = new ConcurrentBag<byte>();
+            Parallel.ForEach(
+                Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount),
+                (range) =>
+                {
+                    var min = byte.MaxValue;
+                    var max = byte.MinValue;
+                    int lastIndex = range.Item2 - (range.Item2 - range.Item1) % 2;
+                    for (int i = range.Item1; i < lastIndex; i += 2)
+                    {
+                        if (min > vs[i]) min = vs[i];
+                        if (min > vs[i + 1]) min = vs[i + 1];
+                        if (max < vs[i]) max = vs[i];
+                        if (max < vs[i + 1]) max = vs[i + 1];
+                    }
+                    for (int i = lastIndex; i < range.Item2; i++)
+                    {
+                        if (min > vs[i]) min = vs[i];
+                        if (max < vs[i]) max = vs[i];
+                    }
+                    bag.Add(min);
+                    bag.Add(max);
+                });
+            return (bag.Min(), bag.Max());
+        }
+
+
+
 
 
 
@@ -239,8 +299,10 @@ namespace _20200225_Intrinsics_MinMax
             var span = new Span<byte>(MyArray);
             span.Fill(250);
 
-            MyArray[0] = 100;
+            //最後の要素
+            MyArray[ELEMENT_COUNT - 1] = 100;
 
+            //ランダム値
             //var r = new Random();
             //r.NextBytes(MyArray);
 
@@ -254,7 +316,7 @@ namespace _20200225_Intrinsics_MinMax
         }
 
 
-
+        #region 時間計測
         private void MyExe(Func<byte[], (byte, byte)> func, TextBlock tb, byte[] vs)
         {
             (byte, byte) minmax = (0, 0);
@@ -265,9 +327,10 @@ namespace _20200225_Intrinsics_MinMax
                 minmax = func(vs);
             }
             sw.Stop();
-            this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒 {minmax}");
+            this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒 {minmax} | {func.Method.Name}");
         }
 
+        //あんまり意味ない、シングルスレッドのminmaxメソッドを呼び出すループをマルチスレッドにしたもの
         private void MyExeMultiLoop(Func<byte[], (byte, byte)> func, TextBlock tb, byte[] vs)
         {
             (byte, byte) minmax = (0, 0);
@@ -275,31 +338,31 @@ namespace _20200225_Intrinsics_MinMax
             sw.Start();
             Parallel.For(0, LOOP_COUNT,
                 new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount },
-                x =>
-            {
-                minmax = func(vs);
-            });
+                x => minmax = func(vs));
             sw.Stop();
-            this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("00.000")}秒 {minmax}");
+            this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒 {minmax} | {func.Method.Name}(LoopMulti)");
         }
+        #endregion
 
-
+        //一斉テスト用
         private async void MyExeAll()
         {
             var sw = new Stopwatch();
             sw.Start();
             this.IsEnabled = false;
-            await Task.Run(() => MyExe(Test1_MinMax_Intrinsics, Tb1, MyArray));
-            await Task.Run(() => MyExe(Test2_MinMax_IntrinsicsMulti, Tb2, MyArray));
-            await Task.Run(() => MyExe(Test3_MinMax_Vector, Tb3, MyArray));
-            await Task.Run(() => MyExe(Test4_MinMax_VectorMulti, Tb4, MyArray));
-            await Task.Run(() => MyExeMultiLoop(Test1_MinMax_Intrinsics, Tb5, MyArray));
-            await Task.Run(() => MyExeMultiLoop(Test3_MinMax_Vector, Tb6, MyArray));
+            await Task.Run(() => MyExe(Test1_MinMax_IntrinsicsVector, Tb1, MyArray));
+            await Task.Run(() => MyExe(Test2_MinMax_IntrinsicsVector_Multi, Tb2, MyArray));
+            await Task.Run(() => MyExe(Test3_MinMax_NumericsVector, Tb3, MyArray));
+            await Task.Run(() => MyExe(Test4_MinMax_NumericsVector_Multi, Tb4, MyArray));
+            await Task.Run(() => MyExeMultiLoop(Test1_MinMax_IntrinsicsVector, Tb5, MyArray));
+            await Task.Run(() => MyExeMultiLoop(Test3_MinMax_NumericsVector, Tb6, MyArray));
             await Task.Run(() => MyExe(Test5_MinMax, Tb7, MyArray));
             await Task.Run(() => MyExe(Test6_MinMax_Multi, Tb8, MyArray));
+            await Task.Run(() => MyExe(Test7_MinMaxKai, Tb9, MyArray));
+            await Task.Run(() => MyExe(Test8_MinMax_Multi_Kai, Tb10, MyArray));
             this.IsEnabled = true;
             sw.Stop();
-
+            TbAll.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒";
         }
     }
 }

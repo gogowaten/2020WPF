@@ -19,13 +19,13 @@
           <Setter Property="Margin" Value="2,0"/>
         </Style>
       </StackPanel.Resources>
-      <TextBlock x:Name="MyTextBlock" Text="text" HorizontalAlignment="Center"/>
+      <TextBlock x:Name="MyTextBlock" Text="text" HorizontalAlignment="Center" FontSize="20"/>
       <TextBlock x:Name="MyTextBlockVectorCount" Text="vectorCount" HorizontalAlignment="Center"/>
       <TextBlock x:Name="MyTextBlockCpuThreadCount" Text="threadCount" HorizontalAlignment="Center"/>
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
         <Button x:Name="ButtonAll" Content="一斉テスト" Margin="20,0" Width="120"/>
         <TextBlock x:Name="TbAll" Text="time"/>
-        <Button x:Name="ButtonReset" Content="reset" Margin="20,0"/>
+        <!--<Button x:Name="ButtonReset" Content="reset" Margin="20,0"/>-->
 
       </StackPanel>
       <StackPanel Orientation="Horizontal">
@@ -68,7 +68,7 @@
         <Button x:Name="Button10" Content="test10"/>
         <TextBlock x:Name="Tb10" Text="time"/>
       </StackPanel>
-      <StackPanel Orientation="Horizontal">
+      <!--<StackPanel Orientation="Horizontal">
         <Button x:Name="Button11" Content="test11"/>
         <TextBlock x:Name="Tb11" Text="time"/>
       </StackPanel>
@@ -118,7 +118,7 @@
         <Button x:Name="Button22" Content="test22"/>
         <TextBlock x:Name="Tb22" Text="time"/>
       </StackPanel>
-      <!--<StackPanel Orientation="Horizontal">
+      <StackPanel Orientation="Horizontal">
         <Button x:Name="Button23" Content="test23"/>
         <TextBlock x:Name="Tb23" Text="time"/>
       </StackPanel>
