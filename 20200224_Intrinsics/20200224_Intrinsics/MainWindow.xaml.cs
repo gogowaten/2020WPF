@@ -26,7 +26,7 @@ namespace _20200224_Intrinsics
     public partial class MainWindow : Window
     {
         private byte[] MyArray;
-        private const int ELEMENT_COUNT = 100_000_000;// 538_976_319;
+        private const int ELEMENT_COUNT = 100_000_001;// 538_976_319;
         //private const int ELEMENT_COUNT = 67_372_032;Test1の最大有効要素数
         //private const int ELEMENT_COUNT = 538_976_319;//Test2の最大有効要素数
         public MainWindow()
@@ -42,6 +42,7 @@ namespace _20200224_Intrinsics
             var t5 = Test5(MyArray);
             var t6 = Test6Variance(MyArray);
             var t7 = Test7Variance(MyArray);
+            var t51 = Test5M(MyArray);
 
 
         }
@@ -208,7 +209,7 @@ namespace _20200224_Intrinsics
         //floatからlongはコンバートない
         //floatで掛け算して、doubleで足し算
         //も良さそうだけどunpackメソッドでintを2つのintに分けて掛け算でいいかも
-        //要素数1億で桁あふれ
+        //要素数1億でも計算できる
         private unsafe double Test5(byte[] vs)
         {
 
@@ -241,7 +242,7 @@ namespace _20200224_Intrinsics
 
             for (int i = lastIndex; i < vs.Length; i++) { total += vs[i] * vs[i]; }
 
-            double average = (double)Test1(vs) / vs.Length;
+            double average = (double)Test2(vs) / vs.Length;
             return ((double)total / vs.Length) - (average * average);
         }
 
@@ -273,7 +274,7 @@ namespace _20200224_Intrinsics
             for (int j = 0; j < simdLength; j++) { total += temp[j]; }
             for (; i < vs.Length; i++) { total += vs[i]; }
 
-            double average = (double)Test1(vs) / vs.Length;
+            double average = (double)Test2(vs) / vs.Length;
             return (total / vs.Length) - (average * average);
         }
 
@@ -303,13 +304,55 @@ namespace _20200224_Intrinsics
             Avx.Store(temp, vTotal);
             for (int j = 0; j < simdLength; j++) { total += temp[j]; }
             for (; i < vs.Length; i++) { total += vs[i]; }
-            var sum = Test1(vs);
-            double average = (double)Test1(vs) / vs.Length;
+            
+            double average = (double)Test2(vs) / vs.Length;
             return ((double)total / vs.Length) - (average * average);
         }
 
-      
+        //Test5のマルチスレッド化
+        //要素数1億でも計算できるTest5のCPUスレッド数倍程度まで計算できるはず
+        private unsafe double Test5M(byte[] vs)
+        {   
+            long total = 0;
+            OrderablePartitioner<Tuple<int, int>> rangeSize
+                = Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount);
+            Parallel.ForEach(rangeSize,
+                (range) =>
+                {
+                    int simdLength = Vector256<int>.Count;
+                    int lastIndex = range.Item2 - ((range.Item2 - range.Item1) % simdLength);
+                    var vTotal = Vector256<long>.Zero;
+                    fixed (byte* p = vs)
+                    {
+                        for (int i = range.Item1; i < lastIndex; i += simdLength)
+                        {
+                            Vector256<int> v = Avx2.ConvertToVector256Int32(p + i);//01234567
+                            Vector256<int> neko = Avx2.UnpackHigh(v, v);//22336677
+                            Vector256<int> uma = Avx2.UnpackLow(v, v);//  00114455
+                            Vector256<long> nn = Avx2.Multiply(neko, neko);//4 9 36 49
+                            Vector256<long> uu = Avx2.Multiply(uma, uma);//  0 1 16 25
+                            vTotal = Avx2.Add(vTotal, nn);
+                            vTotal = Avx2.Add(vTotal, uu);//                 4 10 52 74
+                        }
+                    }
+                    long subtotal = 0;
+                    simdLength = Vector256<long>.Count;
+                    long* temp = stackalloc long[simdLength];
+                    Avx.Store(temp, vTotal);
+                    for (int j = 0; j < simdLength; j++)
+                    {
+                        subtotal += temp[j];                        
+                    }
+                    for (int i = lastIndex; i < range.Item2; i++)
+                    {
+                        subtotal += vs[i] * vs[i];
+                    }
+                    System.Threading.Interlocked.Add(ref total, subtotal);
+                });
 
+            double average = (double)Test2(vs) / vs.Length;
+            return ((double)total / vs.Length) - (average * average);
+        }
 
 
 
@@ -318,8 +361,8 @@ namespace _20200224_Intrinsics
         {
             MyArray = new byte[ELEMENT_COUNT];
 
-            var span = new Span<byte>(MyArray);
-            span.Fill(255);
+            //var span = new Span<byte>(MyArray);
+            //span.Fill(255);
 
             //var r = new Random();
             //r.NextBytes(MyArray);
@@ -328,6 +371,14 @@ namespace _20200224_Intrinsics
             //{
             //    MyArray[i] = (byte)i;
             //}
+
+            byte b = 0;
+            for (int i = 0; i < ELEMENT_COUNT; i++)
+            {
+                MyArray[i] = b;                
+                b++;
+            }
+
         }
     }
 }
