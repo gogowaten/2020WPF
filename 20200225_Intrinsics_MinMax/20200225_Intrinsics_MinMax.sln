@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20200225_Intrinsics_MinMax", "20200225_Intrinsics_MinMax\20200225_Intrinsics_MinMax.csproj", "{863C7401-3D37-478E-BC61-A7796C2E57F1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{863C7401-3D37-478E-BC61-A7796C2E57F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{863C7401-3D37-478E-BC61-A7796C2E57F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{863C7401-3D37-478E-BC61-A7796C2E57F1}.Debug|x64.ActiveCfg = Debug|x64
+		{863C7401-3D37-478E-BC61-A7796C2E57F1}.Debug|x64.Build.0 = Debug|x64
+		{863C7401-3D37-478E-BC61-A7796C2E57F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{863C7401-3D37-478E-BC61-A7796C2E57F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{863C7401-3D37-478E-BC61-A7796C2E57F1}.Release|x64.ActiveCfg = Release|x64
+		{863C7401-3D37-478E-BC61-A7796C2E57F1}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F4620B0A-DBC8-4FA4-8CB2-505249C038A7}
+	EndGlobalSection
+EndGlobal
