@@ -27,8 +27,8 @@ namespace _20200225_Intrinsics_MinMax
     public partial class MainWindow : Window
     {
         private byte[] MyArray;
-        private const int LOOP_COUNT = 100;
-        private const int ELEMENT_COUNT = 100_000_001;//要素数1億
+        private const int LOOP_COUNT = 1000;
+        private const int ELEMENT_COUNT = 10_000_001;//要素数1千万
         public MainWindow()
         {
             InitializeComponent();
@@ -173,7 +173,6 @@ namespace _20200225_Intrinsics_MinMax
                     int lastIndex = range.Item2 - (range.Item2 - range.Item1) % simdLength;
                     var vMin = new Vector<byte>(byte.MaxValue);
                     var vMax = new Vector<byte>(byte.MinValue);
-                    //TestVector(new Span<byte>(vs, range.Item1, range.Item2));
                     for (int i = range.Item1; i < lastIndex; i += simdLength)
                     {
                         var v = new Vector<byte>(vs, i);
@@ -257,7 +256,7 @@ namespace _20200225_Intrinsics_MinMax
             return (min, max);
         }
 
-        //普通＋マルチスレッドの改変、ループの中の処理を4つにした、1.3倍速になった
+        //普通＋マルチスレッドの改変、ループの中の処理を4つにした、1.3倍速になった？
         private (byte min, byte max) Test8_MinMax_Multi_Kai(byte[] vs)
         {
             var bag = new ConcurrentBag<byte>();
@@ -342,7 +341,7 @@ namespace _20200225_Intrinsics_MinMax
             sw.Stop();
             this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒 {minmax} | {func.Method.Name}(LoopMulti)");
         }
-        #endregion
+       
 
         //一斉テスト用
         private async void MyExeAll()
@@ -364,5 +363,6 @@ namespace _20200225_Intrinsics_MinMax
             sw.Stop();
             TbAll.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒";
         }
+        #endregion 時間計測
     }
 }
