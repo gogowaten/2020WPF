@@ -466,7 +466,8 @@ namespace _20200207_int配列の値の合計マルチスレッド
             {
                 var v = new Vector<long>();
                 var l = new long[simdLength];
-                int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                //int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                int lastIndex = range.Item2 - ((range.Item2 - range.Item1) % simdLength);
                 for (int i = range.Item1; i < lastIndex; i += simdLength)
                 {
                     for (int j = 0; j < simdLength; j++)
@@ -503,7 +504,8 @@ namespace _20200207_int配列の値の合計マルチスレッド
             Parallel.ForEach(rangePartitioner, (range) =>
             {
                 var v = new Vector<long>();
-                int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                //int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                int lastIndex = range.Item2 - ((range.Item2 - range.Item1) % simdLength);
                 for (int i = range.Item1; i < lastIndex; i += simdLength)
                 {
                     v = System.Numerics.Vector.Add(v, new Vector<long>(ary, i));
@@ -534,7 +536,8 @@ namespace _20200207_int配列の値の合計マルチスレッド
             int simdLength = Vector<int>.Count;
             Parallel.ForEach(rangePartitioner, (range) =>
             {
-                int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                //int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                int lastIndex = range.Item2 - ((range.Item2 - range.Item1) % simdLength);
                 var v = new Vector<int>();
                 for (int i = range.Item1; i < lastIndex; i += simdLength)
                 {
@@ -564,7 +567,8 @@ namespace _20200207_int配列の値の合計マルチスレッド
             int simdLength = 4;
             Parallel.ForEach(rangePartitioner, (range) =>
             {
-                int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                //int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                int lastIndex = range.Item2 - ((range.Item2 - range.Item1) % simdLength);
                 var v = new Vector4();
                 for (int i = range.Item1; i < lastIndex; i += simdLength)
                 {
@@ -591,7 +595,8 @@ namespace _20200207_int配列の値の合計マルチスレッド
 
             Parallel.ForEach(rangePartitioner, (range) =>
             {
-                int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                //int lastIndex = range.Item2 - (range.Item2 % simdLength);
+                int lastIndex = range.Item2 - ((range.Item2 - range.Item1) % simdLength);
                 var v = new Vector<long>();
 
                 for (int i = range.Item1; i < lastIndex; i += simdLength)
