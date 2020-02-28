@@ -1,17 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -27,39 +17,38 @@ namespace _20200227_IntrinsicsAdd
     public partial class MainWindow : Window
     {
         private byte[] MyArray;
-        private const int LOOP_COUNT = 1;
-        private const int ELEMENT_COUNT = 67_372_096;//要素数
+        private const int LOOP_COUNT = 1000;
+        private const int ELEMENT_COUNT = 10_000_000;// 538_976_319;// 67_372_039;//要素数
 
         public MainWindow()
         {
             InitializeComponent();
             MyInitialize();
+            this.Title = this.ToString();
 
-            var neko = int.MaxValue;
+            //var neko = int.MaxValue;
+            //var neko = uint.MaxValue;
 
-            MyTextBlock.Text = $"byte型配列要素数{ELEMENT_COUNT.ToString("N0")} 合計値を {LOOP_COUNT}回求める";
-            MyTextBlockVectorCount.Text = $"Vector256<byte>.Count={Vector256<byte>.Count} Vector<byte>.Count={Vector<byte>.Count}";
+
+            MyTextBlock.Text = $"byte型配列要素数{ELEMENT_COUNT.ToString("N0")}の合計値を {LOOP_COUNT}回求める";
+            MyTextBlockVectorCount.Text = $"Vector256<byte>.Count={Vector256<byte>.Count}  Vector<byte>.Count={Vector<byte>.Count}";
             MyTextBlockCpuThreadCount.Text = $"CPUスレッド数：{Environment.ProcessorCount}";
 
-            ////var mm1 = Test1_MinMax_IntrinsicsVector(MyArray);
-            ////var mm2 = Test2_MinMax_IntrinsicsVector_Multi(MyArray);
-            ////var mm3 = Test3_MinMax_NumericsVector(MyArray);
-            ////var mm4 = Test4_MinMax_NumericsVector_Multi(MyArray);
             ButtonAll.Click += (s, e) => MyExeAll();
-            Button1.Click += (s, e) => MyExe(Test1, Tb1, MyArray);
-            Button2.Click += (s, e) => MyExe(Test2, Tb2, MyArray);
-            Button3.Click += (s, e) => MyExe(Test3, Tb3, MyArray);
-            Button4.Click += (s, e) => MyExe(Test4, Tb4, MyArray);
-            Button5.Click += (s, e) => MyExe(Test5, Tb5, MyArray);
-            Button6.Click += (s, e) => MyExe(Test6, Tb6, MyArray);
-            Button7.Click += (s, e) => MyExe(Test7, Tb7, MyArray);
-            Button8.Click += (s, e) => MyExe(Test8, Tb8, MyArray);
-            Button9.Click += (s, e) => MyExe(Test9, Tb9, MyArray);
-            //Button10.Click += (s, e) => MyExe(Test10, Tb10, MyArray);
+            Button1.Click += (s, e) => MyExe(Test1_Normal, Tb1, MyArray);
+            Button2.Click += (s, e) => MyExe(Test2_Normal_MT, Tb2, MyArray);
+            Button3.Click += (s, e) => MyExe(Test3_Normal4, Tb3, MyArray);
+            Button4.Click += (s, e) => MyExe(Test4_Intrinsics_int, Tb4, MyArray);
+            Button5.Click += (s, e) => MyExe(Test5_Intrinsics_int_MT, Tb5, MyArray);
+            Button6.Click += (s, e) => MyExe(Test6_Intrinsics_int_MT2, Tb6, MyArray);
+            Button7.Click += (s, e) => MyExe(Test7_Intrinsics_long_MT, Tb7, MyArray);
+            Button8.Click += (s, e) => MyExe(Test8_Numerics_uint, Tb8, MyArray);
+            Button9.Click += (s, e) => MyExe(Test9_Nunerics_uint_MT, Tb9, MyArray);
+            Button10.Click += (s, e) => MyExe(Test10_Numerics_long_MT, Tb10, MyArray);
         }
 
         //普通に足し算
-        private long Test1(byte[] vs)
+        private long Test1_Normal(byte[] vs)
         {
             long total = 0;
             for (int i = 0; i < vs.Length; i++)
@@ -70,7 +59,7 @@ namespace _20200227_IntrinsicsAdd
         }
 
         //普通に足し算をマルチスレッド化
-        private long Test2(byte[] vs)
+        private long Test2_Normal_MT(byte[] vs)
         {
             long total = 0;
             Parallel.ForEach(
@@ -89,7 +78,7 @@ namespace _20200227_IntrinsicsAdd
 
 
         //普通に足し算のforの中の足し算を4個
-        private long Test3(byte[] vs)
+        private long Test3_Normal4(byte[] vs)
         {
             long total = 0;
             int lastIndex = vs.Length - (vs.Length % 4);
@@ -110,13 +99,13 @@ namespace _20200227_IntrinsicsAdd
         //Intrinsics + シングルスレッド、int
         //最大要素数67_372_039(約6737万)まで、これを超えると桁あふれの可能性
         //Vector256<int>.Countは8、それぞれでint型最大値の2147483647まで入る、合計すると2147483647*8=1.7179869e+10(171億…)
-        //要素が全てbyte型最大値の255だった場合に171億に入る個数は、17179869176/255=67372036(6737万)
-        //これを8個づつ計算するから8で割ると余りが4、67372036%8=4
-        //これを引いて、67372036-4=67372032、これがVectorで桁あふれしないで計算する回数なる
+        //要素が全てbyte型最大値の255だった場合に171億に入る個数は、17179869176/255=67372035.98、小数点以下切り捨てて
+        //これを8個づつ計算するから8で割ると67372035/8=8421504.4、小数点以下切り捨てて
+        //8421504*8=67372032、これがVectorで桁あふれしないで計算する回数になる
         //余りはlongで計算するから、ここからさらにあまりの最大数の7を足して、
         //67372032+7=67372039、これが桁あふれしないで計算できる要素の最大数になる
         //8Kの画素数は7680*4320=33177600、約3317万
-        private unsafe long Test4(byte[] vs)
+        private unsafe long Test4_Intrinsics_int(byte[] vs)
         {
             var vTotal = Vector256<int>.Zero;
             int simdLength = Vector256<int>.Count;
@@ -144,7 +133,8 @@ namespace _20200227_IntrinsicsAdd
         }
 
         //Intrinsics + マルチスレッド、int
-        private unsafe long Test5(byte[] vs)
+        //最大要素数は配列の分割数分増えて約5億
+        private unsafe long Test5_Intrinsics_int_MT(byte[] vs)
         {
             int simdLength = Vector256<int>.Count;
             long total = 0;
@@ -180,7 +170,7 @@ namespace _20200227_IntrinsicsAdd
         //↑の変形、CPUスレッド数で割り切れる範囲と余りの範囲に分けて計算
         //Intrinsics + マルチスレッド2、int
         //
-        private unsafe long Test6(byte[] vs)
+        private unsafe long Test6_Intrinsics_int_MT2(byte[] vs)
         {
             int simdLength = Vector256<int>.Count;
             var bag = new ConcurrentBag<Vector256<int>>();
@@ -202,7 +192,6 @@ namespace _20200227_IntrinsicsAdd
                     bag.Add(vTotal);
 
                 });
-
             #region bagの集計1、遅いし桁あふれも早く、67_372_096(6737万)で桁あふれ
             //Vector256<int> vv = Vector256<int>.Zero;
             //foreach (var item in bag)
@@ -219,7 +208,7 @@ namespace _20200227_IntrinsicsAdd
             //}
             #endregion
 
-            #region bagの集計2、こっちのほうがいい
+            #region bagの集計2、こっちのほうがいい、最大要素数も配列の分割数分増えて約5億
             long total = 0;
             foreach (var item in bag)
             {
@@ -236,14 +225,12 @@ namespace _20200227_IntrinsicsAdd
             {
                 total += vs[i];
             }
-
-
             return total;
         }
 
         //Intrinsics + マルチスレッド3、long
         //longで計算、遅くなるけど桁数は大きくなる
-        private unsafe long Test7(byte[] vs)
+        private unsafe long Test7_Intrinsics_long_MT(byte[] vs)
         {
             int simdLength = Vector256<long>.Count;
             long total = 0;
@@ -276,8 +263,73 @@ namespace _20200227_IntrinsicsAdd
             return total;
         }
 
+
+        //Numerics、シングルスレッド、uint
+        private unsafe long Test8_Numerics_uint(byte[] vs)
+        {
+
+            int simdLength = Vector<byte>.Count;
+            int lastIndex = vs.Length - (vs.Length % simdLength);
+            Vector<uint> v = new Vector<uint>();
+            for (int i = 0; i < lastIndex; i += simdLength)
+            {
+                System.Numerics.Vector.Widen(new Vector<byte>(vs, i), out Vector<ushort> vv1, out Vector<ushort> vv2);
+                System.Numerics.Vector.Widen(vv1, out Vector<uint> ui1, out Vector<uint> ui2);
+                System.Numerics.Vector.Widen(vv2, out Vector<uint> ui3, out Vector<uint> ui4);
+                v = System.Numerics.Vector.Add(v, ui1);
+                v = System.Numerics.Vector.Add(v, ui2);
+                v = System.Numerics.Vector.Add(v, ui3);
+                v = System.Numerics.Vector.Add(v, ui4);
+            }
+            long total = 0;
+            for (int j = 0; j < Vector<uint>.Count; j++)
+            {
+                total += v[j];
+            }
+            for (int i = lastIndex; i < vs.Length; i++)
+            {
+                total += vs[i];
+            }
+            return total;
+        }
+
+        //Numerics、マルチスレッド、uint
+        private long Test9_Nunerics_uint_MT(byte[] ary)
+        {
+            long total = 0;
+            int simdLength = Vector<byte>.Count;
+            Parallel.ForEach(
+                Partitioner.Create(0, ary.Length, ary.Length / Environment.ProcessorCount),
+                (range) =>
+                {
+                    int lastIndex = range.Item2 - ((range.Item2 - range.Item1) % simdLength);
+                    var v = new Vector<uint>();
+                    for (int i = range.Item1; i < lastIndex; i += simdLength)
+                    {
+                        System.Numerics.Vector.Widen(new Vector<byte>(ary, i), out Vector<ushort> vv1, out Vector<ushort> vv2);
+                        System.Numerics.Vector.Widen(vv1, out Vector<uint> ui1, out Vector<uint> ui2);
+                        System.Numerics.Vector.Widen(vv2, out Vector<uint> ui3, out Vector<uint> ui4);
+                        v = System.Numerics.Vector.Add(v, ui1);
+                        v = System.Numerics.Vector.Add(v, ui2);
+                        v = System.Numerics.Vector.Add(v, ui3);
+                        v = System.Numerics.Vector.Add(v, ui4);
+                    }
+                    long subtotal = 0;
+                    for (int i = 0; i < Vector<uint>.Count; i++)
+                    {
+                        subtotal += v[i];
+                    }
+                    for (int i = lastIndex; i < range.Item2; i++)
+                    {
+                        subtotal += ary[i];
+                    }
+                    System.Threading.Interlocked.Add(ref total, subtotal);
+                });
+            return total;
+        }
+
         //Numerics、マルチスレッド、long
-        private long Test8(byte[] ary)
+        private long Test10_Numerics_long_MT(byte[] ary)
         {
             long total = 0;
             int simdLength = Vector<byte>.Count;
@@ -321,46 +373,54 @@ namespace _20200227_IntrinsicsAdd
             return total;
         }
 
-        //Numerics、マルチスレッド、uint
-        private long Test9(byte[] ary)
+
+        #region 未使用
+        //Numerics、シングルスレッド、uint、Span
+        private unsafe long Test81_Numerics_uint(Span<byte> span)
+        {
+
+            int simdLength = Vector<byte>.Count;
+            int lastIndex = span.Length - (span.Length % simdLength);
+            Vector<uint> v = new Vector<uint>();
+            for (int i = 0; i < lastIndex; i += simdLength)
+            {
+                System.Numerics.Vector.Widen(new Vector<byte>(span.Slice(i)), out Vector<ushort> vv1, out Vector<ushort> vv2);
+                System.Numerics.Vector.Widen(vv1, out Vector<uint> ui1, out Vector<uint> ui2);
+                System.Numerics.Vector.Widen(vv2, out Vector<uint> ui3, out Vector<uint> ui4);
+                v = System.Numerics.Vector.Add(v, ui1);
+                v = System.Numerics.Vector.Add(v, ui2);
+                v = System.Numerics.Vector.Add(v, ui3);
+                v = System.Numerics.Vector.Add(v, ui4);
+            }
+            long total = 0;
+            for (int j = 0; j < Vector<uint>.Count; j++)
+            {
+                total += v[j];
+            }
+            for (int i = lastIndex; i < span.Length; i++)
+            {
+                total += span[i];
+            }
+            return total;
+        }
+        //↑と組み合わせて使う
+        //Numerics、マルチスレッド、uint、Spanにしてシングルスレッドに渡して処理
+        private long Test91_Nunerics_uint_MT(byte[] ary)
         {
             long total = 0;
             int simdLength = Vector<byte>.Count;
+            //Span<byte> span = new Span<byte>(ary);
             Parallel.ForEach(
                 Partitioner.Create(0, ary.Length, ary.Length / Environment.ProcessorCount),
                 (range) =>
                 {
-                    int lastIndex = range.Item2 - ((range.Item2 - range.Item1) % simdLength);
-                    var v = new Vector<uint>();
-                    for (int i = range.Item1; i < lastIndex; i += simdLength)
-                    {
-                        System.Numerics.Vector.Widen(new Vector<byte>(ary, i), out Vector<ushort> vv1, out Vector<ushort> vv2);
-                        System.Numerics.Vector.Widen(vv1, out Vector<uint> ui1, out Vector<uint> ui2);
-                        System.Numerics.Vector.Widen(vv2, out Vector<uint> ui3, out Vector<uint> ui4);
-                        v = System.Numerics.Vector.Add(v, ui1);
-                        v = System.Numerics.Vector.Add(v, ui2);
-                        v = System.Numerics.Vector.Add(v, ui3);
-                        v = System.Numerics.Vector.Add(v, ui4);
-                    }
-                    long subtotal = 0;
-                    for (int i = 0; i < Vector<uint>.Count; i++)
-                    {
-                        subtotal += v[i];
-                    }
-                    for (int i = lastIndex; i < range.Item2; i++)
-                    {
-                        subtotal += ary[i];
-                    }
+                    var s = new Span<byte>(ary);
+                    long subtotal = Test81_Numerics_uint(s.Slice(range.Item1, range.Item2-range.Item1));
                     System.Threading.Interlocked.Add(ref total, subtotal);
                 });
             return total;
         }
-
-        //private long Test10(byte[] ary)
-        //{
-
-        //}
-
+        #endregion
 
 
 
@@ -409,16 +469,16 @@ namespace _20200227_IntrinsicsAdd
             var sw = new Stopwatch();
             sw.Start();
             this.IsEnabled = false;
-            await Task.Run(() => MyExe(Test1, Tb1, MyArray));
-            await Task.Run(() => MyExe(Test2, Tb2, MyArray));
-            await Task.Run(() => MyExe(Test3, Tb3, MyArray));
-            await Task.Run(() => MyExe(Test4, Tb4, MyArray));
-            await Task.Run(() => MyExe(Test5, Tb5, MyArray));
-            await Task.Run(() => MyExe(Test6, Tb6, MyArray));
-            await Task.Run(() => MyExe(Test7, Tb7, MyArray));
-            await Task.Run(() => MyExe(Test8, Tb8, MyArray));
-            await Task.Run(() => MyExe(Test9, Tb9, MyArray));
-            //await Task.Run(() => MyExe(Test8_MinMax_Multi_Kai, Tb10, MyArray));
+            await Task.Run(() => MyExe(Test1_Normal, Tb1, MyArray));
+            await Task.Run(() => MyExe(Test2_Normal_MT, Tb2, MyArray));
+            await Task.Run(() => MyExe(Test3_Normal4, Tb3, MyArray));
+            await Task.Run(() => MyExe(Test4_Intrinsics_int, Tb4, MyArray));
+            await Task.Run(() => MyExe(Test5_Intrinsics_int_MT, Tb5, MyArray));
+            await Task.Run(() => MyExe(Test6_Intrinsics_int_MT2, Tb6, MyArray));
+            await Task.Run(() => MyExe(Test7_Intrinsics_long_MT, Tb7, MyArray));
+            await Task.Run(() => MyExe(Test8_Numerics_uint, Tb8, MyArray));
+            await Task.Run(() => MyExe(Test9_Nunerics_uint_MT, Tb9, MyArray));
+            await Task.Run(() => MyExe(Test10_Numerics_long_MT, Tb10, MyArray));
 
             this.IsEnabled = true;
             sw.Stop();
