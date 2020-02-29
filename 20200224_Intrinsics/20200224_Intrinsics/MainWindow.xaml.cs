@@ -26,6 +26,8 @@ namespace _20200224_Intrinsics
     public partial class MainWindow : Window
     {
         private byte[] MyArray;
+        private byte[] MyArray0to255;
+
         private const int ELEMENT_COUNT = 100_000_001;// 538_976_319;
         //private const int ELEMENT_COUNT = 67_372_032;Test1の最大有効要素数
         //private const int ELEMENT_COUNT = 538_976_319;//Test2の最大有効要素数
@@ -33,6 +35,8 @@ namespace _20200224_Intrinsics
         {
             InitializeComponent();
             MyInitialize();
+
+            TestAddSum(MyArray0to255);
 
             var neko = int.MaxValue;
             //var t1 = Test1(MyArray);
@@ -304,7 +308,7 @@ namespace _20200224_Intrinsics
             Avx.Store(temp, vTotal);
             for (int j = 0; j < simdLength; j++) { total += temp[j]; }
             for (; i < vs.Length; i++) { total += vs[i]; }
-            
+
             double average = (double)Test2(vs) / vs.Length;
             return ((double)total / vs.Length) - (average * average);
         }
@@ -312,7 +316,7 @@ namespace _20200224_Intrinsics
         //Test5のマルチスレッド化
         //要素数1億でも計算できるTest5のCPUスレッド数倍程度まで計算できるはず
         private unsafe double Test5M(byte[] vs)
-        {   
+        {
             long total = 0;
             OrderablePartitioner<Tuple<int, int>> rangeSize
                 = Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount);
@@ -341,7 +345,7 @@ namespace _20200224_Intrinsics
                     Avx.Store(temp, vTotal);
                     for (int j = 0; j < simdLength; j++)
                     {
-                        subtotal += temp[j];                        
+                        subtotal += temp[j];
                     }
                     for (int i = lastIndex; i < range.Item2; i++)
                     {
@@ -353,6 +357,54 @@ namespace _20200224_Intrinsics
             double average = (double)Test2(vs) / vs.Length;
             return ((double)total / vs.Length) - (average * average);
         }
+
+        private unsafe void TestAddSum(byte[] vs)
+        {
+
+            fixed (byte* p = vs)
+            {
+                var v = Avx.LoadVector256(p);
+                var v2 = Avx.LoadVector256(p + 32);
+                //Avx.MultipleSumAbsoluteDifferences;
+                Vector256<int> i1 = Avx2.ConvertToVector256Int32(p);
+                Vector256<float> f1 = Avx.ConvertToVector256Single(i1);
+                Vector256<float> m1 = Avx.Multiply(f1, f1);
+
+                Vector128<int> i128 = Sse41.ConvertToVector128Int32(p);
+                Vector256<double> d256 = Avx.ConvertToVector256Double(i128);
+                var dZero = Vector256<double>.Zero;
+                Vector256<double> ma1 = Fma.MultiplyAdd(d256, d256, dZero);
+
+                var i256 = Avx2.ConvertToVector256Int32(p);
+                var f256 = Avx.ConvertToVector256Single(i256);
+                var fZero = Vector256<float>.Zero;
+                var ma2 = Fma.MultiplyAdd(f256, f256, fZero);
+
+                Vector128<float> s128 = Sse2.ConvertToVector128Single(i128);
+                Vector128<float> ms = Sse.MultiplyScalar(s128, s128);
+
+                var neko = 0;
+                //Avx.MultiplyAddAdjacent;
+                //Avx.MultiplyHigh;
+                //Avx.MultiplyHighRoundScale;
+                //Avx.MultiplyLow;
+                //Avx.MultiplyScalar;
+                //Fma.MultiplyAdd;
+                //Fma.MultiplyAddNegated;
+                //Fma.MultiplyAddNegatedScalar;
+                //Fma.MultiplyAddScalar;
+                //Fma.MultiplyAddSubtract;
+                //Fma.MultiplySubtract;
+                //Fma.MultiplySubtractAdd;
+                //Fma.MultiplySubtractNegated;
+                //Fma.MultiplySubtractNegatedScalar;
+                //Fma.MultiplySubtractScalar;
+
+            }
+
+        }
+
+
 
 
 
@@ -375,10 +427,14 @@ namespace _20200224_Intrinsics
             byte b = 0;
             for (int i = 0; i < ELEMENT_COUNT; i++)
             {
-                MyArray[i] = b;                
+                MyArray[i] = b;
                 b++;
             }
-
+            MyArray0to255 = new byte[ELEMENT_COUNT];
+            for (int i = 0; i < ELEMENT_COUNT; i++)
+            {
+                MyArray0to255[i] = (byte)i;
+            }
         }
     }
 }
