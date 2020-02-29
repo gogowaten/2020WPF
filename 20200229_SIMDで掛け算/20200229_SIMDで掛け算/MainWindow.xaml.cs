@@ -170,26 +170,25 @@ namespace _20200229_SIMDで掛け算
         private unsafe long Test6(byte[] vs)
         {
             long total = 0;
-            int simdLength = Vector256<byte>.Count;
+            int simdLength = Vector128<byte>.Count * 2;//2個同時のほうが速い？
             int lastIndex = vs.Length - (vs.Length % simdLength);
-            Vector256<long> ff = Vector256<long>.Zero;
+
+            Vector128<int> vi = Vector128<int>.Zero;
             fixed (byte* p = vs)
             {
                 for (int i = 0; i < lastIndex; i += simdLength)
                 {
-                    Vector128<short> vv = Sse41.ConvertToVector128Int16(p + i);
-                    Vector128<short> v1 = Sse2.UnpackHigh(vv, vv);
-                    Vector128<short> v2 = Sse2.UnpackLow(vv, vv);
-                    Vector128<int> v3 = Sse2.MultiplyAddAdjacent(v1, v2);//byte + sbyte, short + short
-                    Vector256<long> t1 = Avx2.Multiply(v1, v1);//double,float,int,uint
-                    Vector256<long> t2 = Avx2.Multiply(v2, v2);
-                    ff = Avx2.Add(ff, t1);
-                    ff = Avx2.Add(ff, t2);
+                    Vector128<short> sh1 = Sse41.ConvertToVector128Int16(p + i);
+                    Vector128<short> sh2 = Sse41.ConvertToVector128Int16(p + i + Vector128<byte>.Count);
+                    Vector128<int> ii1 = Sse2.MultiplyAddAdjacent(sh1, sh1);//byte + sbyte, short + short
+                    Vector128<int> ii2 = Sse2.MultiplyAddAdjacent(sh2, sh2);//byte + sbyte, short + short
+                    vi = Sse2.Add(vi, ii1);
+                    vi = Sse2.Add(vi, ii2);
                 }
             }
-            simdLength = Vector256<long>.Count;
-            long* pp = stackalloc long[simdLength];
-            Avx.Store(pp, ff);
+            simdLength = Vector128<int>.Count;
+            int* pp = stackalloc int[simdLength];
+            Avx.Store(pp, vi);
             for (int i = 0; i < simdLength; i++)
             {
                 total += pp[i];
