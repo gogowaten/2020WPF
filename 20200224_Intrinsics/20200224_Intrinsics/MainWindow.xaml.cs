@@ -383,6 +383,14 @@ namespace _20200224_Intrinsics
                 Vector128<float> s128 = Sse2.ConvertToVector128Single(i128);
                 Vector128<float> ms = Sse.MultiplyScalar(s128, s128);
 
+//                x86 / x64 SIMD命令一覧表（SSE～AVX2）
+//https://www.officedaytime.com/tips/simd.html
+                //                pmaddwd
+                //https://www.officedaytime.com/tips/simdimg/si.php?f=pmaddwd
+
+                Vector128<short> sh128 = Sse41.ConvertToVector128Int16(p);
+                Vector128<int> vv3 = Avx.MultiplyAddAdjacent(sh128, sh128);
+
                 var neko = 0;
                 //Avx.MultiplyAddAdjacent;
                 //Avx.MultiplyHigh;

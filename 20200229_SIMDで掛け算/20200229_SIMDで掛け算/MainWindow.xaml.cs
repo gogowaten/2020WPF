@@ -27,8 +27,8 @@ namespace _20200229_SIMDで掛け算
     public partial class MainWindow : Window
     {
         private byte[] MyArray;
-        private const int LOOP_COUNT = 1000;
-        private const int ELEMENT_COUNT = 10_000_000;// 538_976_319;// 67_372_039;//要素数
+        private const int LOOP_COUNT = 1;
+        private const int ELEMENT_COUNT = 10;// 538_976_319;// 67_372_039;//要素数
 
         public MainWindow()
         {
@@ -37,9 +37,14 @@ namespace _20200229_SIMDで掛け算
             this.Title = this.ToString();
 
 
+
+
             MyTextBlock.Text = $"byte型配列要素数{ELEMENT_COUNT.ToString("N0")}の合計値を {LOOP_COUNT}回求める";
             MyTextBlockVectorCount.Text = $"Vector256<byte>.Count={Vector256<byte>.Count}  Vector<byte>.Count={Vector<byte>.Count}";
             MyTextBlockCpuThreadCount.Text = $"CPUスレッド数：{Environment.ProcessorCount}";
+
+            Test1_Normal(MyArray);
+            Test2_(MyArray);
 
             //ButtonAll.Click += (s, e) => MyExeAll();
             //Button1.Click += (s, e) => MyExe(Test1_Normal, Tb1, MyArray);
@@ -56,12 +61,16 @@ namespace _20200229_SIMDで掛け算
         }
 
         //普通に掛け算
-        private void Test1_Normal(byte[] vs)
+        private long Test1_Normal(byte[] vs)
         {
-           
+            long total = 0;
+            for (int i = 0; i < vs.Length; i++)
+            {
+                total += vs[i] * vs[i];
+            }
+            return total;
         }
 
-        //普通に掛け算をマルチスレッド化
         private long Test2_Normal_MT(byte[] vs)
         {
             long total = 0;
@@ -72,7 +81,7 @@ namespace _20200229_SIMDで掛け算
                     long subtotal = 0;
                     for (int i = range.Item1; i < range.Item2; i++)
                     {
-                        subtotal += vs[i];
+                        subtotal += vs[i] * vs[i];
                     }
                     System.Threading.Interlocked.Add(ref total, subtotal);
                 });
@@ -80,13 +89,125 @@ namespace _20200229_SIMDで掛け算
         }
 
 
+
+
+        //Numerics Dot
+        private long Test3_(byte[] vs)
+        {
+            long total = 0;
+            int simdLength = Vector<byte>.Count;
+            int lastIndex = vs.Length - (vs.Length % simdLength);
+            for (int i = 0; i < lastIndex; i += simdLength)
+            {
+                System.Numerics.Vector.Widen(new Vector<byte>(vs[i]), out Vector<ushort> v1, out Vector<ushort> v2);
+                System.Numerics.Vector.Widen(v1, out Vector<uint> vv1, out Vector<uint> vv2);
+                System.Numerics.Vector.Widen(v2, out Vector<uint> vv3, out Vector<uint> vv4);
+                total += System.Numerics.Vector.Dot(vv1, vv1);
+                total += System.Numerics.Vector.Dot(vv2, vv2);
+                total += System.Numerics.Vector.Dot(vv3, vv3);
+                total += System.Numerics.Vector.Dot(vv4, vv4);
+            }
+            return total;
+
+        }
+
+        //Intrinsics FMA MultiplyAdd
+        private unsafe long Test4(byte[] vs)
+        {
+            long total = 0;
+            int simdLength = Vector256<byte>.Count;
+            int lastIndex = vs.Length - (vs.Length % simdLength);
+            Vector256<float> ff = Vector256.Create(0f);
+            fixed (byte* p = vs)
+            {
+                for (int i = 0; i < lastIndex; i += simdLength)
+                {
+                    Vector256<int> v = Avx2.ConvertToVector256Int32(p + i);
+                    Vector256<float> f = Avx.ConvertToVector256Single(v);
+                    ff = Fma.MultiplyAdd(f, f, ff);//float,double
+                }
+            }
+
+            float* pp = stackalloc float[Vector256<float>.Count];
+            Avx.Store(pp, ff);
+            for (int i = 0; i < Vector256<float>.Count; i++)
+            {
+                total += (long)pp[i];
+            }
+            return total;
+        }
+
+        //Intrinsics AVX Multiply + Add
+        private unsafe long Test5(byte[] vs)
+        {
+            long total = 0;
+            int simdLength = Vector256<byte>.Count;
+            int lastIndex = vs.Length - (vs.Length % simdLength);
+            Vector256<long> ff = Vector256<long>.Zero;
+            fixed (byte* p = vs)
+            {
+                for (int i = 0; i < lastIndex; i += simdLength)
+                {
+                    Vector256<int> vv = Avx2.ConvertToVector256Int32(p + i);
+                    Vector256<int> v1 = Avx2.UnpackHigh(vv, vv);
+                    Vector256<int> v2 = Avx2.UnpackLow(vv, vv);
+                    Vector256<long> t1 = Avx2.Multiply(v1, v1);//double,float,int,uint
+                    Vector256<long> t2 = Avx2.Multiply(v2, v2);
+                    ff = Avx2.Add(ff, t1);
+                    ff = Avx2.Add(ff, t2);
+                }
+            }
+            simdLength = Vector256<long>.Count;
+            long* pp = stackalloc long[simdLength];
+            Avx.Store(pp, ff);
+            for (int i = 0; i < simdLength; i++)
+            {
+                total += pp[i];
+            }
+            return total;
+        }
+
+        private unsafe long Test6(byte[] vs)
+        {
+            long total = 0;
+            int simdLength = Vector256<byte>.Count;
+            int lastIndex = vs.Length - (vs.Length % simdLength);
+            Vector256<long> ff = Vector256<long>.Zero;
+            fixed (byte* p = vs)
+            {
+                for (int i = 0; i < lastIndex; i += simdLength)
+                {
+                    Vector128<short> vv = Sse41.ConvertToVector128Int16(p + i);
+                    Vector128<short> v1 = Sse2.UnpackHigh(vv, vv);
+                    Vector128<short> v2 = Sse2.UnpackLow(vv, vv);
+                    Vector128<int> v3 = Sse2.MultiplyAddAdjacent(v1, v2);//byte + sbyte, short + short
+                    Vector256<long> t1 = Avx2.Multiply(v1, v1);//double,float,int,uint
+                    Vector256<long> t2 = Avx2.Multiply(v2, v2);
+                    ff = Avx2.Add(ff, t1);
+                    ff = Avx2.Add(ff, t2);
+                }
+            }
+            simdLength = Vector256<long>.Count;
+            long* pp = stackalloc long[simdLength];
+            Avx.Store(pp, ff);
+            for (int i = 0; i < simdLength; i++)
+            {
+                total += pp[i];
+            }
+            return total;
+        }
+
+
+
+
+
         private void MyInitialize()
         {
             MyArray = new byte[ELEMENT_COUNT];
 
-            //指定値で埋める
-            var span = new Span<byte>(MyArray);
-            span.Fill(255);
+            ////指定値で埋める
+            //var span = new Span<byte>(MyArray);
+            //span.Fill(255);
 
             //最後の要素
             //MyArray[ELEMENT_COUNT - 1] = 100;
@@ -95,11 +216,11 @@ namespace _20200229_SIMDで掛け算
             //var r = new Random();
             //r.NextBytes(MyArray);
 
-            ////0～255までを連番で繰り返し
-            //for (int i = 0; i < ELEMENT_COUNT; i++)
-            //{
-            //    MyArray[i] = (byte)i;
-            //}
+            //0～255までを連番で繰り返し
+            for (int i = 0; i < ELEMENT_COUNT; i++)
+            {
+                MyArray[i] = (byte)i;
+            }
 
 
         }
