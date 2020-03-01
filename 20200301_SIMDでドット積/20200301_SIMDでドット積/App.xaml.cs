@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace _20200229_SIMDで掛け算
+namespace _20200301_SIMDでドット積
 {
     /// <summary>
     /// Interaction logic for App.xaml
