@@ -17,7 +17,7 @@ namespace _20200301_SIMDでドット積
     {
         private byte[] MyArray;
         private const int LOOP_COUNT = 1000;
-        private const int ELEMENT_COUNT = 10_000_000;// 1_056_831;// 132_103;// 2071;// 538_976_319;// 67_372_039;//要素数
+        private const int ELEMENT_COUNT = 10_000_000;// 1_056_831;// 132_103;// 2071;//要素数
 
         public MainWindow()
         {
@@ -31,8 +31,7 @@ namespace _20200301_SIMDでドット積
             MyTextBlockVectorCount.Text = $"Vector256<byte>.Count={Vector256<byte>.Count}  Vector<byte>.Count={Vector<byte>.Count}";
             MyTextBlockCpuThreadCount.Text = $"CPUスレッド数：{Environment.ProcessorCount}";
 
-            //Test8_Intrinsics_SSE41_DotProduct_float(MyArray);
-            //Test2_Normal_MT(MyArray);
+
 
             ButtonAll.Click += (s, e) => MyExeAll();
             Button1.Click += (s, e) => MyExe(Test1_Normal, Tb1, MyArray);
@@ -76,8 +75,8 @@ namespace _20200301_SIMDでドット積
         private long Test11_Normal_MT(byte[] vs)
         {
             long total = 0;
-            Parallel.ForEach(
-                Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount),
+            int rangeSize = vs.Length / Environment.ProcessorCount;
+            Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     long subtotal = 0;
@@ -101,9 +100,12 @@ namespace _20200301_SIMDでドット積
             int lastIndex = vs.Length - (vs.Length % simdLength);
             for (int i = 0; i < lastIndex; i += simdLength)
             {
-                System.Numerics.Vector.Widen(new Vector<byte>(vs, i), out Vector<ushort> v1, out Vector<ushort> v2);
-                System.Numerics.Vector.Widen(v1, out Vector<uint> vv1, out Vector<uint> vv2);
-                System.Numerics.Vector.Widen(v2, out Vector<uint> vv3, out Vector<uint> vv4);
+                System.Numerics.Vector.Widen(new Vector<byte>(vs, i),
+                    out Vector<ushort> v1, out Vector<ushort> v2);
+                System.Numerics.Vector.Widen(v1,
+                    out Vector<uint> vv1, out Vector<uint> vv2);
+                System.Numerics.Vector.Widen(v2,
+                    out Vector<uint> vv3, out Vector<uint> vv4);
                 total += System.Numerics.Vector.Dot(vv1, vv1);
                 total += System.Numerics.Vector.Dot(vv2, vv2);
                 total += System.Numerics.Vector.Dot(vv3, vv3);
@@ -121,16 +123,20 @@ namespace _20200301_SIMDでドット積
         {
             long total = 0;
             int simdLength = Vector<byte>.Count;
-            Parallel.ForEach(Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount),
+            int rangeSize = vs.Length / Environment.ProcessorCount;
+            Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     long subtotal = 0;
                     int lastIndex = range.Item2 - (range.Item2 - range.Item1) % simdLength;
                     for (int i = range.Item1; i < lastIndex; i += simdLength)
                     {
-                        System.Numerics.Vector.Widen(new Vector<byte>(vs, i), out Vector<ushort> v1, out Vector<ushort> v2);
-                        System.Numerics.Vector.Widen(v1, out Vector<uint> vv1, out Vector<uint> vv2);
-                        System.Numerics.Vector.Widen(v2, out Vector<uint> vv3, out Vector<uint> vv4);
+                        System.Numerics.Vector.Widen(new Vector<byte>(vs, i),
+                            out Vector<ushort> v1, out Vector<ushort> v2);
+                        System.Numerics.Vector.Widen(v1,
+                            out Vector<uint> vv1, out Vector<uint> vv2);
+                        System.Numerics.Vector.Widen(v2,
+                            out Vector<uint> vv3, out Vector<uint> vv4);
                         subtotal += System.Numerics.Vector.Dot(vv1, vv1);
                         subtotal += System.Numerics.Vector.Dot(vv2, vv2);
                         subtotal += System.Numerics.Vector.Dot(vv3, vv3);
@@ -150,12 +156,17 @@ namespace _20200301_SIMDでドット積
 
         #region ここからIntrinsics
 
-        //誤差無しで計算できる最大要素数は7071まで。
-        //これはVectorの各要素の最大値が16777215までだからで
-        //byte配列が最大の255だった場合
-        //16777215/255/255=258.01176、
+        //誤差無しで計算できる最大要素数は2064まで。
+        //これはVector256<float>でbyte型配列を計算する場合で、
+        //floatの誤差なし最大値が16777215(24bit)とbyte配列が最大の255ってことで
+        //16777215/255/255=258.01176
         //小数点以下切り捨てて258個、これにVectorCountの8をかけて
-        //  258*8=2064、これに余りの最大数7を足して、2064+7=2071
+        //258*8=2064、これが限界。
+        //あとはおまけでVectorCountで割り切れなかった余りの最大数7を足して
+        //2064+7=2071
+        //FMA MultiplyAddはVector256Double型でも計算できる
+        //最大要素数は増えるけどVectorCountが半減するから遅くなるので
+        //配列を分割してfloat型で計算するほうが効率が良さそう
         //Intrinsics FMA MultiplyAdd float
         private unsafe long Test3_Intrinsics_FMA_MultiplyAdd_float(byte[] vs)
         {
@@ -179,6 +190,7 @@ namespace _20200301_SIMDでドット積
             {
                 total += (long)pp[i];
             }
+            //割り切れなかった余り要素用
             for (int i = lastIndex; i < vs.Length; i++)
             {
                 total += vs[i] * vs[i];
@@ -192,7 +204,8 @@ namespace _20200301_SIMDでドット積
         {
             long total = 0;
             int simdLength = Vector256<int>.Count;
-            Parallel.ForEach(Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount),
+            int rangeSize = vs.Length / Environment.ProcessorCount;//1区分のサイズ
+            Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     long subtotal = 0;
@@ -223,25 +236,24 @@ namespace _20200301_SIMDでドット積
         }
 
         //↑を改変
-        //集計用のVector256<float> がオーバーフローしないように配列を分割して計算
+        //集計用のVector256<float>で誤差が出ないように配列を分割して計算
         //Intrinsics FMA MultiplyAdd float
         private unsafe long Test23_Intrinsics_FMA_MultiplyAdd_float_MT_Kai(byte[] vs)
         {
             long total = 0;
             int simdLength = Vector256<int>.Count;
-            //集計用のVector256<float> vTotalで扱える最大要素数 = 2064
+            //集計用のVector256<float>で扱える最大要素数 = 2064
             //これを1区分あたりの要素数(分割サイズ)にする
-            //floatの仮数部24bit(16777215) / 255 * 255 * 8 = 2064.0941
+            //floatの仮数部24bit(16777215) * 8 / (255 * 255) = 2064.0941
             int rangeSize = ((1 << 24) - 1)
-                            / (byte.MaxValue * byte.MaxValue)
-                            * Vector256<float>.Count;//2064
-
+                            * Vector256<float>.Count
+                            / (byte.MaxValue * byte.MaxValue);
             Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     long subtotal = 0;
                     int lastIndex = range.Item2 - (range.Item2 - range.Item1) % simdLength;
-                    Vector256<float> vTotal = Vector256.Create(0f);
+                    Vector256<float> vTotal = Vector256.Create(0f);//集計用
                     fixed (byte* p = vs)
                     {
                         for (int i = range.Item1; i < lastIndex; i += simdLength)
@@ -303,7 +315,8 @@ namespace _20200301_SIMDでドット積
         {
             long total = 0;
             int simdLength = Vector128<int>.Count;
-            Parallel.ForEach(Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount),
+            int rangeSize = vs.Length / Environment.ProcessorCount;
+            Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     long subtotal = 0;
@@ -374,11 +387,13 @@ namespace _20200301_SIMDでドット積
         {
             long total = 0;
             int simdLength = Vector256<int>.Count;
-            Parallel.ForEach(Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount),
+            int rangeSize = vs.Length / Environment.ProcessorCount;
+            Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     long subtotal = 0;
-                    int lastIndex = range.Item2 - (range.Item2 - range.Item1) % simdLength;
+                    int lastIndex =
+                    range.Item2 - (range.Item2 - range.Item1) % simdLength;
                     Vector256<long> vTotal = Vector256<long>.Zero;
                     fixed (byte* p = vs)
                     {
@@ -428,7 +443,7 @@ namespace _20200301_SIMDでドット積
                 for (int i = 0; i < lastIndex; i += simdLength)
                 {
                     Vector128<short> v = Sse41.ConvertToVector128Int16(p + i);
-                    Vector128<int> vv = Sse2.MultiplyAddAdjacent(v, v);//byte + sbyte or short + short                    
+                    Vector128<int> vv = Sse2.MultiplyAddAdjacent(v, v);// short + short                    
                     vTotal = Sse2.Add(vTotal, vv);
                 }
             }
@@ -453,18 +468,20 @@ namespace _20200301_SIMDでドット積
         {
             long total = 0;
             int simdLength = Vector128<short>.Count;//8
-            Parallel.ForEach(Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount),
+            int rangeSize = vs.Length / Environment.ProcessorCount;
+            Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     long subtotal = 0;
-                    int lastIndex = range.Item2 - (range.Item2 - range.Item1) % simdLength;
+                    int lastIndex =
+                    range.Item2 - (range.Item2 - range.Item1) % simdLength;
                     Vector128<int> vTotal = Vector128<int>.Zero;
                     fixed (byte* p = vs)
                     {
                         for (int i = range.Item1; i < lastIndex; i += simdLength)
                         {
                             Vector128<short> v = Sse41.ConvertToVector128Int16(p + i);
-                            Vector128<int> vv = Sse2.MultiplyAddAdjacent(v, v);//byte + sbyte or short + short                    
+                            Vector128<int> vv = Sse2.MultiplyAddAdjacent(v, v);// short + short                    
                             vTotal = Sse2.Add(vTotal, vv);
                         }
                     }
@@ -491,22 +508,26 @@ namespace _20200301_SIMDでドット積
         {
             long total = 0;
             int simdLength = Vector128<short>.Count;//8            
-            //集計用のVector128<int> vTotalでオーバーフローすることなく扱える最大要素数 = 132102
+            //集計用のVector128<int>で
+            //オーバーフローすることなく扱える最大要素数 = 132102
+            //int.MaxValue / (byte.MaxValue * byte.MaxValue) * Vector128<int>.Count
             //2147483647 / (255 * 255) * 4 = 132102.03 小数点以下切り捨てで132102            
-            int rangeSize = int.MaxValue / (byte.MaxValue * byte.MaxValue) * Vector128<int>.Count;
-            
+            int rangeSize =
+                int.MaxValue / (byte.MaxValue * byte.MaxValue) * Vector128<int>.Count;
+
             Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     long subtotal = 0;
-                    int lastIndex = range.Item2 - (range.Item2 - range.Item1) % simdLength;
-                    Vector128<int> vTotal = Vector128<int>.Zero;
+                    int lastIndex =
+                    range.Item2 - (range.Item2 - range.Item1) % simdLength;
+                    Vector128<int> vTotal = Vector128<int>.Zero;//集計用
                     fixed (byte* p = vs)
                     {
                         for (int i = range.Item1; i < lastIndex; i += simdLength)
                         {
                             Vector128<short> v = Sse41.ConvertToVector128Int16(p + i);
-                            Vector128<int> vv = Sse2.MultiplyAddAdjacent(v, v);//byte + sbyte or short + short                    
+                            Vector128<int> vv = Sse2.MultiplyAddAdjacent(v, v);//short + short                    
                             vTotal = Sse2.Add(vTotal, vv);
                         }
                     }
@@ -529,7 +550,7 @@ namespace _20200301_SIMDでドット積
 
         //        x86/x64 SIMD命令一覧表　（SSE～AVX2）
         //https://www.officedaytime.com/tips/simd.html
-        //ドット積 DPPS
+        //算術演算 ドット積 DPPS
         //Intrinsics SSE41 DotProduct
         private unsafe long Test7_Intrinsics_SSE41_DotProduct_float(byte[] vs)
         {
@@ -559,8 +580,8 @@ namespace _20200301_SIMDでドット積
         {
             long total = 0;
             int simdLength = Vector128<int>.Count;
-            Parallel.ForEach(
-                Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount),
+            int rangeSize = vs.Length / Environment.ProcessorCount;
+            Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     long subtotal = 0;
@@ -640,8 +661,8 @@ namespace _20200301_SIMDでドット積
             long total = 0;
             int simdLength = Vector128<int>.Count * 4;
 
-            Parallel.ForEach(
-                Partitioner.Create(0, vs.Length, vs.Length / Environment.ProcessorCount),
+            int rangeSize = vs.Length / Environment.ProcessorCount;
+            Parallel.ForEach(Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
                 {
                     var vTotal = Vector128<float>.Zero;
@@ -697,8 +718,9 @@ namespace _20200301_SIMDでドット積
             //floatの仮数部24bit / byte型最大値 * byte型最大値
             //16777215 / (255 * 255) * 4 = 1032.0471 これの小数点以下切り捨てを
             //1区分あたりの要素数(分割サイズ)
-            int rangeSize = ((1 << 24) - 1) / (byte.MaxValue * byte.MaxValue) * Vector128<float>.Count;//1032
-            
+            int rangeSize =
+                ((1 << 24) - 1) / (byte.MaxValue * byte.MaxValue) * Vector128<float>.Count;//1032
+
             Parallel.ForEach(
                 Partitioner.Create(0, vs.Length, rangeSize),
                 (range) =>
@@ -778,7 +800,7 @@ namespace _20200301_SIMDでドット積
             //var r = new Random();
             //r.NextBytes(MyArray);
 
-            ////0～255までを連番で繰り返し
+            //0～255までを連番で繰り返し
             //for (int i = 0; i < ELEMENT_COUNT; i++)
             //{
             //    MyArray[i] = (byte)i;
