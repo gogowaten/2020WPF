@@ -19,6 +19,7 @@ using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
+
 namespace SIMDでユークリッド距離
 {
     /// <summary>
@@ -60,14 +61,14 @@ namespace SIMDでユークリッド距離
             Button7.Click += (s, e) => MyExe(Test21_V3_Distance_MTPF, Tb7, MyR, MyG, MyB, MyFloatArray);
             Button8.Click += (s, e) => MyExe(Test22_V3_Distance_MTPFE, Tb8, MyR, MyG, MyB, MyFloatArray);
             Button9.Click += (s, e) => MyExe(Test23_V3_Distance_MTPFE, Tb9, MyR, MyG, MyB, MyFloatArray);
-            Button10.Click += (s, e) => MyExe(Test30_V3_Distance, Tb10, MyR, MyG, MyB, MyFloatArray);
-            //Button11.Click += (s, e) => MyExe(Test11_Normal_MT, Tb11, MyArray);
-            //Button12.Click += (s, e) => MyExe(Test12_Numerics_Dot_long_MT, Tb12, MyArray);
-            //Button13.Click += (s, e) => MyExe(Test13_Intrinsics_FMA_MultiplyAdd_float_MT, Tb13, MyArray);
-            //Button14.Click += (s, e) => MyExe(Test14_Intrinsics_FMA_MultiplyAdd_double_MT, Tb14, MyArray);
-            //Button15.Click += (s, e) => MyExe(Test15_Intrinsics_AVX_Multiply_Add_long_MT, Tb15, MyArray);
-            //Button16.Click += (s, e) => MyExe(Test16_Intrinsics_SSE2_MultiplyAddAdjacent_int_MT, Tb16, MyArray);
-            //Button17.Click += (s, e) => MyExe(Test17_Intrinsics_SSE41_DotProduct_float_MT, Tb17, MyArray);
+            Button10.Click += (s, e) => MyExe(Test30_V_SquareRoot, Tb10, MyR, MyG, MyB, MyFloatArray);
+            Button11.Click += (s, e) => MyExe(Test31_V_SquareRoot_MT, Tb11, MyR, MyG, MyB, MyFloatArray);
+            Button12.Click += (s, e) => MyExe(Test40_Intrinsics_V256float_Sqrt, Tb12, MyR, MyG, MyB, MyFloatArray);
+            Button13.Click += (s, e) => MyExe(Test41_Intrinsics_V128float_Sqrt, Tb13, MyR, MyG, MyB, MyFloatArray);
+            Button14.Click += (s, e) => MyExe(Test42_Intrinsics_V256float_Sqrt, Tb14, MyR, MyG, MyB, MyFloatArray);
+            Button15.Click += (s, e) => MyExe(Test43_Intrinsics_V256float_Sqrt, Tb15, MyR, MyG, MyB, MyFloatArray);
+            Button16.Click += (s, e) => MyExe(Test44_Intrinsics_V128float_Sqrt, Tb16, MyR, MyG, MyB, MyFloatArray);
+            Button17.Click += (s, e) => MyExe(Test45_Intrinsics_V256float_Sqrt, Tb17, MyR, MyG, MyB, MyFloatArray);
             //Button18.Click += (s, e) => MyExe(Test18_Intrinsics_SSE41_DotProduct_float_MT, Tb18, MyArray);
             ////Button19.Click += (s, e) => MyExe(Test19_Intrinsics_SSE41_DotProduct_float_MT, Tb19, MyArray);
             ////Button20.Click += (s, e) => MyExe(Test20, Tb20, MyArray);
@@ -83,9 +84,9 @@ namespace SIMDでユークリッド距離
             for (int i = 0; i < red.Length; i++)
             {
                 vv[i] = Math.Sqrt(
-                    ((0 - red[i]) * (0 - red[i])) +
-                    ((0 - green[i]) * (0 - green[i])) +
-                    ((0 - blue[i]) * (0 - blue[i])));
+                    ((green[i] - red[i]) * (green[i] - red[i])) +
+                    ((blue[i] - green[i]) * (blue[i] - green[i])) +
+                    ((red[i] - blue[i]) * (red[i] - blue[i])));
             }
         }
 
@@ -94,9 +95,9 @@ namespace SIMDでユークリッド距離
             Parallel.For(0, red.Length, i =>
             {
                 vv[i] = Math.Sqrt(
-                    ((0 - red[i]) * (0 - red[i])) +
-                    ((0 - green[i]) * (0 - green[i])) +
-                    ((0 - blue[i]) * (0 - blue[i])));
+                    ((green[i] - red[i]) * (green[i] - red[i])) +
+                    ((blue[i] - green[i]) * (blue[i] - green[i])) +
+                    ((red[i] - blue[i]) * (red[i] - blue[i])));
             });
         }
 
@@ -109,9 +110,9 @@ namespace SIMDでユークリッド距離
                     for (int i = range.Item1; i < range.Item2; i++)
                     {
                         vv[i] = Math.Sqrt(
-                    ((0 - red[i]) * (0 - red[i])) +
-                    ((0 - green[i]) * (0 - green[i])) +
-                    ((0 - blue[i]) * (0 - blue[i])));
+                    ((green[i] - red[i]) * (green[i] - red[i])) +
+                    ((blue[i] - green[i]) * (blue[i] - green[i])) +
+                    ((red[i] - blue[i]) * (red[i] - blue[i])));
                     }
                 });
         }
@@ -124,9 +125,9 @@ namespace SIMDでユークリッド距離
                     for (int i = range.Item1; i < range.Item2; i++)
                     {
                         vv[i] = Math.Sqrt(
-                     ((0 - red[i]) * (0 - red[i])) +
-                     ((0 - green[i]) * (0 - green[i])) +
-                     ((0 - blue[i]) * (0 - blue[i])));
+                            ((green[i] - red[i]) * (green[i] - red[i])) +
+                            ((blue[i] - green[i]) * (blue[i] - green[i])) +
+                            ((red[i] - blue[i]) * (red[i] - blue[i])));
                     }
                 });
         }
@@ -137,7 +138,7 @@ namespace SIMDでユークリッド距離
             for (int i = 0; i < red.Length; i++)
             {
                 vv[i] = Vector3.Distance(
-                    new Vector3(0, 0, 0),
+                    new Vector3(green[i], blue[i], red[i]),
                     new Vector3(red[i], green[i], blue[i]));
             }
         }
@@ -148,7 +149,7 @@ namespace SIMDでユークリッド距離
             for (int i = 0; i < red.Length; i++)
             {
                 vv[i] = Vector3.DistanceSquared(
-                    new Vector3(0, 0, 0),
+                    new Vector3(green[i], blue[i], red[i]),
                     new Vector3(red[i], green[i], blue[i]));
             }
         }
@@ -158,7 +159,7 @@ namespace SIMDでユークリッド距離
             Parallel.For(0, red.Length, i =>
             {
                 vv[i] = Vector3.Distance(
-                    new Vector3(0, 0, 0),
+                    new Vector3(green[i], blue[i], red[i]),
                     new Vector3(red[i], green[i], blue[i]));
             });
         }
@@ -172,7 +173,7 @@ namespace SIMDでユークリッド距離
                     for (int i = range.Item1; i < range.Item2; i++)
                     {
                         vv[i] = Vector3.Distance(
-                            new Vector3(0, 0, 0),
+                            new Vector3(green[i], blue[i], red[i]),
                             new Vector3(red[i], green[i], blue[i]));
                     }
                 });
@@ -187,49 +188,285 @@ namespace SIMDでユークリッド距離
                     for (int i = range.Item1; i < range.Item2; i++)
                     {
                         vv[i] = Vector3.Distance(
-                            new Vector3(0, 0, 0),
+                            new Vector3(green[i], blue[i], red[i]),
                             new Vector3(red[i], green[i], blue[i]));
                     }
                 });
         }
 
 
-        private void Test30_V3_Distance(byte[] red, byte[] green, byte[] blue, float[] vv)
+        private void Amari(int lastIndex, int endIndex, byte[] red, byte[] green, byte[] blue, float[] vv)
+        {
+            for (int i = lastIndex; i < endIndex; i++)
+            {
+                vv[i] = (float)Math.Sqrt(
+                           ((green[i] - red[i]) * (green[i] - red[i])) +
+                           ((blue[i] - green[i]) * (blue[i] - green[i])) +
+                           ((red[i] - blue[i]) * (red[i] - blue[i])));
+            }
+        }
+
+        private void Test30_V_SquareRoot(byte[] red, byte[] green, byte[] blue, float[] vv)
         {
             int simdLength = Vector<float>.Count;
             int lastIndex = red.Length - (red.Length % simdLength);
-            var ii = new float[simdLength];
+            var ff = new float[simdLength];
             int p;
             for (int i = 0; i < lastIndex; i += simdLength)
             {
                 for (int k = 0; k < simdLength; k++)
                 {
                     p = k + i;
-                    ii[k] = (0 - red[p]) * (0 - red[p]) + (0 - green[p]) * (0 - green[p]) + (0 - blue[p]) * (0 - blue[p]);
+                    ff[k] =
+                        (green[p] - red[p]) * (green[p] - red[p]) +
+                        (blue[p] - green[p]) * (blue[p] - green[p]) +
+                        (red[p] - blue[p]) * (red[p] - blue[p]);
                 }
-                var v = System.Numerics.Vector.SquareRoot(new Vector<float>(ii));
+                var v = System.Numerics.Vector.SquareRoot(new Vector<float>(ff));
                 for (int m = 0; m < simdLength; m++)
                 {
                     vv[i + m] = v[m];
                 }
             }
-            Amari(lastIndex, red, green, blue, vv);
+            Amari(lastIndex, red.Length, red, green, blue, vv);
         }
 
-        private void Amari(int lastIndex, byte[] red, byte[] green, byte[] blue, float[] vv)
+        private void Test31_V_SquareRoot_MT(byte[] red, byte[] green, byte[] blue, float[] vv)
         {
-            for (int i = lastIndex; i < red.Length; i++)
+            int rangeSize = red.Length / Environment.ProcessorCount;
+            int simdLength = Vector<float>.Count;
+            Parallel.ForEach(Partitioner.Create(0, red.Length, rangeSize),
+                (range) =>
+                {
+                    int lastIndex = range.Item2 - (range.Item2 - range.Item1) % simdLength;
+                    var ii = new float[simdLength];
+                    int p;
+                    for (int i = range.Item1; i < lastIndex; i += simdLength)
+                    {
+                        for (int k = 0; k < simdLength; k++)
+                        {
+                            p = k + i;
+                            ii[k] =
+                                 (green[p] - red[p]) * (green[p] - red[p]) +
+                                 (blue[p] - green[p]) * (blue[p] - green[p]) +
+                                 (red[p] - blue[p]) * (red[p] - blue[p]);
+                        }
+                        var v = System.Numerics.Vector.SquareRoot(new Vector<float>(ii));
+                        for (int m = 0; m < simdLength; m++)
+                        {
+                            vv[i + m] = v[m];
+                        }
+                    }
+                    Amari(lastIndex, range.Item2, red, green, blue, vv);
+                });
+        }
+
+        //Intrinsics、Vector256float、差の2乗和は普通に計算、平方根だけAVXのSqrt
+        private unsafe void Test40_Intrinsics_V256float_Sqrt(byte[] red, byte[] green, byte[] blue, float[] vv)
+        {
+            //System.Runtime.CompilerServices.Unsafe.As<int>(red);
+            int simdLength = Vector256<float>.Count;
+            int lastIndex = red.Length - (red.Length % simdLength);
+            float[] ff = new float[simdLength];
+            float* tp = stackalloc float[simdLength];
+            int p;
+            fixed (byte* pR = red, pG = green, pB = blue)
             {
-                vv[i] = (float)Math.Sqrt(
-                    ((0 - red[i]) * (0 - red[i])) +
-                    ((0 - green[i]) * (0 - green[i])) +
-                    ((0 - blue[i]) * (0 - blue[i])));
+                fixed (float* pF = ff)
+                {
+                    for (int i = 0; i < lastIndex; i += simdLength)
+                    {
+                        for (int k = 0; k < simdLength; k++)
+                        {
+                            p = k + i;
+                            pF[k] =
+                                (pG[p] - pR[p]) * (pG[p] - pR[p]) +
+                                (pB[p] - pG[p]) * (pB[p] - pG[p]) +
+                                (pR[p] - pB[p]) * (pR[p] - pB[p]);
+                        }
+                        //var neko = Avx2.Sqrt(Avx2.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pR + i)));
+                        var v = Avx.Sqrt(Avx.LoadVector256(pF));
+                        //vv[i] = v.GetElement(0);
+
+                        Avx.Store(tp, v);
+                        for (int m = 0; m < simdLength; m++)
+                        {
+                            vv[i + m] = tp[m];
+                        }
+                    }
+                    Amari(lastIndex, red.Length, red, green, blue, vv);
+                }
             }
         }
 
+        //128floatで
+        private unsafe void Test41_Intrinsics_V128float_Sqrt(byte[] red, byte[] green, byte[] blue, float[] vv)
+        {
+            int simdLength = Vector128<float>.Count;
+            int lastIndex = red.Length - (red.Length % simdLength);
+            float[] ff = new float[simdLength];
+            float* tp = stackalloc float[simdLength];
+            int p;
+            fixed (byte* pR = red, pG = green, pB = blue)
+            {
+                fixed (float* pF = ff)
+                {
+                    for (int i = 0; i < lastIndex; i += simdLength)
+                    {
+                        for (int k = 0; k < simdLength; k++)
+                        {
+                            p = k + i;
+                            pF[k] =
+                                (pG[p] - pR[p]) * (pG[p] - pR[p]) +
+                                (pB[p] - pG[p]) * (pB[p] - pG[p]) +
+                                (pR[p] - pB[p]) * (pR[p] - pB[p]);
+                        }
+
+                        var v = Sse.Sqrt(Sse.LoadVector128(pF));
+                        Sse.Store(tp, v);
+                        for (int m = 0; m < simdLength; m++)
+                        {
+                            vv[i + m] = tp[m];
+                        }
+                    }
+                    Amari(lastIndex, red.Length, red, green, blue, vv);
+                }
+            }
+        }
+
+        //結果をGetElementで収納
+        private unsafe void Test42_Intrinsics_V256float_Sqrt(byte[] red, byte[] green, byte[] blue, float[] vv)
+        {
+            int simdLength = Vector256<float>.Count;
+            int lastIndex = red.Length - (red.Length % simdLength);
+            float[] ff = new float[simdLength];
+            int p;
+            fixed (byte* pR = red, pG = green, pB = blue)
+            {
+                fixed (float* pF = ff)
+                {
+                    for (int i = 0; i < lastIndex; i += simdLength)
+                    {
+                        for (int k = 0; k < simdLength; k++)
+                        {
+                            p = k + i;
+                            pF[k] =
+                                (pG[p] - pR[p]) * (pG[p] - pR[p]) +
+                                (pB[p] - pG[p]) * (pB[p] - pG[p]) +
+                                (pR[p] - pB[p]) * (pR[p] - pB[p]);
+                        }
+                        var v = Avx.Sqrt(Avx.LoadVector256(pF));
+                        for (int m = 0; m < simdLength; m++)
+                        {
+                            vv[i + m] = v.GetElement(m);
+                        }
+                    }
+                    Amari(lastIndex, red.Length, red, green, blue, vv);
+                }
+            }
+        }
+
+        //Intrinsics、Vector256float、差の2乗和、平方根もSIMD
+        private unsafe void Test43_Intrinsics_V256float_Sqrt(byte[] red, byte[] green, byte[] blue, float[] vv)
+        {
+            //System.Runtime.CompilerServices.Unsafe.As<int>(red);
+            int simdLength = Vector256<float>.Count;
+            int lastIndex = red.Length - (red.Length % simdLength);
+            float[] ff = new float[simdLength];
+            float[] fR = new float[simdLength];
+            float[] fG = new float[simdLength];
+            float[] fB = new float[simdLength];
+            float* tp = stackalloc float[simdLength];
+            //Vector256<float> zero = Vector256<float>.Zero;
+            Vector256<float> vm = Vector256<float>.Zero;
+            int p;
 
 
+            fixed (float* pF = ff, pR = fR, pG = fG, pB = fB)
+            {
+                for (int i = 0; i < lastIndex; i += simdLength)
+                {
+                    for (int k = 0; k < simdLength; k++)
+                    {
+                        p = k + i;
+                        fR[k] = red[p];
+                        fG[k] = green[p];
+                        fB[k] = blue[p];
+                    }
+                    var vr = Avx.Subtract(Avx.LoadVector256(pG), Avx.LoadVector256(pR));
+                    var vg = Avx.Subtract(Avx.LoadVector256(pB), Avx.LoadVector256(pG));
+                    var vb = Avx.Subtract(Avx.LoadVector256(pR), Avx.LoadVector256(pB));
+                    vm = Avx.Add(Avx.Multiply(vr, vr), Avx.Multiply(vg, vg));
+                    vm = Avx.Add(vm, Avx.Multiply(vb, vb));
+                    vm = Avx.Sqrt(vm);
+                    Avx.Store(tp, vm);
+                    for (int m = 0; m < simdLength; m++)
+                    {
+                        vv[i + m] = tp[m];
+                    }
+                }
+                Amari(lastIndex, red.Length, red, green, blue, vv);
+            }
 
+        }
+
+        private unsafe void Test44_Intrinsics_V128float_Sqrt(byte[] red, byte[] green, byte[] blue, float[] vv)
+        {
+            int simdLength = Vector128<float>.Count;
+            int lastIndex = red.Length - (red.Length % simdLength);
+            float* tp = stackalloc float[simdLength];
+            //var zero = Vector128<float>.Zero;
+            var vm = Vector128<float>.Zero;
+
+            fixed (byte* pR = red, pG = green, pB = blue)
+            {
+                for (int i = 0; i < lastIndex; i += simdLength)
+                {
+                    var vr = Sse.Subtract(Sse2.ConvertToVector128Single(Sse41.ConvertToVector128Int32(pG + i)), Sse2.ConvertToVector128Single(Sse41.ConvertToVector128Int32(pR + i)));
+                    var vg = Sse.Subtract(Sse2.ConvertToVector128Single(Sse41.ConvertToVector128Int32(pB + i)), Sse2.ConvertToVector128Single(Sse41.ConvertToVector128Int32(pG + i)));
+                    var vb = Sse.Subtract(Sse2.ConvertToVector128Single(Sse41.ConvertToVector128Int32(pR + i)), Sse2.ConvertToVector128Single(Sse41.ConvertToVector128Int32(pB + i)));
+                    vm = Sse.Add(Sse.Multiply(vr, vr), Sse.Multiply(vg, vg));
+                    vm = Sse.Add(vm, Sse.Multiply(vb, vb));
+                    vm = Sse.Sqrt(vm);
+
+                    Sse.Store(tp, vm);
+                    for (int m = 0; m < simdLength; m++)
+                    {
+                        vv[i + m] = tp[m];
+                    }
+                }
+            }
+            Amari(lastIndex, red.Length, red, green, blue, vv);
+        }
+
+        private unsafe void Test45_Intrinsics_V256float_Sqrt(byte[] red, byte[] green, byte[] blue, float[] vv)
+        {
+            int simdLength = Vector256<float>.Count;
+            int lastIndex = red.Length - (red.Length % simdLength);
+            float* tp = stackalloc float[simdLength];
+            var zero = Vector256<float>.Zero;
+            var vm = Vector256<float>.Zero;
+
+            fixed (byte* pR = red, pG = green, pB = blue)
+            {
+                for (int i = 0; i < lastIndex; i += simdLength)
+                {
+                    var vr = Avx.Subtract(Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pG + i)), Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pR + i)));
+                    var vg = Avx.Subtract(Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pB + i)), Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pG + i)));
+                    var vb = Avx.Subtract(Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pR + i)), Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pB + i)));
+                    vm = Avx.Add(Avx.Multiply(vr, vr), Avx.Multiply(vg, vg));
+                    vm = Avx.Add(vm, Avx.Multiply(vb, vb));
+                    vm = Avx.Sqrt(vm);
+
+                    Avx.Store(tp, vm);
+                    for (int m = 0; m < simdLength; m++)
+                    {
+                        vv[i + m] = tp[m];
+                    }
+                }
+            }
+            Amari(lastIndex, red.Length, red, green, blue, vv);
+        }
 
 
 
@@ -274,10 +511,10 @@ namespace SIMDでユークリッド距離
             //span.Fill(255);
             span = new Span<byte>(MyZ);
             span.Fill(0);
-            //span = new Span<byte>(MyG);
-            //span.Fill(0);
-            //span = new Span<byte>(MyB);
-            //span.Fill(0);
+            span = new Span<byte>(MyG);
+            span.Fill(0);
+            span = new Span<byte>(MyB);
+            span.Fill(0);
 
 
 
@@ -297,8 +534,8 @@ namespace SIMDでユークリッド距離
             for (int i = 0; i < ELEMENT_COUNT; i++)
             {
                 MyR[i] = (byte)i;
-                MyG[i] = (byte)i;
-                MyB[i] = (byte)i;
+                //MyG[i] = (byte)i;
+                //MyB[i] = (byte)i;
             }
 
         }
@@ -328,7 +565,8 @@ namespace SIMDでユークリッド距離
                 act(red, green, blue, vv);
             }
             sw.Stop();
-            this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒 {vv[1]}  {act.Method.Name}");
+            this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒 {vv[ELEMENT_COUNT - 1].ToString("F16")}  {act.Method.Name}");
+
         }
         private void MyExe(Action<byte[], byte[], byte[], float[]> act, TextBlock tb, byte[] red, byte[] green, byte[] blue, float[] vv)
         {
@@ -342,7 +580,7 @@ namespace SIMDでユークリッド距離
                 act(red, green, blue, vv);
             }
             sw.Stop();
-            this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒 {vv[1]}  {act.Method.Name}");
+            this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒 {vv[ELEMENT_COUNT - 1].ToString("F16")}  {act.Method.Name}");
         }
 
         //private void MyExe(Func<byte[], long> func, TextBlock tb, byte[] vs)
