@@ -34,7 +34,7 @@ namespace _20200306_ユークリッド距離
         private double[] MyResult;
         private float[] MyResultFloat;
 
-        private const int LOOP_COUNT = 10;
+        private const int LOOP_COUNT = 1000;
         private const int ELEMENT_COUNT = 10_000_000;// 1_056_831;// 132_103;// 2071;//要素数
 
         public MainWindow()
@@ -56,8 +56,8 @@ namespace _20200306_ユークリッド距離
             Button1.Click += (s, e) => MyExe(Test1_MathSqrt, Tb1, MyX, MyY, MyXX, MyYY, MyResult);
             Button2.Click += (s, e) => MyExe(Test2_Vector256Double, Tb2, MyX, MyY, MyXX, MyYY, MyResult);
             Button3.Click += (s, e) => MyExe(Test3_Vector256Float, Tb3, MyX, MyY, MyXX, MyYY, MyResultFloat);
-            //Button4.Click += (s, e) => MyExe(Test4_Intrinsics_FMA_MultiplyAdd_double, Tb4, MyArray);
-            //Button5.Click += (s, e) => MyExe(Test5_Intrinsics_AVX_Multiply_Add_long, Tb5, MyArray);
+            //Button4.Click += (s, e) => MyExe(Test4_Vector2_Distance, Tb4, MyX, MyY, MyXX, MyYY, MyResultFloat);
+            Button5.Click += (s, e) => MyExe(Test5_Vector2_Distance, Tb5, MyX, MyY, MyXX, MyYY, MyResultFloat);
             //Button6.Click += (s, e) => MyExe(Test6_Intrinsics_SSE2_MultiplyAddAdjacent_int, Tb6, MyArray);
             //Button7.Click += (s, e) => MyExe(Test7_Intrinsics_SSE41_DotProduct_float, Tb7, MyArray);
             //Button8.Click += (s, e) => MyExe(Test8_Intrinsics_SSE41_DotProduct_float, Tb8, MyArray);
@@ -152,7 +152,32 @@ namespace _20200306_ユークリッド距離
             });
         }
 
+        //遅すぎ
+        //private unsafe void Test4_Vector2_Distance(byte[] x, byte[] y, byte[] xx, byte[] yy, float[] result)
+        //{
+        //    Parallel.ForEach(Partitioner.Create(0, x.Length), range =>
+        //    {
+        //        var v1 = new Vector2();
+        //        var v2 = new Vector2();
+        //        for (int i = range.Item1; i < range.Item2; i++)
+        //        {
+        //            v1.X = x[i]; v1.Y = y[i];
+        //            v2.X = xx[i]; v2.Y = yy[i];
+        //            result[i] = Vector2.Distance(v1, v2);
+        //        }
+        //    });
+        //}
 
+        private unsafe void Test5_Vector2_Distance(byte[] x, byte[] y, byte[] xx, byte[] yy, float[] result)
+        {
+            Parallel.ForEach(Partitioner.Create(0, x.Length), range =>
+            {
+                for (int i = range.Item1; i < range.Item2; i++)
+                {
+                    result[i] = Vector2.Distance(new Vector2(x[i], y[i]), new Vector2(xx[i], yy[i]));
+                }
+            });
+        }
 
 
 
