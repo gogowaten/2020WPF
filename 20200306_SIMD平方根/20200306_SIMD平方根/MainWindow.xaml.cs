@@ -41,7 +41,7 @@ namespace _20200306_SIMD平方根
 
 
 
-            MyTextBlock.Text = $"byte型配列要素数{ELEMENT_COUNT.ToString("N0")}のドット積を {LOOP_COUNT}回求める";
+            MyTextBlock.Text = $"byte型配列要素数{ELEMENT_COUNT.ToString("N0")}の平方根を {LOOP_COUNT}回求める";
             MyTextBlockVectorCount.Text = $"Vector256<byte>.Count={Vector256<byte>.Count}  Vector<byte>.Count={Vector<byte>.Count}";
             MyTextBlockCpuThreadCount.Text = $"CPUスレッド数：{Environment.ProcessorCount}";
 
