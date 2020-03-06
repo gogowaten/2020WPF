@@ -19,6 +19,10 @@ using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
+//結果
+//MathのSqrtを使って普通に計算で良さそう、Vector256floatで計算しても2倍速も行かないくらい
+
+
 namespace _20200306_ユークリッド距離
 {
     /// <summary>
@@ -28,9 +32,10 @@ namespace _20200306_ユークリッド距離
     {
         private byte[] MyX;
         private byte[] MyY;
+        private byte[] MyZ;
         private byte[] MyXX;
         private byte[] MyYY;
-
+        private byte[] MyZZ;
         private double[] MyResult;
         private float[] MyResultFloat;
 
@@ -53,11 +58,11 @@ namespace _20200306_ユークリッド距離
 
 
             ButtonAll.Click += (s, e) => MyExeAll();
-            Button1.Click += (s, e) => MyExe(Test1_MathSqrt, Tb1, MyX, MyY, MyXX, MyYY, MyResult);
-            Button2.Click += (s, e) => MyExe(Test2_Vector256Double, Tb2, MyX, MyY, MyXX, MyYY, MyResult);
-            Button3.Click += (s, e) => MyExe(Test3_Vector256Float, Tb3, MyX, MyY, MyXX, MyYY, MyResultFloat);
+            Button1.Click += (s, e) => MyExe(Test1_MathSqrt, Tb1, MyX, MyY, MyZ, MyXX, MyYY, MyZZ, MyResult);
+            Button2.Click += (s, e) => MyExe(Test2_Vector256Double, Tb2, MyX, MyY, MyZ, MyXX, MyYY, MyZZ, MyResult);
+            Button3.Click += (s, e) => MyExe(Test3_Vector256Float, Tb3, MyX, MyY, MyZ, MyXX, MyYY, MyZZ, MyResultFloat);
             //Button4.Click += (s, e) => MyExe(Test4_Vector2_Distance, Tb4, MyX, MyY, MyXX, MyYY, MyResultFloat);
-            Button5.Click += (s, e) => MyExe(Test5_Vector2_Distance, Tb5, MyX, MyY, MyXX, MyYY, MyResultFloat);
+            Button5.Click += (s, e) => MyExe(Test5_Vector3_Distance, Tb5, MyX, MyY, MyZ, MyXX, MyYY, MyZZ, MyResultFloat);
             //Button6.Click += (s, e) => MyExe(Test6_Intrinsics_SSE2_MultiplyAddAdjacent_int, Tb6, MyArray);
             //Button7.Click += (s, e) => MyExe(Test7_Intrinsics_SSE41_DotProduct_float, Tb7, MyArray);
             //Button8.Click += (s, e) => MyExe(Test8_Intrinsics_SSE41_DotProduct_float, Tb8, MyArray);
@@ -80,29 +85,30 @@ namespace _20200306_ユークリッド距離
 
         }
 
-        private void Test1_MathSqrt(byte[] x, byte[] y, byte[] xx, byte[] yy, double[] result)
+        private void Test1_MathSqrt(byte[] x, byte[] y, byte[] z, byte[] xx, byte[] yy, byte[] zz, double[] result)
         {
             Parallel.ForEach(Partitioner.Create(0, x.Length), range =>
             {
-                int xd, yd;
+                int xd, yd, zd;
                 for (int i = range.Item1; i < range.Item2; i++)
                 {
                     xd = x[i] - xx[i];
                     yd = y[i] - yy[i];
-                    result[i] = Math.Sqrt((xd * xd) + (yd * yd));
+                    zd = z[i] - zz[i];
+                    result[i] = Math.Sqrt((xd * xd) + (yd * yd) + (zd * zd));
                 }
             });
         }
 
 
-        private unsafe void Test2_Vector256Double(byte[] x, byte[] y, byte[] xx, byte[] yy, double[] result)
+        private unsafe void Test2_Vector256Double(byte[] x, byte[] y, byte[] z, byte[] xx, byte[] yy, byte[] zz, double[] result)
         {
             Parallel.ForEach(Partitioner.Create(0, x.Length), range =>
             {
                 int simdLength = Vector256<double>.Count;
                 int lastIndex = range.Item2 - (range.Item2 - range.Item1) % simdLength;
-                Vector256<double> vx, vy, vm;
-                fixed (byte* px = x, py = y, pxx = xx, pyy = yy)
+                Vector256<double> vx, vy, vz, vm;
+                fixed (byte* px = x, py = y, pz = z, pxx = xx, pyy = yy, pzz = zz)
                 {
                     fixed (double* dp = result)
                     {
@@ -115,8 +121,14 @@ namespace _20200306_ユークリッド距離
                             vy = Avx.Subtract(
                                 Avx.ConvertToVector256Double(Sse41.ConvertToVector128Int32(py + i)),
                                 Avx.ConvertToVector256Double(Sse41.ConvertToVector128Int32(pyy + i)));
+                            vz = Avx.Subtract(
+                                Avx.ConvertToVector256Double(Sse41.ConvertToVector128Int32(pz + i)),
+                                Avx.ConvertToVector256Double(Sse41.ConvertToVector128Int32(pzz + i)));
+
                             //2乗和の平方根
-                            vm = Avx.Sqrt(Avx.Add(Avx.Multiply(vx, vx), Avx.Multiply(vy, vy)));
+                            vm = Avx.Add(Avx.Multiply(vx, vx), Avx.Multiply(vy, vy));
+                            vm = Avx.Sqrt(Avx.Add(vm, Avx.Multiply(vz, vz)));
+
                             //結果を配列に書き込み
                             Avx.Store(dp + i, vm);
                         }
@@ -125,14 +137,14 @@ namespace _20200306_ユークリッド距離
             });
         }
 
-        private unsafe void Test3_Vector256Float(byte[] x, byte[] y, byte[] xx, byte[] yy, float[] result)
+        private unsafe void Test3_Vector256Float(byte[] x, byte[] y, byte[] z, byte[] xx, byte[] yy, byte[] zz, float[] result)
         {
             Parallel.ForEach(Partitioner.Create(0, x.Length), range =>
             {
                 int simdLength = Vector256<float>.Count;
                 int lastIndex = range.Item2 - (range.Item2 - range.Item1) % simdLength;
-                Vector256<float> vx, vy, vm;
-                fixed (byte* px = x, py = y, pxx = xx, pyy = yy)
+                Vector256<float> vx, vy, vz, vm;
+                fixed (byte* px = x, py = y, pz = z, pxx = xx, pyy = yy, pzz = zz)
                 {
                     fixed (float* dp = result)
                     {
@@ -144,7 +156,12 @@ namespace _20200306_ユークリッド距離
                             vy = Avx.Subtract(
                                 Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(py + i)),
                                 Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pyy + i)));
-                            vm = Avx.Sqrt(Avx.Add(Avx.Multiply(vx, vx), Avx.Multiply(vy, vy)));
+                            vz = Avx.Subtract(
+                                Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pz + i)),
+                                Avx.ConvertToVector256Single(Avx2.ConvertToVector256Int32(pzz + i)));
+
+                            vm = Avx.Add(Avx.Multiply(vx, vx), Avx.Multiply(vy, vy));
+                            vm = Avx.Sqrt(Avx.Add(vm, Avx.Multiply(vz, vz)));
                             Avx.Store(dp + i, vm);
                         }
                     }
@@ -168,26 +185,53 @@ namespace _20200306_ユークリッド距離
         //    });
         //}
 
-        private unsafe void Test5_Vector2_Distance(byte[] x, byte[] y, byte[] xx, byte[] yy, float[] result)
+        private unsafe void Test5_Vector3_Distance(byte[] x, byte[] y, byte[] z, byte[] xx, byte[] yy, byte[] zz, float[] result)
         {
             Parallel.ForEach(Partitioner.Create(0, x.Length), range =>
             {
                 for (int i = range.Item1; i < range.Item2; i++)
                 {
-                    result[i] = Vector2.Distance(new Vector2(x[i], y[i]), new Vector2(xx[i], yy[i]));
+                    result[i] = Vector3.Distance(new Vector3(x[i], y[i], z[i]), new Vector3(xx[i], yy[i], zz[i]));
                 }
             });
         }
 
 
+        #region 未使用
+        private unsafe float Test(float* f1, float* f2, int n)
+        {            
+            var u = Vector128<float>.Zero;
+            for (int i = 0; i < n; i += 4)
+            {
+                var w = Sse.LoadVector128(f1);
+                var x = Sse.LoadVector128(f2);
+                x = Sse.Multiply(w, x);
+                u = Sse.Add(u, x);
+            }
+            float* p = stackalloc float[4];
+            Sse.Store(p, u);
+            return p[0] + p[1] + p[2] + p[3];
+        }
+
+        private unsafe void Exe()
+        {
+            float[] f1 = new float[ELEMENT_COUNT];
+            float[] f2 = new float[ELEMENT_COUNT];
+            fixed (float* p1 = f1, p2 = f2)
+            {
+                var neko = Test(p1, p2, ELEMENT_COUNT);
+            }
+        }
+        #endregion 未使用
 
         private void MyInitialize()
         {
             MyX = new byte[ELEMENT_COUNT];
             MyY = new byte[ELEMENT_COUNT];
+            MyZ = new byte[ELEMENT_COUNT];
             MyXX = new byte[ELEMENT_COUNT];
             MyYY = new byte[ELEMENT_COUNT];
-
+            MyZZ = new byte[ELEMENT_COUNT];
             MyResult = new double[ELEMENT_COUNT];
             MyResultFloat = new float[ELEMENT_COUNT];
 
@@ -207,13 +251,15 @@ namespace _20200306_ユークリッド距離
             {
                 MyX[i] = (byte)i;
                 MyY[i] = (byte)i;
+                MyZ[i] = (byte)i;
             }
 
 
         }
 
         #region 時間計測
-        private void MyExe(Action<byte[], byte[], byte[], byte[], double[]> func, TextBlock tb, byte[] x, byte[] y, byte[] xx, byte[] yy, double[] result)
+        private void MyExe(Action<byte[], byte[], byte[], byte[], byte[], byte[], double[]> func,
+            TextBlock tb, byte[] x, byte[] y, byte[] z, byte[] xx, byte[] yy, byte[] zz, double[] result)
         {
             Span<double> span = new Span<double>(result);
             span.Fill(0);
@@ -222,7 +268,7 @@ namespace _20200306_ユークリッド距離
             sw.Start();
             for (int i = 0; i < LOOP_COUNT; i++)
             {
-                func(x, y, xx, yy, result);
+                func(x, y, z, xx, yy, zz, result);
             }
             sw.Stop();
 
@@ -230,7 +276,8 @@ namespace _20200306_ユークリッド距離
             this.Dispatcher.Invoke(() => tb.Text = $"処理時間：{sw.Elapsed.TotalSeconds.ToString("000.000")}秒 {total.ToString("F16")}  {func.Method.Name}");
         }
 
-        private void MyExe(Action<byte[], byte[], byte[], byte[], float[]> func, TextBlock tb, byte[] x, byte[] y, byte[] xx, byte[] yy, float[] result)
+        private void MyExe(Action<byte[], byte[], byte[], byte[], byte[], byte[], float[]> func,
+            TextBlock tb, byte[] x, byte[] y, byte[] z, byte[] xx, byte[] yy, byte[] zz, float[] result)
         {
             Span<float> span = new Span<float>(result);
             span.Fill(0);
@@ -239,7 +286,7 @@ namespace _20200306_ユークリッド距離
             sw.Start();
             for (int i = 0; i < LOOP_COUNT; i++)
             {
-                func(x, y, xx, yy, result);
+                func(x, y, z, xx, yy, zz, result);
             }
             sw.Stop();
 
@@ -272,11 +319,11 @@ namespace _20200306_ユークリッド距離
             var sw = new Stopwatch();
             sw.Start();
             this.IsEnabled = false;
-            await Task.Run(() => MyExe(Test1_MathSqrt, Tb1, MyX, MyY, MyXX, MyYY, MyResult));
-            //await Task.Run(() => MyExe(Test2_Numerics_Dot_long, Tb2, MyArray));
-            //await Task.Run(() => MyExe(Test3_Intrinsics_FMA_MultiplyAdd_float, Tb3, MyArray));
+            await Task.Run(() => MyExe(Test1_MathSqrt, Tb1, MyX, MyY, MyZ, MyXX, MyYY, MyZZ, MyResult));
+            await Task.Run(() => MyExe(Test2_Vector256Double, Tb2, MyX, MyY, MyZ, MyXX, MyYY, MyZZ, MyResult));
+            await Task.Run(() => MyExe(Test3_Vector256Float, Tb3, MyX, MyY, MyZ, MyXX, MyYY, MyZZ, MyResultFloat));
             //await Task.Run(() => MyExe(Test4_Intrinsics_FMA_MultiplyAdd_double, Tb4, MyArray));
-            //await Task.Run(() => MyExe(Test5_Intrinsics_AVX_Multiply_Add_long, Tb5, MyArray));
+            await Task.Run(() => MyExe(Test5_Vector3_Distance, Tb5, MyX, MyY, MyZ, MyXX, MyYY, MyZZ, MyResultFloat));
             //await Task.Run(() => MyExe(Test6_Intrinsics_SSE2_MultiplyAddAdjacent_int, Tb6, MyArray));
             //await Task.Run(() => MyExe(Test7_Intrinsics_SSE41_DotProduct_float, Tb7, MyArray));
             //await Task.Run(() => MyExe(Test8_Intrinsics_SSE41_DotProduct_float, Tb8, MyArray));
