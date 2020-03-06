@@ -30,7 +30,7 @@ namespace _20200306_SIMD平方根
     public partial class MainWindow : Window
     {
         private byte[] MyArray;
-        private const int LOOP_COUNT = 10;
+        private const int LOOP_COUNT = 1000;
         private const int ELEMENT_COUNT = 10_000_000;// 1_056_831;// 132_103;// 2071;//要素数
 
         public MainWindow()
