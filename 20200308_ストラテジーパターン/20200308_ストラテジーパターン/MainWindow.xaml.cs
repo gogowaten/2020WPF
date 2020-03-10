@@ -23,10 +23,12 @@ using System.Diagnostics;
 //Abstract Factory、近い気もするけど難しすぎてわからん
 //Bridge、いい気がするけど少し違うかも、いやかなり近いかも、namespace使わないのがいい
 
+//    ストラテジー: C#　プログラミング　再入門
+//http://dotnetcsharptips.seesaa.net/article/406029274.html?seesaa_related=category
 
 namespace _20200308_ストラテジーパターン
 {
-    using Framework;
+
 
 
     /// <summary>
@@ -38,151 +40,38 @@ namespace _20200308_ストラテジーパターン
         {
             InitializeComponent();
 
-            //var neko = Encoding.GetEncodings();
-            //foreach (var item in neko)
-            //{
-            //    Debug.WriteLine(item.DisplayName);
-            //    Debug.WriteLine(item.Name);
-            //}
+            var neko = new Context(new StrategyA());
+            neko.Execute();
+            neko.Strategy = new StrategyB();
+            neko.Execute();
 
-            Display d1 = new Display(new StringDisplayImpl("Hello, Japan."));
-            Display d2 = new CountDisplay(new StringDisplayImpl("Hello, World."));
-            CountDisplay d3 = new CountDisplay(new StringDisplayImpl("Hello, Universe."));
-            d1.Show();
-            d2.Show();
-            d3.Show();
-            d3.MultiDisplay(2);
-            var dd = new CountDisplay(new StringDisplayImpl("yukkuri"));
-            
         }
     }
 
-
-    public class Display
+    interface IStrategy
     {
-        private DisplayImpl impl;
-        public Display(DisplayImpl impl)
-        {
-            this.impl = impl;
-        }
-
-        public void Open()
-        {
-            impl.RawOpen();
-        }
-
-        public void Print()
-        {
-            impl.RawPrint();
-        }
-
-        public void Close()
-        {
-            impl.RawClose();
-        }
-
-        public void Show()
-        {
-            Open();
-            Print();
-            Close();
-        }
+        void DoSomething();
     }
 
-    // RefinedAbstraction
-    // ・Abstractionに対して機能を追加
-    public class CountDisplay : Display
+    class StrategyA : IStrategy
     {
-        public CountDisplay(DisplayImpl impl) : base(impl) { }
-
-        public void MultiDisplay(int times)
-        {
-            Open();
-            for (int i = 0; i < times; i++)
-            {
-                Print();
-            }
-            Close();
-        }
+        public void DoSomething() => Debug.WriteLine("Strategy A.");
     }
 
-    // Implementor
-    // ・実装のクラス階層の最上位クラス
-    // ・Abstranctionのインターフェース（API）を規定する
-    public abstract class DisplayImpl
+    class StrategyB : IStrategy
     {
-        public abstract void RawOpen();
-        public abstract void RawPrint();
-        public abstract void RawClose();
+        public void DoSomething() => Debug.WriteLine("Strategy B.");
     }
 
-    // ConcreteImplementator
-    // ・Implementatorを具体的に実装する
-    public class StringDisplayImpl : DisplayImpl
+    class Context
     {
-        private string str;
-        private int width;
-        public StringDisplayImpl(string str)
-        {
-            this.str = str;
-            Encoding sjisEnc = Encoding.GetEncoding("shift_jis");
-            this.width = sjisEnc.GetByteCount(str);
-        }
-
-        public override void RawOpen()
-        {
-            PrintLine();
-        }
-
-        public override void RawPrint()
-        {
-            Console.WriteLine($"|{str}|");
-        }
-
-        public override void RawClose()
-        {
-            PrintLine();
-        }
-
-        public void PrintLine()
-        {
-            Console.Write("+");
-            for (int i = 0; i < width; i++)
-            {
-                Console.Write("-");
-            }
-            Console.WriteLine("+");
-        }
+        public IStrategy Strategy { set; private get; }
+        public Context(IStrategy strategy) => Strategy = strategy;
+        public void Execute() => Strategy.DoSomething();
     }
+
+
 }
-
-
-namespace Framework
-{
-    // Prototype
-    public interface Product : ICloneable
-    {
-        void Use(string s);
-        Product CreateClone();
-    }
-
-    // Client
-    public class Manager
-    {
-        private Dictionary<string, Product> showcase = new Dictionary<string, Product>();
-        public void Register(string name, Product proto)
-        {
-            showcase.Add(name, proto);
-        }
-        public Product Create(string protoname)
-        {
-            Product p = showcase[protoname];
-            return p.CreateClone();
-        }
-    }
-}
-
-
 
 
 
