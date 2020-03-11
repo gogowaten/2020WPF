@@ -29,6 +29,12 @@ namespace _20200131_ストラテジーパターン
         {
             InitializeComponent();
 
+            //インターフェース版
+            var inu = new LLL(new Selecter1(), new Splitter1());
+            inu.Execute();
+            inu = new LLL(new Selecter2(), new Splitter1());
+            inu.Execute();
+
             //抽象クラス版
             AbstTestClass neko;
             neko = new AbstTestClass(new AbsClsSelecter1(), new AbsClsSplitter1());
@@ -39,18 +45,7 @@ namespace _20200131_ストラテジーパターン
             //neko.Select();
             //neko.Split();
             neko.Execute();
-
-            //インターフェース版
-            var inu = new LLL(new Selecter1(), new Splitter1());
-            inu.Execute();
-            inu = new LLL(new Selecter2(), new Splitter1());
-            inu.Execute();
-
-            //CCCI uma;
-            //uma = new CCCI(new AAAI());
-            //uma.Execute();
-            //uma = new CCCI(new BBBI());
-            //uma.Execute();
+         
         }
     }
 
