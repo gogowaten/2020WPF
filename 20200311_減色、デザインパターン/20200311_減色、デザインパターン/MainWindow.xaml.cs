@@ -169,9 +169,9 @@ namespace _20200311_減色_デザインパターン
         }
 
 
-        public class SetCube
+        public abstract class Entry
         {
-
+            public byte[] Values;
         }
         public enum KeyColor
         {
