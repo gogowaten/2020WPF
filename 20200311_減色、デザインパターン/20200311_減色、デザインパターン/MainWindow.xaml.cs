@@ -38,14 +38,79 @@ namespace _20200311_減色_デザインパターン
             var r = new Random();
             r.NextBytes(MyPixels);
 
-            Cube cube = new Cube(MyPixels);
-            var c2 = new MyAbSelect(new AbSelectA(cube));
-            c2.Exe();
-            c2.AbSelect = new AbSelectB(cube);
-            c2.Exe();
+            var cube = new Cube1(MyPixels);
+            cube.SplitCube(3, cube);
+            
 
         }
     }
+
+    #region
+    public class Cube1
+    {
+        public byte[] Values;
+        public List<Cube1> Cubes;
+        public byte Min;
+        public byte Max;
+        public int Count;
+
+        public Cube1(byte[] vs)
+        {
+            Values = vs;
+            Cubes = new List<Cube1>();
+            Cubes.Add(this);
+            Initialize();
+        }
+        private void Initialize()
+        {
+            Min = byte.MaxValue;
+            Max = byte.MinValue;
+            Count = Values.Length;
+            for (int i = 0; i < Count; i++)
+            {
+                var v = Values[i];
+                if (Min > v) Min = v;
+                if (Max < v) Max = v;
+            }
+        }
+
+        private Cube1 SelectA(List<Cube1> cubes)
+        {
+            int side = 0;
+            Cube1 cube = cubes[0];
+            foreach (var item in cubes)
+            {
+                if (side < item.Max - item.Min) cube = item;
+            }
+            return cube;
+        }
+        private (Cube1 cubeA, Cube1 cubeB) SplitA(Cube1 cube)
+        {
+            int mid = (int)((cube.Max + cube.Min) / 2.0);
+            return (new Cube1(cube.Values.Where((x) => x > mid).ToArray()),
+                new Cube1(cube.Values.Where((x) => x <= mid).ToArray()));
+        }
+
+        public void SplitCube(int count, Cube1 cube)
+        {
+            while (cube.Cubes.Count < count)
+            {
+                var c = SelectA(cube.Cubes);
+                var cc = SplitA(c);
+                cube.Cubes.Remove(c);
+                cube.Cubes.Add(cc.cubeA);
+                cube.Cubes.Add(cc.cubeB);
+            }
+
+        }
+    }
+
+
+
+    #endregion
+
+
+
 
     public abstract class AbSelect
     {
@@ -168,11 +233,6 @@ namespace _20200311_減色_デザインパターン
 
         }
 
-
-        public abstract class Entry
-        {
-            public byte[] Values;
-        }
         public enum KeyColor
         {
             None = 0,
@@ -181,4 +241,32 @@ namespace _20200311_減色_デザインパターン
             Blue,
         }
     }
+
+
+
+
+    public abstract class Entry
+    {
+        public byte[] Values;
+    }
+    public class File : Entry
+    {
+
+    }
+    public class Files
+    {
+        List<Entry> entries;
+        public void Add(Entry entry) => entries.Add(entry);
+    }
+    public class Tukau
+    {
+        private void Test()
+        {
+            var f = new File();
+
+        }
+    }
+
+
+
 }
