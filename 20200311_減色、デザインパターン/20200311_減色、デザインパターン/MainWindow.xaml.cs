@@ -41,7 +41,14 @@ namespace _20200311_減色_デザインパターン
             var cube = new Cube1(MyPixels);
             cube.SplitCube(3, cube);
 
+            var c3 = new SelecterA3(MyPixels);
 
+
+            var ccc5 = new Cube5(MyPixels, SelectType.SideLong, SplitType.SideMid, new CalcA(), new SplitA());
+            ccc5.Calc();
+            ccc5.Select();
+            ccc5.ExeSplitCalc();
+            ccc5.ExeSplit();
         }
     }
 
@@ -162,20 +169,21 @@ namespace _20200311_減色_デザインパターン
 
     #endregion
 
+    //必要なプロパティ群を、インターフェースを付加したクラスに置いてみたけど、うまく行かない
     #region
-    //必要なプロパティ群をインターフェースを付加したクラスに置いてみたけど、うまく行かない
     public interface ISelecter3
     {
         Cube3 Select(List<Cube3> cubes);
     }
     public class SelecterA3 : ISelecter3
     {
-        private byte Min;
-        private byte Max;
+        public byte Min;
+        public byte Max;
         public SelecterA3(byte[] pixels)
         {
             //ここでminmaxを計算
         }
+
         public Cube3 Select(List<Cube3> cubes)
         {
             throw new NotImplementedException();
@@ -198,27 +206,39 @@ namespace _20200311_減色_デザインパターン
             throw new NotImplementedException();
         }
     }
+    //Cube自体にCubeを作成する機能、セレクターとスプリッターの種類のenumをもたせる
     public class Cube3
     {
+        public SelectType SelectType;
+        public SplitType SplitType;
+        public ISelecter3 Selecter;
+        public ISplitter3 Splitter;
         private List<Cube3> CubeList = new List<Cube3>();
         private byte[] Pixels;
-        private ISelecter3 Selecter;
-        private ISplitter3 Splitter;
-        public Cube3(byte[] pixels, ISelecter3 selecter, ISplitter3 splitter)
+        public Cube3(byte[] pixels, SelectType selectType, SplitType splitType)
         {
             Pixels = pixels;
-            Selecter = selecter;
-            Splitter = splitter;
             CubeList.Add(this);
+            SelectType = selectType;
+            SplitType = splitType;
         }
         public void Exe(int count)
         {
             Splitter.Split(Selecter.Select(CubeList));
         }
     }
+    public class Tukau3
+    {
+        private void Test()
+        {
+            var pixels = new byte[40];
+            var neko = new Cube3(pixels, SelectType.SideLong, SplitType.SideMid);
 
+        }
+    }
     #endregion
 
+    //____________________________________________________
     #region
     public abstract class SelecterBase
     {
@@ -252,7 +272,191 @@ namespace _20200311_減色_デザインパターン
     }
     #endregion
 
+    //___________________________________________________
 
+    #region
+    public interface ICalc
+    {
+        public void Calc(Cube5 cube);
+        public Cube5 Select(List<Cube5> cubes);
+    }
+    public class CalcA : ICalc
+    {
+        public void Calc(Cube5 cube)
+        {
+            byte min = cube.Min;
+            byte max = cube.Max;
+            foreach (var item in cube.Pixels)
+            {
+                if (min > item) min = item;
+                if (max < item) max = item;
+            }
+            cube.Min = min;cube.Max = max;
+            cube.IsCalcMinMax = true;
+        }
+
+        public Cube5 Select(List<Cube5> cubes)
+        {
+            Cube5 cube = cubes[0];
+            int length = 0;
+            foreach (var item in cubes)
+            {
+                if (length < item.Max - item.Min) cube = item;
+            }
+            return cube;
+        }
+    }
+    public class CalcB : ICalc
+    {
+        public void Calc(Cube5 cube)
+        {
+            cube.Count = cube.Pixels.Length;
+            cube.IsCalcMinMax = true;
+        }
+
+        public Cube5 Select(List<Cube5> cubes)
+        {
+            Cube5 cube = cubes[0];
+            foreach (var item in cubes)
+            {
+                if (cube.Pixels.Length < item.Pixels.Length)
+                    cube = item;
+            }
+            return cube;
+        }
+    }
+    public interface ISplitCalc
+    {
+        public void Calc(Cube5 cube);
+        public (Cube5 cubeA, Cube5 cubeB) Split(Cube5 cube);
+    }
+    //辺の中央で分割
+    public class SplitA : ISplitCalc
+    {
+        public void Calc(Cube5 cube)
+        {
+            if (cube.IsCalcMinMax == false)
+            {
+                new CalcA().Calc(cube);
+            }
+        }
+
+        public (Cube5 cubeA, Cube5 cubeB) Split(Cube5 cube)
+        {
+            var pixA = new List<byte>();
+            var pixB = new List<byte>();
+            int mid = (int)((cube.Max + cube.Min) / 2.0);
+            foreach (var item in cube.Pixels)
+            {
+                if (item < mid)
+                {
+                    pixA.Add(item);
+                }
+                else
+                {
+                    pixB.Add(item);
+                }
+            }
+            var cuA = new Cube5(pixA.ToArray(), cube.SelectType, cube.SplitType, cube.CalcType, cube.SplitCalc);
+            var cuB = new Cube5(pixB.ToArray(), cube.SelectType, cube.SplitType, cube.CalcType, cube.SplitCalc);
+            return (cuA, cuB);
+        }
+    }
+    //中央値
+    public class SplitB : ISplitCalc
+    {
+        public void Calc(Cube5 cube)
+        {
+            //if (cube.IsCalcCount == false) new CalcB().Calc(cube);
+        }
+
+        public (Cube5 cubeA, Cube5 cubeB) Split(Cube5 cube)
+        {
+            var pixA = new List<byte>();
+            var pixB = new List<byte>();
+            byte[] neko = cube.Pixels.OrderBy(x => x).ToArray();
+
+            int mid = neko[neko.Length / 2];
+            foreach (var item in cube.Pixels)
+            {
+                if (item < mid)
+                {
+                    pixA.Add(item);
+                }
+                else
+                {
+                    pixB.Add(item);
+                }
+            }
+            var cuA = new Cube5(pixA.ToArray(), cube.SelectType, cube.SplitType, cube.CalcType, cube.SplitCalc);
+            var cuB = new Cube5(pixB.ToArray(), cube.SelectType, cube.SplitType, cube.CalcType, cube.SplitCalc);
+            return (cuA, cuB);
+        }
+    }
+
+    public class Cube5
+    {
+        public SelectType SelectType;
+        public SplitType SplitType;
+        public ICalc CalcType;
+        public ISplitCalc SplitCalc;
+        public List<Cube5> Cubes = new List<Cube5>();
+        public byte[] Pixels;
+        public byte Min;
+        public byte Max;
+        public bool IsCalcMinMax = false;
+        public int Count;
+        public bool IsCalcCount = false;
+        public Cube5(byte[] vs, SelectType selectType, SplitType splitType, ICalc calc, ISplitCalc splitCalc)
+        {
+            Pixels = vs;
+            SelectType = selectType;
+            SplitType = splitType;
+            Cubes.Add(this);
+            CalcType = calc;
+            SplitCalc = splitCalc;
+        }
+        public void Calc()
+        {
+            CalcType.Calc(this);
+        }
+        public void Select()
+        {
+            var ccc = CalcType.Select(Cubes);
+            var neko = ccc;
+        }
+        public void ExeSplitCalc()
+        {
+            SplitCalc.Calc(this);
+        }
+        public void ExeSplit()
+        {
+            var ccc = CalcType.Select(Cubes);
+            var neko = SplitCalc.Split(ccc);
+        }
+
+    }
+    public class Tukau5
+    {
+        private void Test()
+        {
+            var pixels = new byte[40];
+            var neko = new Cube5(pixels, SelectType.SideLong, SplitType.SideMid, new CalcA(), new SplitA());
+
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+    #endregion
 
 
 
@@ -383,7 +587,21 @@ namespace _20200311_減色_デザインパターン
 
         }
     }
-
+    //選択タイプ
+    public enum SelectType
+    {
+        SideLong = 1,
+        ManyPixels,
+        Taiseki,
+        Varient,
+    }
+    //分割タイプ
+    public enum SplitType
+    {
+        SideMid = 1,
+        PixelsMid,
+        Ootu
+    }
 
 
 }
