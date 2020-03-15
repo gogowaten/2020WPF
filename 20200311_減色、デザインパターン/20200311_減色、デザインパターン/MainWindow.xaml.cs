@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 
 using System.Diagnostics;
 
+//だいたいできた、Cube5がそれ
 
 namespace _20200311_減色_デザインパターン
 {
@@ -44,10 +45,10 @@ namespace _20200311_減色_デザインパターン
             var c3 = new SelecterA3(MyPixels);
 
 
-            var ccc5 = new Cube5(MyPixels, new CalcA(), new SplitA());
+            var ccc5 = new Cube5(MyPixels, new SelectCube5_LongSide(), new SplitCube5_SideMid());
             ccc5.ExeGensyoku(8);
             var neko = ccc5.Cubes;
-            ccc5 = new Cube5(MyPixels, new CalcB(), new SplitB());            
+            ccc5 = new Cube5(MyPixels, new SelectCube5_ManyPicexls(), new SplitCube5_Mid());            
             ccc5.ExeGensyoku(8);
             neko = ccc5.Cubes;
         }
@@ -276,12 +277,12 @@ namespace _20200311_減色_デザインパターン
     //___________________________________________________
 
     #region
-    public interface ISelectCalc
+    public interface ISelectCube5
     {
         public void Calc(Cube5 cube);
         public Cube5 Select(Cube5 cube);
     }
-    public class CalcA : ISelectCalc
+    public class SelectCube5_LongSide : ISelectCube5
     {
         public void Calc(Cube5 cube)
         {
@@ -308,7 +309,7 @@ namespace _20200311_減色_デザインパターン
             return result;
         }
     }
-    public class CalcB : ISelectCalc
+    public class SelectCube5_ManyPicexls : ISelectCube5
     {
         public void Calc(Cube5 cube)
         {
@@ -327,13 +328,13 @@ namespace _20200311_減色_デザインパターン
             return result;
         }
     }
-    public interface ISplitCalc
+    public interface ISplitCube5
     {
         public void Calc(Cube5 cube);
         public (Cube5 cubeA, Cube5 cubeB) Split(Cube5 cube);
     }
     //辺の中央で分割
-    public class SplitA : ISplitCalc
+    public class SplitCube5_SideMid : ISplitCube5
     {
         public void Calc(Cube5 cube)
         {
@@ -345,7 +346,7 @@ namespace _20200311_減色_デザインパターン
 
         public (Cube5 cubeA, Cube5 cubeB) Split(Cube5 cube)
         {
-            if (cube.IsCalcMinMax == false) new CalcA().Calc(cube);
+            if (cube.IsCalcMinMax == false) new SelectCube5_LongSide().Calc(cube);
             var pixA = new List<byte>();
             var pixB = new List<byte>();
             int mid = (int)((cube.Max + cube.Min) / 2.0);
@@ -366,7 +367,7 @@ namespace _20200311_減色_デザインパターン
         }
     }
     //中央値
-    public class SplitB : ISplitCalc
+    public class SplitCube5_Mid : ISplitCube5
     {
         public void Calc(Cube5 cube)
         {
@@ -375,7 +376,7 @@ namespace _20200311_減色_デザインパターン
 
         public (Cube5 cubeA, Cube5 cubeB) Split(Cube5 cube)
         {
-            if (cube.IsCalcCount == false) new CalcB().Calc(cube);
+            if (cube.IsCalcCount == false) new SelectCube5_ManyPicexls().Calc(cube);
             var pixA = new List<byte>();
             var pixB = new List<byte>();
             byte[] neko = cube.Pixels.OrderBy(x => x).ToArray();
@@ -402,25 +403,8 @@ namespace _20200311_減色_デザインパターン
     {
         //public SelectType SelectType;
         //public SplitType SplitType;
-        public ISelectCalc Selecter
-        {
-            get { return _Selecter; }
-            set
-            {
-                _Selecter = value;
-                _Selecter.Calc(this);
-            }
-        }
-        private ISelectCalc _Selecter;
-        public ISplitCalc Splitter
-        {
-            get => _Splitter; set
-            {
-                _Splitter = value;
-                //_Splitter.Calc(this);
-            }
-        }
-        private ISplitCalc _Splitter;
+        public ISelectCube5 Selecter;
+        public ISplitCube5 Splitter;
         public List<Cube5> Cubes = new List<Cube5>();
         public byte[] Pixels;
         public byte Min;
@@ -428,7 +412,7 @@ namespace _20200311_減色_デザインパターン
         public bool IsCalcMinMax = false;
         public int Count;
         public bool IsCalcCount = false;
-        public Cube5(byte[] vs, ISelectCalc calc, ISplitCalc splitCalc)
+        public Cube5(byte[] vs, ISelectCube5 calc, ISplitCube5 splitCalc)
         {
             Pixels = vs;
             //SelectType = selectType;
