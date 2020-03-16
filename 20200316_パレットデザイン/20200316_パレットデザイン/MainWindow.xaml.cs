@@ -24,7 +24,9 @@ namespace _20200316_パレットデザイン
     public partial class MainWindow : Window
     {
         MyColorData MyDataContext;
-        const int COLOR_COUNT = 2;
+        const int COLOR_COUNT = 12;
+        ListBox MyListBox3;
+        MyColorData MyColorData3;
 
         public MainWindow()
         {
@@ -37,6 +39,7 @@ namespace _20200316_パレットデザイン
             MyListBox1.ItemTemplate = CreateDataTemplate();
 
 
+
             List<Color> colors = MakeColors(COLOR_COUNT);
             MyDataContext = new MyColorData(colors);
             MyListBox1.DataContext = MyDataContext.Data;
@@ -44,8 +47,37 @@ namespace _20200316_パレットデザイン
             var data = new List<int> { 1, 2, 3 };
             MyListBox2.DataContext = data;
 
+            MyListBox3 = new ListBox();
+            //ListBoxのItemsSourceのバインディングBinding
+            var bind = new Binding();
+            MyListBox3.SetBinding(ListBox.ItemsSourceProperty, bind);
+            
+            //listboxの要素追加方向を横にする
+            var stackP = new FrameworkElementFactory(typeof(StackPanel));
+            stackP.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+            var itemsPanel = new ItemsPanelTemplate() { VisualTree = stackP };
+            MyListBox3.ItemsPanel = itemsPanel;
+            //ListBoxのアイテムテンプレート作成、設定
+            MyListBox3.ItemTemplate = CreateDataTemplate();
+            //データ作成、設定
+            MyColorData3 = new MyColorData(MakeColors(9));
+            MyListBox3.DataContext = MyColorData3.Data;
+            //表示
+            MyStackPanel.Children.Add(MyListBox3);
 
+            MyListBox3.MouseLeftButtonUp += MyListBox3_MouseLeftButtonUp;
         }
+
+        private void MyListBox3_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            var lb = sender as ListBox;
+            var index = lb.SelectedIndex;
+            MyColorData3.Data[index] = new MyColor(Colors.Red);
+        }
+
+    
+
+     
 
         private List<Color> MakeColors(int count)
         {
@@ -62,22 +94,22 @@ namespace _20200316_パレットデザイン
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
+            MyDataContext.Data[0] = new MyColor(Colors.Red);//ok
 
         }
 
         private DataTemplate CreateDataTemplate()
         {
+            var border = new FrameworkElementFactory(typeof(Border));
+            border.SetValue(WidthProperty, 20.0);
+            border.SetValue(HeightProperty, 20.0);
+            border.SetBinding(BackgroundProperty, new Binding(nameof(MyColor.Brush)));
+            
+
             var panel = new FrameworkElementFactory(typeof(StackPanel));
             panel.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+            panel.AppendChild(border);
 
-            for (int i = 0; i < COLOR_COUNT; i++)
-            {
-                var border = new FrameworkElementFactory(typeof(Border));
-                border.SetValue(WidthProperty, 20.0);
-                border.SetValue(HeightProperty, 20.0);
-                border.SetBinding(BackgroundProperty, new Binding(nameof(MyColor.Brush)));
-                panel.AppendChild(border);
-            }
 
             var dt = new DataTemplate();
             dt.VisualTree = panel;
