@@ -1,0 +1,24 @@
+﻿<Window x:Class="_20200316_パレットデザイン.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:_20200316_パレットデザイン"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="400">
+  <Grid Margin="2,20">
+    <StackPanel>
+      <Button x:Name="Button1" Content="button1" Click="Button1_Click"/>
+
+
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="MyStackPanel">
+          <ListBox x:Name="MyListBox1" ItemsSource="{Binding}"/>
+          <ListBox x:Name="MyListBox2" ItemsSource="{Binding}"/>
+          
+
+        </StackPanel>
+      </ScrollViewer>
+    </StackPanel>
+  </Grid>
+</Window>
