@@ -6,6 +6,8 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Collections.ObjectModel;
 //ItemTemplateで表示を変更したListBoxを動的作成したい
+//WPFのListBox、ItemTemplateで表示変更したListBoxを動的作成したいのでXAMLじゃなくてC#コードで書いてみた - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/03/17/133941
 
 namespace _20200317_ListBox
 {
