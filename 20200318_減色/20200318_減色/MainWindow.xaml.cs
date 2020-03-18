@@ -13,6 +13,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+using System.Collections.ObjectModel;
+
+
 namespace _20200318_減色
 {
     /// <summary>
@@ -22,6 +25,7 @@ namespace _20200318_減色
     {
         byte[] MyOriginPixels;
         BitmapSource MyOriginBitmap;
+        List<List<Color>> MyColorList = new List<List<Color>>();
 
         public MainWindow()
         {
@@ -40,11 +44,14 @@ namespace _20200318_減色
             ComboBoxSelectType.SelectedIndex = 0;
             ComboBoxSplitType.ItemsSource = Enum.GetValues(typeof(SplitType));
             ComboBoxSplitType.SelectedIndex = 0;
+            ComboBoxColorSelectType.ItemsSource = Enum.GetValues(typeof(ColorSelectType));
+            ComboBoxColorSelectType.SelectedIndex = 0;
 
             string file;
             file = @"D:\ブログ用\テスト用画像\NEC_1456_2018_03_17_午後わてん.jpg";
             (MyOriginPixels, MyOriginBitmap) = MakeBitmapSourceAndPixelData(file, PixelFormats.Gray8, 96, 96);
 
+            MyImage.Source = MyOriginBitmap;
 
         }
 
@@ -53,8 +60,64 @@ namespace _20200318_減色
             SelectType select = (SelectType)ComboBoxSelectType.SelectedItem;
             SplitType split = (SplitType)ComboBoxSplitType.SelectedItem;
             var cube = new Cube5(MyOriginPixels, GetSelecter(select), GetSplitter(split));
-            cube.ExeGensyoku(2);
+            cube.ExeGensyoku(8);
 
+            var colors = cube.GetColors((ColorSelectType)ComboBoxColorSelectType.SelectedItem);
+            var data = MakeDataContext(colors);
+            MyColorList.Add(colors);
+
+            ListBox list = CreateListBox();
+            MyStackPanel.Children.Add(list);
+            list.DataContext = data;
+
+
+        }
+        private ObservableCollection<MyData> MakeDataContext(List<Color> colors)
+        {
+            var data = new ObservableCollection<MyData>();
+            for (int i = 0; i < colors.Count; i++)
+            {
+                data.Add(new MyData(colors[i]));
+            }
+            return data;
+        }
+
+        //        2020WPF/MainWindow.xaml.cs at master · gogowaten/2020WPF
+        //https://github.com/gogowaten/2020WPF/blob/master/20200317_ListBox/20200317_ListBox/MainWindow.xaml.cs
+
+        private ListBox CreateListBox()
+        {
+            var listBox = new ListBox();
+            listBox.SetBinding(ListBox.ItemsSourceProperty, new Binding());
+            //listboxの要素追加方向を横にする
+            var stackPanel = new FrameworkElementFactory(typeof(StackPanel));
+            stackPanel.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+            var itemsPanel = new ItemsPanelTemplate() { VisualTree = stackPanel };
+            listBox.ItemsPanel = itemsPanel;
+
+            //ListBoxのアイテムテンプレート作成、設定
+            //ItemTemplate作成、Bindingも設定する
+            //縦積みのstackPanelにBorderとTextBlock
+            //StackPanel(縦積み)
+            //┣Border
+            //┗TextBlock
+            var border = new FrameworkElementFactory(typeof(Border));
+            border.SetValue(WidthProperty, 20.0);
+            border.SetValue(HeightProperty, 10.0);
+            border.SetBinding(BackgroundProperty, new Binding(nameof(MyData.Brush)));
+
+            var textBlock = new FrameworkElementFactory(typeof(TextBlock));
+            textBlock.SetBinding(TextBlock.TextProperty, new Binding(nameof(MyData.GrayScaleValue)));
+
+            var panel = new FrameworkElementFactory(typeof(StackPanel));
+            //panel.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);//横積み
+            panel.AppendChild(border);
+            panel.AppendChild(textBlock);
+
+            var dt = new DataTemplate();
+            dt.VisualTree = panel;
+            listBox.ItemTemplate = dt;
+            return listBox;
         }
 
         private ISelecter GetSelecter(SelectType type)
@@ -130,6 +193,7 @@ namespace _20200318_減色
 
 
     #region
+    #region Cube選択
     public interface ISelecter
     {
         public void Calc(Cube5 cube);
@@ -181,6 +245,8 @@ namespace _20200318_減色
             return result;
         }
     }
+    #endregion
+    #region 分割
     public interface ISplitter
     {
         public void Calc(Cube5 cube);
@@ -247,6 +313,7 @@ namespace _20200318_減色
             return (cuA, cuB);
         }
     }
+    #endregion
 
     public class Cube5
     {
@@ -299,6 +366,49 @@ namespace _20200318_減色
                 Cubes.Add(cubeB);
             }
         }
+
+        public List<Color> GetColors(ColorSelectType type)
+        {
+            var colors = new List<Color>();
+            if (type == ColorSelectType.Average)
+            {
+                foreach (var cube in Cubes)
+                {
+                    long total = 0;
+                    foreach (var pixel in cube.Pixels)
+                    {
+                        total += pixel;
+                    }
+                    byte v = (byte)Math.Round((double)total / cube.Pixels.Length, MidpointRounding.AwayFromZero);
+                    colors.Add(Color.FromRgb(v, v, v));
+                }
+            }
+            else if (type == ColorSelectType.Core)
+            {
+                foreach (var cube in Cubes)
+                {
+                    if (cube.IsCalcMinMax == false)
+                    {
+                        new Select_LongSide().Calc(cube);
+                    }
+                    byte v = (byte)Math.Round((cube.Max + cube.Min) / 2.0, MidpointRounding.AwayFromZero);
+                    colors.Add(Color.FromRgb(v, v, v));
+                }
+            }
+            else if (type == ColorSelectType.Median)
+            {
+                foreach (var cube in Cubes)
+                {
+                    int mid = (cube.Pixels.Length + 1) / 2;
+                    var vs = cube.Pixels.OrderBy(x => x).ToArray();
+                    var v = vs[mid];
+                    colors.Add(Color.FromRgb(v, v, v));
+                }
+            }
+            return colors;
+        }
+
+
         public override string ToString()
         {
             return $"{Pixels.Length}個 Min={Min} Max={Max}";
@@ -308,21 +418,41 @@ namespace _20200318_減色
     #endregion
 
 
+    public class MyData
+    {
+        public SolidColorBrush Brush { get; set; }
+        public string ColorCode { get; set; }
+        public byte GrayScaleValue { get; set; }
+        public MyData(Color color)
+        {
+            Brush = new SolidColorBrush(color);
+            ColorCode = color.ToString();
+            GrayScaleValue = color.R;
+        }
+    }
 
-    //選択タイプ
+
+    //Cube選択タイプ
     public enum SelectType
     {
         SideLong = 1,
         ManyPixels,
-        Taiseki,
-        Varient,
+        //Taiseki,
+        //Varient,
     }
     //分割タイプ
     public enum SplitType
     {
         SideMid = 1,
         PixelsMid,
-        Ootu
+        //Ootu
     }
+    //Cubeからの色選択タイプ
+    public enum ColorSelectType
+    {
+        Average = 1,//ピクセルの平均
+        Core,//Cube中心
+        Median,//RGB中央値
 
+    }
 }
