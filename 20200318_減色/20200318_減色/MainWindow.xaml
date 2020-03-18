@@ -16,31 +16,33 @@
       <StackPanel Width="100">
         <Image x:Name="MyImage" Stretch="Uniform"/>
       </StackPanel>
-      <StackPanel>
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
         <StackPanel>
-          <Button x:Name="Button1" Content="実行"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
           <StackPanel>
-            <TextBlock Text="選択方法"/>
-            <ComboBox Name="ComboBoxSelectType"/>
+            <Button x:Name="Button1" Content="実行"/>
           </StackPanel>
-          <StackPanel>
-            <TextBlock Text="分割方法"/>
-            <ComboBox Name="ComboBoxSplitType"/>
-          </StackPanel>
-          <StackPanel>
-            <TextBlock Text="色選択方法"/>
-            <ComboBox Name="ComboBoxColorSelectType"/>
-          </StackPanel>
-
-        </StackPanel>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-          <StackPanel x:Name="MyStackPanel">
+          <StackPanel Orientation="Horizontal">
+            <StackPanel>
+              <TextBlock Text="選択方法"/>
+              <ComboBox Name="ComboBoxSelectType"/>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Text="分割方法"/>
+              <ComboBox Name="ComboBoxSplitType"/>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Text="色選択方法"/>
+              <ComboBox Name="ComboBoxColorSelectType"/>
+            </StackPanel>
 
           </StackPanel>
-        </ScrollViewer>
-      </StackPanel>
+          <!--<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">-->
+            <StackPanel x:Name="MyStackPanel">
+
+            </StackPanel>
+          <!--</ScrollViewer>-->
+        </StackPanel>
+      </ScrollViewer>
     </StackPanel>
   </Grid>
 </Window>

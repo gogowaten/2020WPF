@@ -34,7 +34,7 @@ namespace _20200318_減色
 
             MyInitialize();
 
-
+            
         }
         private void MyInitialize()
         {
