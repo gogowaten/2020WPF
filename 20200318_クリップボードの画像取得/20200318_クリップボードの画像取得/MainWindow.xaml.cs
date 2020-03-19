@@ -31,27 +31,33 @@ namespace _20200318_クリップボードの画像取得
         {
             if (!Clipboard.ContainsImage())
             {
-                TextBlock1.Text = "none";
+                TextBlock1.Text = "クリップボードに画像なし";
+                TextBlockIsExcel.Text = "";
+                TextBlockIsAlphaAll0.Text = "";
+                TextBlockBitmapHederBpp.Text = "";
+                MyImage.Source = null;
                 return;
             }
 
             var bitmap = Clipboard.GetImage();
             MyImage.Source = bitmap;
 
-            TextBlock1.Text = bitmap.Format.ToString();
+            TextBlock1.Text = $"PixelFormats = {bitmap.Format}";
 
 
-
-            //Alphaが全部0なら255にする、
             int w = bitmap.PixelWidth;
             int h = bitmap.PixelHeight;
             int stride = w * 32 / 8;
             byte[] pixels = new byte[h * stride];
             bitmap.CopyPixels(pixels, stride, 0);
-            bool isAlpha0 = IsAlphaAll0(pixels);
-            TextBlockIsAlphaAll0.Text = $"{nameof(IsAlphaAll0)}={isAlpha0}";
 
-            if (isAlpha0)
+            bool isExcel = IsExcel();
+            TextBlockIsExcel.Text = $"{nameof(IsExcel)} = {isExcel}";
+            bool isAlpha0 = IsAlphaAll0(pixels);
+            TextBlockIsAlphaAll0.Text = $"{nameof(IsAlphaAll0)} = {isAlpha0}";
+
+            //Alphaが全部0かエクセルデータなら255にする
+            if (isAlpha0 || isExcel)
             {
                 for (int i = 3; i < pixels.Length; i += 4)
                 {
@@ -60,6 +66,13 @@ namespace _20200318_クリップボードの画像取得
                 var nb = BitmapSource.Create(w, h, 96, 96, PixelFormats.Bgra32, null, pixels, stride);
                 MyImage.Source = nb;
             }
+
+            //Bitmapの情報ヘッダーのbppを表す値を取得して表示
+            var stream = Clipboard.GetDataObject().GetData("DeviceIndependentBitmap") as System.IO.MemoryStream;
+            if (stream == null) return;
+            byte[] dib = stream.ToArray();
+            TextBlockBitmapHederBpp.Text = $"BitmapHederBpp={dib[14]}";
+
 
 
         }
@@ -74,6 +87,19 @@ namespace _20200318_クリップボードの画像取得
                 }
             }
             return true;
+        }
+        //エクセル判定、データの中にEnhancedMetafile形式があればエクセルと判定trueを返す
+        private bool IsExcel()
+        {
+            string[] formats = Clipboard.GetDataObject().GetFormats();
+            foreach (var item in formats)
+            {
+                if (item == "EnhancedMetafile")
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

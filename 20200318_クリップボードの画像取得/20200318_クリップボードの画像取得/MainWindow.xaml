@@ -5,13 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20200318_クリップボードの画像取得"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="614">
   <Grid Background="AliceBlue">
-    <StackPanel>
-      <Button x:Name="Button1" Content="button1"/>
+    <StackPanel Margin="10">
+      <Button x:Name="Button1" Content="ClipBorad.GetImage()"/>
       <TextBlock x:Name="TextBlock1" Text="text"/>
       <TextBlock x:Name="TextBlockIsAlphaAll0"/>
-      
+      <TextBlock x:Name="TextBlockIsExcel"/>
+      <TextBlock x:Name="TextBlockBitmapHederBpp"/>
       <ScrollViewer UseLayoutRounding="True">
         <Image x:Name="MyImage" Stretch="None"/>
       </ScrollViewer>
