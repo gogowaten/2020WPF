@@ -9,6 +9,9 @@
   <Grid Background="AliceBlue">
     <StackPanel>
       <Button x:Name="Button1" Content="button1"/>
+      <TextBlock x:Name="TextBlock1" Text="text"/>
+      <TextBlock x:Name="TextBlockIsAlphaAll0"/>
+      
       <ScrollViewer UseLayoutRounding="True">
         <Image x:Name="MyImage" Stretch="None"/>
       </ScrollViewer>

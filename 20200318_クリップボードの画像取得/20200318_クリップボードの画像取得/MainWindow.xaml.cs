@@ -29,40 +29,51 @@ namespace _20200318_クリップボードの画像取得
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
+            if (!Clipboard.ContainsImage())
+            {
+                TextBlock1.Text = "none";
+                return;
+            }
+
             var bitmap = Clipboard.GetImage();
             MyImage.Source = bitmap;
 
-            var format = bitmap.Format;
+            TextBlock1.Text = bitmap.Format.ToString();
+
+
+
             //Alphaが全部0なら255にする、
-            if (bitmap.Format == PixelFormats.Bgra32)
+            int w = bitmap.PixelWidth;
+            int h = bitmap.PixelHeight;
+            int stride = w * 32 / 8;
+            byte[] pixels = new byte[h * stride];
+            bitmap.CopyPixels(pixels, stride, 0);
+            bool isAlpha0 = IsAlphaAll0(pixels);
+            TextBlockIsAlphaAll0.Text = $"{nameof(IsAlphaAll0)}={isAlpha0}";
+
+            if (isAlpha0)
             {
-                int w = bitmap.PixelWidth;
-                int h = bitmap.PixelHeight;
-                int stride = w * 32 / 8;
-                byte[] pixels = new byte[h * stride];
-                bitmap.CopyPixels(pixels, stride, 0);
-                if (IsAlphaAll0())
+                for (int i = 3; i < pixels.Length; i += 4)
                 {
-                    for (int i = 3; i < pixels.Length; i += 4)
-                    {
-                        pixels[i] = 255;
-                    }
-                    var nb = BitmapSource.Create(w, h, 96, 96, PixelFormats.Bgra32, null, pixels, stride);
-                    MyImage.Source = nb;
+                    pixels[i] = 255;
                 }
-                //Alphaが全部0ならtrue、1つでも0以外があるならfalse
-                bool IsAlphaAll0()
+                var nb = BitmapSource.Create(w, h, 96, 96, PixelFormats.Bgra32, null, pixels, stride);
+                MyImage.Source = nb;
+            }
+
+
+        }
+        //Alphaが全部0ならtrue、1つでも0以外があるならfalse
+        private bool IsAlphaAll0(byte[] pixels)
+        {
+            for (int i = 3; i < pixels.Length; i += 4)
+            {
+                if (pixels[i] != 0)
                 {
-                    for (int i = 3; i < pixels.Length; i += 4)
-                    {
-                        if (pixels[i] != 0)
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
+                    return false;
                 }
             }
+            return true;
         }
     }
 }
