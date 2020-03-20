@@ -5,8 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20200320_クリップボードの画像取得"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-
-    </Grid>
+      Title="MainWindow" Height="450" Width="614">
+  <Grid>
+    <DockPanel Margin="10">
+      <Button DockPanel.Dock="Top" x:Name="ButtonGetBitmap" Content="Clipboard.GetImage()"/>
+      <Button DockPanel.Dock="Top" x:Name="ButtonSetBitmap" Content="Clipboard.SetImage()"/>
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlock1" Text="text"/>
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlockIsAlphaAll0"/>
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlockIsExcel"/>
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlockBitmapHederBpp"/>
+      <Grid DockPanel.Dock="Top" x:Name="MyGrid" UseLayoutRounding="True">
+        <ScrollViewer Grid.Row="1" UseLayoutRounding="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+          <Image x:Name="MyImage" Stretch="None"/>
+        </ScrollViewer>
+      </Grid>
+    </DockPanel>
+  </Grid>
 </Window>
