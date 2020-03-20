@@ -6,16 +6,19 @@
         xmlns:local="clr-namespace:_20200318_クリップボードの画像取得"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="614">
-  <Grid Background="AliceBlue">
-    <StackPanel Margin="10">
-      <Button x:Name="Button1" Content="ClipBorad.GetImage()"/>
-      <TextBlock x:Name="TextBlock1" Text="text"/>
-      <TextBlock x:Name="TextBlockIsAlphaAll0"/>
-      <TextBlock x:Name="TextBlockIsExcel"/>
-      <TextBlock x:Name="TextBlockBitmapHederBpp"/>
-      <ScrollViewer UseLayoutRounding="True">
-        <Image x:Name="MyImage" Stretch="None"/>
-      </ScrollViewer>
-    </StackPanel>
+  <Grid>   
+    <DockPanel Margin="10">
+      <Button DockPanel.Dock="Top" x:Name="Button1" Content="ClipBorad.GetImage()"/>
+      <Button DockPanel.Dock="Top" x:Name="Button2" Content="button2" Click="Button2_Click"/>
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlock1" Text="text"/>
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlockIsAlphaAll0"/>
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlockIsExcel"/>
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlockBitmapHederBpp"/>
+      <Grid DockPanel.Dock="Top" x:Name="MyGrid">
+        <ScrollViewer Grid.Row="1" UseLayoutRounding="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+          <Image x:Name="MyImage" Stretch="None"/>
+        </ScrollViewer>
+      </Grid>
+    </DockPanel>
   </Grid>
 </Window>
