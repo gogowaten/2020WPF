@@ -78,8 +78,7 @@ namespace _20200318_減色
             int stride = w * 1;
             byte[] pixels = new byte[h * stride];
             MyOriginBitmap.CopyPixels(pixels, stride, 0);
-            MyOriginPixels = pixels;
-            
+            MyOriginPixels = pixels;            
         }
 
         //減色パレット作成
@@ -114,9 +113,9 @@ namespace _20200318_減色
             return data;
         }
 
+        //色データ表示用のlistbox作成
         //        2020WPF/MainWindow.xaml.cs at master · gogowaten/2020WPF
         //https://github.com/gogowaten/2020WPF/blob/master/20200317_ListBox/20200317_ListBox/MainWindow.xaml.cs
-        //色データ表示用のlistbox作成
         private ListBox CreateListBox()
         {
             var listBox = new ListBox();
@@ -139,8 +138,9 @@ namespace _20200318_減色
             border.SetBinding(BackgroundProperty, new Binding(nameof(MyData.Brush)));
 
             var textBlock = new FrameworkElementFactory(typeof(TextBlock));
+            textBlock.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Right);
             textBlock.SetBinding(TextBlock.TextProperty, new Binding(nameof(MyData.GrayScaleValue)));
-
+          
             var panel = new FrameworkElementFactory(typeof(StackPanel));
             //panel.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);//横積み
             panel.AppendChild(border);
@@ -156,9 +156,9 @@ namespace _20200318_減色
         private ISelecter GetSelecter(SelectType type)
         {
             ISelecter select;
-            if (type == SelectType.SideLong)
+            if (type == SelectType.Long)
                 select = new Select_LongSide();
-            else if (type == SelectType.ManyPixels)
+            else if (type == SelectType.Many)
                 select = new Select_ManyPicexls();
             else select = new Select_LongSide();
             return select;
@@ -168,9 +168,9 @@ namespace _20200318_減色
         private ISplitter GetSplitter(SplitType type)
         {
             ISplitter split;
-            if (type == SplitType.SideMid)
+            if (type == SplitType.Center)
                 split = new Split_SideMid();
-            else if (type == SplitType.PixelsMid)
+            else if (type == SplitType.Median)
                 split = new Split_Mid();
             else split = new Split_SideMid();
             return split;
@@ -402,18 +402,20 @@ namespace _20200318_減色
             var confirmCubes = new List<Cube>();//これ以上分割できないCube隔離用
             while (Cubes.Count + confirmCubes.Count < count)
             {
-                Cube ccc = Selecter.Select(this);
-                var (cubeA, cubeB) = Splitter.Split(ccc);
+                Cube cube = Selecter.Select(this);//選択
+                var (cubeA, cubeB) = Splitter.Split(cube);//選択したCubeを2分割
                 if (cubeA.Pixels.Length == 0 || cubeB.Pixels.Length == 0)
                 {
                     //分割できなかったCubeを隔離用リストに移動
-                    confirmCubes.Add(ccc);
-                    Cubes.Remove(ccc);
+                    confirmCubes.Add(cube);
+                    Cubes.Remove(cube);
+                    //分割できるCubeが尽きたらループ抜け
+                    if (Cubes.Count == 0) break;
                 }
                 else
                 {
                     //分割できたCubeをリストから削除して、分割したCubeを追加
-                    Cubes.Remove(ccc);
+                    Cubes.Remove(cube);
                     Cubes.Add(cubeA);
                     Cubes.Add(cubeB);
                 }
@@ -516,17 +518,17 @@ namespace _20200318_減色
     //Cube選択タイプ
     public enum SelectType
     {
-        SideLong = 1,
-        ManyPixels,
-        //Taiseki,
-        //Varient,
+        Long = 1,//辺最長
+        Many,//ピクセル数最多
+        //Taiseki,//体積最大
+        //Varient,//分散最大
     }
     //分割タイプ
     public enum SplitType
     {
-        SideMid = 1,
-        PixelsMid,
-        //Ootu
+        Center = 1,//辺の中央
+        Median,//中央値
+        //Ootu,//大津の2値化
     }
     //Cubeからの色選択タイプ
     public enum ColorSelectType
