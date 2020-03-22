@@ -10,18 +10,30 @@
     <Style TargetType="StackPanel">
       <Setter Property="Margin" Value="4,1,0,0"/>
     </Style>
+    <Style TargetType="Button">
+      <Setter Property="Margin" Value="4,4,0,0"/>
+    </Style>
   </Window.Resources>
   <Grid>
     <StackPanel Orientation="Horizontal">
-      <StackPanel Width="100">
+      
+      <Grid Width="100" Height="100">
         <Image x:Name="MyImage" Stretch="Uniform"/>
-      </StackPanel>
+      </Grid>
 
       <DockPanel Width="490">
         <StackPanel DockPanel.Dock="Top">
           <Button x:Name="ButtonListClear" Content="リストクリア"/>
-          <Button x:Name="ButtonGetClipboardImage" Content="クリップボードの画像取得"/>
-          <Button x:Name="ButtonMakePalette" Content="減色パレット作成" Margin="10" FontSize="20"/>
+          <Button x:Name="ButtonGetClipboardImage" Content="クリップボードの画像取得"/>          
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="パレット作成" VerticalAlignment="Center" FontSize="20"/>
+            <Button Content="2" Click="ButtonMakePalette_Click"/>
+            <Button Content="4" Click="ButtonMakePalette_Click"/>
+            <Button Content="16" Click="ButtonMakePalette_Click"/>
+            <Button Content="64" Click="ButtonMakePalette_Click"/>
+            <Button Content="128" Click="ButtonMakePalette_Click"/>
+            <Button Content="256" Click="ButtonMakePalette_Click"/>            
+          </StackPanel>
         </StackPanel>
         
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">

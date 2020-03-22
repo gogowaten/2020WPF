@@ -39,7 +39,9 @@ namespace _20200318_減色
         }
         private void MyInitialize()
         {
-            ButtonMakePalette.Click += ButtonMakePalette_Click;
+            this.AllowDrop = true;
+            this.Drop += MainWindow_Drop;
+
             ButtonGetClipboardImage.Click += ButtonGetClipboardImage_Click;
             ButtonListClear.Click += ButtonListClear_Click;
 
@@ -56,6 +58,24 @@ namespace _20200318_減色
             //(MyOriginPixels, MyOriginBitmap) = MakeBitmapSourceAndPixelData(file, PixelFormats.Gray8, 96, 96);
             //MyImage.Source = MyOriginBitmap;
 
+        }
+
+        //ファイルドロップされたとき
+        private void MainWindow_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop) == false) return;
+            string[] filePath = (string[])e.Data.GetData(DataFormats.FileDrop);
+            (byte[] pixels, BitmapSource source) = MakeBitmapSourceAndPixelData(filePath[0], PixelFormats.Gray8, 96, 96);
+            if (source == null)
+            {
+                MessageBox.Show("ドロップされたファイルは画像として開くことができなかった");
+            }
+            else
+            {
+                MyOriginBitmap = source;
+                MyOriginPixels = pixels;
+                MyImage.Source = source;
+            }
         }
 
         //すべてのリストボックス消去
@@ -78,18 +98,24 @@ namespace _20200318_減色
             int stride = w * 1;
             byte[] pixels = new byte[h * stride];
             MyOriginBitmap.CopyPixels(pixels, stride, 0);
-            MyOriginPixels = pixels;            
+            MyOriginPixels = pixels;
         }
 
-        //減色パレット作成
         private void ButtonMakePalette_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = (Button)sender;
+            int colorCount = int.Parse(button.Content.ToString());
+            MakePaletteColor(colorCount);
+        }
+        //減色パレット作成
+        private void MakePaletteColor(int colorCount)
         {
             if (MyOriginPixels == null) return;
 
-            SelectType select = (SelectType)ComboBoxSelectType.SelectedItem;
-            SplitType split = (SplitType)ComboBoxSplitType.SelectedItem;
-            var cube = new Cube(MyOriginPixels, GetSelecter(select), GetSplitter(split));
-            cube.Split(16);//分割数指定で分割
+            ISelecter selecter = GetSelecter((SelectType)ComboBoxSelectType.SelectedItem);
+            ISplitter splitter = GetSplitter((SplitType)ComboBoxSplitType.SelectedItem);
+            var cube = new Cube(MyOriginPixels, selecter, splitter);
+            cube.Split(colorCount);//分割数指定でCube分割
 
             //Cubeから色取得して、色データ作成
             var colors = cube.GetColors((ColorSelectType)ComboBoxColorSelectType.SelectedItem);
@@ -140,7 +166,7 @@ namespace _20200318_減色
             var textBlock = new FrameworkElementFactory(typeof(TextBlock));
             textBlock.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Right);
             textBlock.SetBinding(TextBlock.TextProperty, new Binding(nameof(MyData.GrayScaleValue)));
-          
+
             var panel = new FrameworkElementFactory(typeof(StackPanel));
             //panel.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);//横積み
             panel.AppendChild(border);
@@ -222,9 +248,11 @@ namespace _20200318_減色
             }
             return (pixels, source);
         }
+
+        #endregion
+
     }
 
-    #endregion
 
 
     #region
@@ -232,9 +260,9 @@ namespace _20200318_減色
     public interface ISelecter
     {
         public void Calc(Cube cube);
-        public Cube Select(Cube cube);
+        public Cube Select(List<Cube> cubes);
     }
-    public class Select_LongSide : ISelecter
+    public class Select_LongSide : ISelecter//辺最長Cubeを選択
     {
         public void Calc(Cube cube)
         {
@@ -249,19 +277,24 @@ namespace _20200318_減色
             cube.IsCalcMinMax = true;
         }
 
-        public Cube Select(Cube cube)
+        public Cube Select(List<Cube> cubes)
         {
 
-            Cube result = cube.Cubes[0];
+            Cube result = cubes[0];
             int length = result.Max - result.Min;
-            foreach (var item in cube.Cubes)
+            foreach (var item in cubes)
             {
-                if (length < item.Max - item.Min) result = item;
+                if (item.IsCalcMinMax == false) new Select_LongSide().Calc(item);
+                if (length < item.Max - item.Min)
+                {
+                    result = item;
+                    length = item.Max - item.Min;
+                }
             }
             return result;
         }
     }
-    public class Select_ManyPicexls : ISelecter
+    public class Select_ManyPicexls : ISelecter//ピクセル最多Cubeを選択
     {
         public void Calc(Cube cube)
         {
@@ -269,10 +302,10 @@ namespace _20200318_減色
             cube.IsCalcCount = true;
         }
 
-        public Cube Select(Cube cube)
+        public Cube Select(List<Cube> cubes)
         {
-            Cube result = cube.Cubes[0];
-            foreach (var item in cube.Cubes)
+            Cube result = cubes[0];
+            foreach (var item in cubes)
             {
                 if (result.Pixels.Length < item.Pixels.Length)
                     result = item;
@@ -306,7 +339,7 @@ namespace _20200318_減色
             int mid = (int)((cube.Max + cube.Min) / 2.0);
             foreach (var item in cube.Pixels)
             {
-                if (item < mid)
+                if (item > mid)
                 {
                     pixA.Add(item);
                 }
@@ -333,12 +366,13 @@ namespace _20200318_減色
             if (cube.IsCalcCount == false) new Select_ManyPicexls().Calc(cube);
             var pixA = new List<byte>();
             var pixB = new List<byte>();
-            byte[] neko = cube.Pixels.OrderBy(x => x).ToArray();
-
-            int mid = neko[neko.Length / 2];
+            //byte[] neko = cube.Pixels.OrderBy(x => x).ToArray();
+            Array.Sort(cube.Pixels);
+            int mid =cube.Pixels[ cube.Pixels.Length / 2];
+            //int midd = neko[neko.Length / 2];
             foreach (var item in cube.Pixels)
             {
-                if (item < mid)
+                if (item > mid)
                     pixA.Add(item);
                 else
                     pixB.Add(item);
@@ -402,7 +436,7 @@ namespace _20200318_減色
             var confirmCubes = new List<Cube>();//これ以上分割できないCube隔離用
             while (Cubes.Count + confirmCubes.Count < count)
             {
-                Cube cube = Selecter.Select(this);//選択
+                Cube cube = Selecter.Select(this.Cubes);//選択
                 var (cubeA, cubeB) = Splitter.Split(cube);//選択したCubeを2分割
                 if (cubeA.Pixels.Length == 0 || cubeB.Pixels.Length == 0)
                 {
@@ -481,7 +515,8 @@ namespace _20200318_減色
             var colors = new List<Color>();
             foreach (var cube in Cubes)
             {
-                int mid = (cube.Pixels.Length + 1) / 2;
+                int mid = ((cube.Pixels.Length + 1) / 2) - 1;//+1して2で割っているのは四捨五入、-1してるのは配列のインデックスは0からカウントだから
+
                 var vs = cube.Pixels.OrderBy(x => x).ToArray();
                 var v = vs[mid];
                 colors.Add(Color.FromRgb(v, v, v));
