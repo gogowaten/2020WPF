@@ -60,7 +60,7 @@
         <Button Content="128" Click="ButtonMakePalette_Click"/>
         <Button Content="256" Click="ButtonMakePalette_Click"/>
       </StackPanel>
-
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlockTime" Text="処理時間"/>
       <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
         <StackPanel x:Name="MyStackPanel"/>
       </ScrollViewer>
