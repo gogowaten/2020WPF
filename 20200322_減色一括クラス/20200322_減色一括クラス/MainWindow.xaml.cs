@@ -300,7 +300,7 @@ namespace _20200322_減色一括クラス
         private Cube SelectCube(List<Cube> cubes, SelectType select)
         {
             Cube result = cubes[0];
-            if (select == SelectType.LongeSide)
+            if (select == SelectType.LongSide)
             {
                 int length = 0;
                 foreach (var item in cubes)
@@ -317,10 +317,8 @@ namespace _20200322_減色一括クラス
             {
                 foreach (var item in cubes)
                 {
-                    {
-                        if (result.Pixels.Length < item.Pixels.Length)
-                            result = item;
-                    }
+                    if (result.Pixels.Length < item.Pixels.Length)
+                        result = item;
                 }
             }
             return result;
