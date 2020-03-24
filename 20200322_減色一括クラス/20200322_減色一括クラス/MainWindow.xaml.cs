@@ -250,6 +250,7 @@ namespace _20200322_減色一括クラス
         public byte Min;
         public byte Max;
         public bool IsCalcMinMax = false;
+        public byte[] SortedPixels;//中央値を求めるときのソート用
         public bool IsPixelsSorted = false;
 
         public Cube(byte[] pixels)
@@ -355,10 +356,13 @@ namespace _20200322_減色一括クラス
             {
                 if (cube.IsPixelsSorted == false)
                 {
-                    Array.Sort(cube.Pixels);
+                    //Array.Sort(cube.Pixels);
+                    cube.SortedPixels = new byte[cube.Pixels.Length];
+                    Array.Copy(cube.Pixels, cube.SortedPixels, cube.Pixels.Length);
+                    Array.Sort(cube.SortedPixels);
                     IsPixelsSorted = true;
                 }
-                int mid = cube.Pixels[cube.Pixels.Length / 2];
+                int mid = cube.SortedPixels[cube.SortedPixels.Length / 2];
 
                 foreach (var item in cube.Pixels)
                 {
@@ -441,10 +445,12 @@ namespace _20200322_減色一括クラス
                 int mid = ((cube.Pixels.Length + 1) / 2) - 1;//+1して2で割っているのは四捨五入、-1してるのは配列のインデックスは0からカウントだから
                 if (cube.IsPixelsSorted == false)
                 {
-                    Array.Sort(cube.Pixels);
+                    cube.SortedPixels = new byte[cube.Pixels.Length];
+                    Array.Copy(cube.Pixels, cube.SortedPixels, cube.Pixels.Length);
+                    Array.Sort(cube.SortedPixels);
                     cube.IsPixelsSorted = true;
                 }
-                var v = cube.Pixels[mid];
+                var v = cube.SortedPixels[mid];
                 colors.Add(Color.FromRgb(v, v, v));
             }
             return colors;
@@ -469,7 +475,7 @@ namespace _20200322_減色一括クラス
     //Cube選択タイプ
     public enum SelectType
     {
-        LongeSide = 1,//辺最長
+        LongSide = 1,//辺最長
         MostPixels,//ピクセル数最多
         //VolumeMax,//体積最大
         //VarientMax,//分散最大

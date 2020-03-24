@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:_20200322_減色一括クラス"
         mc:Ignorable="d"
         Title="MainWindow" Height="300" Width="614">
+  
   <Window.Resources>
     <Style TargetType="StackPanel">
       <Setter Property="Margin" Value="4,1,0,0"/>
@@ -14,6 +15,7 @@
       <Setter Property="Margin" Value="4,4,0,0"/>
     </Style>
   </Window.Resources>
+  
   <Grid>
     <StackPanel Orientation="Horizontal">
 
@@ -47,6 +49,7 @@
           <Button Content="4" Click="ButtonMakePalette_Click"/>
           <Button Content="8" Click="ButtonMakePalette_Click"/>
           <Button Content="16" Click="ButtonMakePalette_Click"/>
+          <Button Content="32" Click="ButtonMakePalette_Click"/>
           <Button Content="64" Click="ButtonMakePalette_Click"/>
           <Button Content="128" Click="ButtonMakePalette_Click"/>
           <Button Content="256" Click="ButtonMakePalette_Click"/>
