@@ -594,7 +594,7 @@ namespace _20200323_減色グレースケール用
     //Cube選択タイプ
     public enum SelectType
     {
-        LongeSide = 1,//辺最長
+        LongSide = 1,//辺最長
         MostPixels,//ピクセル数最多
         //VolumeMax,//体積最大
         //VarientMax,//分散最大
