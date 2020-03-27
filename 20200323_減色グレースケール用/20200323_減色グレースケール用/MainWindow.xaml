@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20200323_減色グレースケール用"
         mc:Ignorable="d"
-        Title="MainWindow" Height="300" Width="614">
+        Title="MainWindow" Height="400" Width="614">
   <Window.Resources>
     <Style TargetType="StackPanel">
       <Setter Property="Margin" Value="4,1,0,0"/>
@@ -21,12 +21,12 @@
       <ColumnDefinition Width="320"/>
     </Grid.ColumnDefinitions>
 
-    <StackPanel Grid.Column="0" Name="MyStackPanelImage">
+    <DockPanel Grid.Column="0" Name="MyDockPanelImage">
       <Button DockPanel.Dock="Top" x:Name="ButtonImageStretch" Content="実寸or全体" Margin="4"/>
-      <ScrollViewer x:Name="MyScrollViewerImage" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+      <ScrollViewer DockPanel.Dock="Top" x:Name="MyScrollViewerImage" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
           <Image x:Name="MyImage" Stretch="None" UseLayoutRounding="True"/>
       </ScrollViewer>
-    </StackPanel>
+    </DockPanel>
 
     <DockPanel Grid.Column="1" Width="320">
       <StackPanel DockPanel.Dock="Top">
@@ -60,7 +60,7 @@
         <Button Content="128" Click="ButtonMakePalette_Click"/>
         <Button Content="256" Click="ButtonMakePalette_Click"/>
       </StackPanel>
-      <TextBlock DockPanel.Dock="Top" x:Name="TextBlockTime" Text="処理時間"/>
+      <TextBlock DockPanel.Dock="Top" x:Name="TextBlockTime" Text="処理時間" Margin="4"/>
       <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
         <StackPanel x:Name="MyStackPanel"/>
       </ScrollViewer>

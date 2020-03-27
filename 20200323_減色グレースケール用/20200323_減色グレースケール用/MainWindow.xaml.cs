@@ -26,7 +26,7 @@ namespace _20200323_減色グレースケール用
     public partial class MainWindow : Window
     {
         byte[] MyOriginPixels;
-        BitmapSource MyOriginBitmap { get; set; }
+        BitmapSource MyOriginBitmap;//元の画像用
         //List<List<Color>> MyColorDataList = new List<List<Color>>();
         List<Palette> MyPalettes = new List<Palette>();
         Dictionary<Button, Palette> MyDictionary = new Dictionary<Button, Palette>();
@@ -66,19 +66,19 @@ namespace _20200323_減色グレースケール用
 
         }
 
-        //画像の表示方式、実寸or全体表示
+        //画像の表示方式切り替え、実寸or全体表示
         private void ButtonImageStretch_Click(object sender, RoutedEventArgs e)
         {
             if (MyImage.Stretch == Stretch.None)
             {
                 MyImage.Stretch = Stretch.Uniform;
                 MyScrollViewerImage.Content = null;
-                MyStackPanelImage.Children.Add(MyImage);
+                MyDockPanelImage.Children.Add(MyImage);
             }
             else
             {
                 MyImage.Stretch = Stretch.None;
-                MyStackPanelImage.Children.Remove(MyImage);
+                MyDockPanelImage.Children.Remove(MyImage);
                 MyScrollViewerImage.Content = MyImage;
             }
         }
@@ -95,6 +95,7 @@ namespace _20200323_減色グレースケール用
             MyStackPanel.Children.Clear();
             MyDictionary.Clear();
             MyImage.Source = MyOriginBitmap;
+            TextBlockTime.Text = "";
         }
 
 
@@ -120,16 +121,14 @@ namespace _20200323_減色グレースケール用
 
             //Cubeから色取得して、色データ作成
             List<Color> colors = cube.GetColors((ColorSelectType)ComboBoxColorSelectType.SelectedItem);
-            //ObservableCollection<MyData> data = MakeDataContext(colors);
-            //MyColorDataList.Add(colors);
 
             //Palette作成して表示
-            var panel = new StackPanel() { Orientation = Orientation.Horizontal };
-            var button = new Button() { Content = "減色" };
             Palette palette = new Palette(colors);
             MyPalettes.Add(palette);
-            button.Click += ButtonGensyoku_Click;
 
+            var button = new Button() { Content = "減色" };
+            button.Click += ButtonGensyoku_Click;
+            var panel = new StackPanel() { Orientation = Orientation.Horizontal };
             panel.Children.Add(button);
             panel.Children.Add(palette);
             MyStackPanel.Children.Add(panel);
@@ -181,6 +180,7 @@ namespace _20200323_減色グレースケール用
             byte[] pixels = new byte[h * stride];
             MyOriginBitmap.CopyPixels(pixels, stride, 0);
             MyOriginPixels = pixels;
+            ClearPalettes();//パレットリスト初期化
         }
 
         //ファイルドロップされたとき
@@ -262,9 +262,11 @@ namespace _20200323_減色グレースケール用
     {
         List<Color> Colors { get; set; }
         byte[] Brightness;//各色の値、明度
+
         ObservableCollection<MyData> Datas { get; set; }
         public Palette(List<Color> colors)
         {
+
             Colors = colors;
             SetBlightness(colors);
             //DataContext作成
@@ -278,27 +280,7 @@ namespace _20200323_減色グレースケール用
         }
 
 
-        //減色変換
-        public byte[] Gensyoku(byte[] pixels)
-        {
-            byte[] replaced = new byte[pixels.Length];
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                var distance = 255;
-                int nearIndex = 0;
-                for (int k = 0; k < Brightness.Length; k++)
-                {
-                    var temp = Math.Abs(Brightness[k] - pixels[i]);
-                    if (distance > temp)
-                    {
-                        distance = temp;
-                        nearIndex = k;
-                    }
-                }
-                replaced[i] = Brightness[nearIndex];
-            }
-            return replaced;
-        }
+
 
         #region 変換テーブルで減色
         //変換テーブルを使った減色変換
@@ -322,7 +304,7 @@ namespace _20200323_減色グレースケール用
         //変換テーブル作成
         private Dictionary<byte, byte> MakeTable(byte[] usedColor)
         {
-            var table = new Dictionary<byte, byte>(256);
+            var table = new Dictionary<byte, byte>(usedColor.Length);
             for (int i = 0; i < usedColor.Length; i++)
             {
                 int nearIndex = 0;
@@ -452,7 +434,7 @@ namespace _20200323_減色グレースケール用
         public byte[] SortedPixels;//ソート用
         public bool IsCalcPixelsSorted = false;
         public double Variance;//分散
-        public bool IsCalcVariance = false;//分散を計算済み？
+        public bool IsCalcVariance = false;//分散を計算済みフラグ用
 
         public Cube(byte[] pixels)
         {
@@ -472,9 +454,10 @@ namespace _20200323_減色グレースケール用
             var confirmCubes = new List<Cube>();//これ以上分割できないCube隔離用
             while (Cubes.Count + confirmCubes.Count < count)
             {
-                Cube cube = SelectCube(Cubes, select);
-                var (cubeA, cubeB) = SplitCube(cube, split);
-                if (cubeA.Pixels.Length == 0 || cubeB.Pixels.Length == 0)
+                Cube cube = SelectCube(Cubes, select);//選択
+                (Cube aCube, Cube bCube) = SplitCube(cube, split);//2分割
+
+                if (aCube.Pixels.Length == 0 || bCube.Pixels.Length == 0)
                 {
                     //分割できなかったCubeを隔離用リストに移動
                     confirmCubes.Add(cube);
@@ -486,8 +469,8 @@ namespace _20200323_減色グレースケール用
                 {
                     //分割できたCubeをリストから削除して、分割したCubeを追加
                     Cubes.Remove(cube);
-                    Cubes.Add(cubeA);
-                    Cubes.Add(cubeB);
+                    Cubes.Add(aCube);
+                    Cubes.Add(bCube);
                 }
             }
             //隔離しておいたCubeを戻す
@@ -502,17 +485,18 @@ namespace _20200323_減色グレースケール用
         {
             Cube result = cubes[0];
             //辺最長(MinとMaxの差)のCube
-            if (select == SelectType.LongSide)
+            if (select == SelectType.SideLong)
             {
                 int length = 0;
                 foreach (var item in cubes)
                 {
+                    //MinMaxが未計算なら計算する
                     if (item.IsCalcMinMax == false)
                     {
                         CalcMinMax(item);
                         item.IsCalcMinMax = true;
                     }
-
+                    //辺最長のCube選択
                     if (length < item.Max - item.Min)
                     {
                         result = item;
@@ -521,7 +505,7 @@ namespace _20200323_減色グレースケール用
                 }
             }
             //ピクセル数最多
-            else if (select == SelectType.MostPixels)
+            else if (select == SelectType.PixelsMax)
             {
                 foreach (var item in cubes)
                 {
@@ -534,6 +518,7 @@ namespace _20200323_減色グレースケール用
             {
                 foreach (var item in cubes)
                 {
+                    //分散が未計算なら計算する
                     if (item.IsCalcVariance == false)
                     {
                         item.Variance = CalcVariance(item.Pixels);
@@ -566,9 +551,11 @@ namespace _20200323_減色グレースケール用
                     myBag.Add(subtotal);//排他処理で追加
                 });
             double average = MyAverage(pixels);//平均値取得
-                                               //分散 = 2乗の平均 - 平均の2乗
+
+            //分散 = 2乗の平均 - 平均の2乗
             return (myBag.Sum() / (double)pixels.Length) - (average * average);
         }
+
         //平均値
         private double MyAverage(byte[] pixels)
         {
@@ -591,10 +578,10 @@ namespace _20200323_減色グレースケール用
         #region 選択されたCubeを2分割
         private (Cube cubeA, Cube cubeB) SplitCube(Cube cube, SplitType split)
         {
-            var pixA = new List<byte>();
-            var pixB = new List<byte>();
-            Cube cuA = null;
-            Cube cuB = null;
+            var aPix = new List<byte>();
+            var bPix = new List<byte>();
+            Cube aCube = null;
+            Cube bCube = null;
             //辺の中央で分割
             if (split == SplitType.SideCenter)
             {
@@ -604,15 +591,15 @@ namespace _20200323_減色グレースケール用
                 {
                     if (item > mid)
                     {
-                        pixA.Add(item);
+                        aPix.Add(item);
                     }
                     else
                     {
-                        pixB.Add(item);
+                        bPix.Add(item);
                     }
                 }
-                cuA = new Cube(pixA.ToArray());
-                cuB = new Cube(pixB.ToArray());
+                aCube = new Cube(aPix.ToArray());
+                bCube = new Cube(bPix.ToArray());
             }
             //中央値で2分割
             else if (split == SplitType.Median)
@@ -631,20 +618,20 @@ namespace _20200323_減色グレースケール用
                 foreach (var item in cube.Pixels)
                 {
                     if (item > mid)
-                        pixA.Add(item);
+                        aPix.Add(item);
                     else
-                        pixB.Add(item);
+                        bPix.Add(item);
                 }
-                cuA = new Cube(pixA.ToArray());
-                cuB = new Cube(pixB.ToArray());
+                aCube = new Cube(aPix.ToArray());
+                bCube = new Cube(bPix.ToArray());
             }
             //大津の2値化
-            else if (split == SplitType.Ootu)
-            {
+            //else if (split == SplitType.Ootu)
+            //{
 
-            }
+            //}
 
-            return (cuA, cuB);
+            return (aCube, bCube);
         }
         #endregion 分割
 
@@ -707,6 +694,7 @@ namespace _20200323_減色グレースケール用
             return colors;
         }
 
+        //中央値、ソートして中央値のIndexの値
         private List<Color> GetColorsMedian()
         {
             var colors = new List<Color>();
@@ -745,8 +733,8 @@ namespace _20200323_減色グレースケール用
     //Cube選択タイプ
     public enum SelectType
     {
-        LongSide = 1,//辺最長
-        MostPixels,//ピクセル数最多
+        SideLong = 1,//辺最長
+        PixelsMax,//ピクセル数最多
         //VolumeMax,//体積最大
         VarianceMax,//分散最大
     }
@@ -755,7 +743,7 @@ namespace _20200323_減色グレースケール用
     {
         SideCenter = 1,//辺の中央
         Median,//中央値
-        Ootu,//大津の2値化
+        //Ootu,//大津の2値化
     }
     //Cubeからの色選択タイプ
     public enum ColorSelectType
