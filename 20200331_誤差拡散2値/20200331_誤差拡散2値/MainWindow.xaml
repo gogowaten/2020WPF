@@ -5,8 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20200331_誤差拡散2値"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="614">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition/>
+      <ColumnDefinition Width="150"/>
+    </Grid.ColumnDefinitions>
     <Grid>
-
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <Image x:Name="MyImage" Stretch="None" UseLayoutRounding="True"/>
+      </ScrollViewer>
     </Grid>
+    <StackPanel Grid.Column="1">
+      <Button x:Name="ButtonCopy" Content="Copy" Click="ButtonCopy_Click"/>
+      <Button x:Name="ButtonBlackWhite" Content="PixelFormatsBlackWhite" Click="ButtonBlackWhite_Click"/>
+      <TextBlock x:Name="TextBlockTime" Text="time"/>
+      <Button x:Name="Button1" Content="button1" Click="Button1_Click"/>
+      <Button x:Name="Button2" Content="button2" Click="Button2_Click"/>
+      <Button x:Name="Button3" Content="button3" Click="Button3_Click"/>
+      <Button x:Name="Button4" Content="button4" Click="Button4_Click"/>
+      <Button x:Name="Button5" Content="button5" Click="Button5_Click"/>
+      <Button x:Name="Button6" Content="button6" Click="Button6_Click"/>
+      <Button x:Name="Button7" Content="button7" Click="Button7_Click"/>
+      <Button x:Name="Button8" Content="button8" Click="Button8_Click"/>
+    </StackPanel>
+  </Grid>
 </Window>
