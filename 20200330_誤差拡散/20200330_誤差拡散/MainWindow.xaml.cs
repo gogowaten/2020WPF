@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Diagnostics;
+
 
 namespace _20200330_誤差拡散
 {
@@ -36,21 +38,23 @@ namespace _20200330_誤差拡散
         {
             string imagePath;
             imagePath = @"D:\ブログ用\チェック用2\WP_20200328_11_22_52_Pro_2020_03_28_午後わてん.jpg";
+            //imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
             imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
+            //imagePath = @"D:\ブログ用\テスト用画像\grayscale256x256.png";
             //imagePath = @"D:\ブログ用\テスト用画像\Michelangelo's_David_-_63_grijswaarden.bmp";
-            imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
-            imagePath = @"D:\ブログ用\テスト用画像\gray127.png";//これは中間じゃないみたい
-            imagePath = @"D:\ブログ用\テスト用画像\gray250.png";
+            //imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
+            //imagePath = @"D:\ブログ用\テスト用画像\gray127.png";//これは中間じゃないみたい
+            //imagePath = @"D:\ブログ用\テスト用画像\gray250.png";
             //imagePath = @"D:\ブログ用\テスト用画像\ﾈｺは見ている.png";
-            imagePath = @"D:\ブログ用\テスト用画像\NEC_2097_.jpg";
-            imagePath = @"D:\ブログ用\テスト用画像\NEC_1456_2018_03_17_午後わてん_256x192.png";
+            //imagePath = @"D:\ブログ用\テスト用画像\NEC_2097_.jpg";
+            //imagePath = @"D:\ブログ用\テスト用画像\NEC_1456_2018_03_17_午後わてん_256x192.png";
 
             (MyPixels, MyBitmapSource) = MakeBitmapSourceAndPixelData(imagePath, PixelFormats.Gray8, 96, 96);
             MyImage.Source = MyBitmapSource;
 
             MyPalette = new byte[] { 32, 96, 160, 224 };
             //MyPalette = new byte[] { 0, 128, 255 };
-            //MyPalette = new byte[] { 64,192 };
+            MyPalette = new byte[] { 64, 192 };
             //MyPalette = new byte[] { 0, 255 };
 
         }
@@ -498,7 +502,6 @@ namespace _20200330_誤差拡散
             var (min, max) = GetPaletteMinMax(palette);
             for (int i = 0; i < pixels.Length; i++)
             {
-
                 if (isGoRight == true)
                 //走査方向→の時
                 {
@@ -536,10 +539,12 @@ namespace _20200330_誤差拡散
                     if (ww != 0) SetLimitedPaletteGosa(gosaPixels, p, gosa * 7, min, max);
                     if (p + 1 < bottom)
                     {
-                        p += +stride + 1;//一段下
+                        p += stride + 1;//一段下
                         SetLimitedPaletteGosa(gosaPixels, p, gosa * 5, min, max);//真下
-                        if (ww != 0) SetLimitedPaletteGosa(gosaPixels, p + 1, gosa * 3, min, max);//右下
-                        if (ww != rightEndIndex) SetLimitedPaletteGosa(gosaPixels, p - 1, gosa * 1, min, max);//左下
+                        if (ww != 0)
+                            SetLimitedPaletteGosa(gosaPixels, p + 1, gosa * 3, min, max);//右下
+                        if (ww != rightEndIndex)
+                            SetLimitedPaletteGosa(gosaPixels, p - 1, gosa * 1, min, max);//左下
                     }
                     pp -= 2;
                     //左端に到達したら切り替え
@@ -576,6 +581,89 @@ namespace _20200330_誤差拡散
             }
             return (min, max);
         }
+
+
+        //誤差値をパレットの最小値、最大値の範囲に収めて計算、x,y座標で処理
+        private BitmapSource ReplaceColor蛇行4xy(byte[] palette, byte[] pixels, int width, int height, int stride)
+        {
+            byte[] replacePixels = new byte[pixels.Length];
+            double[] gosaPixels = new double[pixels.Length];
+            Array.Copy(pixels, gosaPixels, pixels.Length);
+            Array.Copy(pixels, replacePixels, pixels.Length);
+            double gosa;
+            int p;
+            int pp;//逆走査用
+            //int ww = 0;//右端判定用
+            //int rightEndIndex = stride - 1;//右端判定用
+            //int bottom = stride * (height - 1);//画像右下の一個上座標
+            //bool isGoRight = true;//走査方向
+            var (min, max) = GetPaletteMinMax(palette);
+            for (int y = 0; y < height; y++)
+            {
+                if (y % 2 == 0)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        p = y * stride + x;
+                        byte color = GetNearColor(gosaPixels[p], palette);
+                        replacePixels[p] = color;
+                        //誤差拡散
+                        gosa = (gosaPixels[p] - color) / 16.0;
+                        if (x < stride - 1)
+                            SetLimitedPaletteGosa(gosaPixels, p + 1, gosa * 7, min, max);
+                        if (y < height)
+                        {
+                            p += stride;//一段下
+                            SetLimitedPaletteGosa(gosaPixels, p, gosa * 5, min, max);
+                            if (x > 0)
+                                SetLimitedPaletteGosa(gosaPixels, p - 1, gosa * 3, min, max);
+                            if (x < stride - 1)
+                                SetLimitedPaletteGosa(gosaPixels, p + 1, gosa * 1, min, max);
+                        }
+                    }
+                }
+                else
+                {
+                    pp = width;
+                    for (int x = 0; x < width; x++)
+                    {
+                        p = y * stride + x + pp - 1;
+                        byte color = GetNearColor(gosaPixels[p], palette);
+                        replacePixels[p] = color;
+                        //誤差拡散
+                        gosa = (gosaPixels[p] - color) / 16.0;
+                        if (x > 0)//左端判定
+                            SetLimitedPaletteGosa(gosaPixels, p - 1, gosa * 7, min, max);
+                        if (y < height - 1)
+                        {
+                            p += stride;//一段下
+                            SetLimitedPaletteGosa(gosaPixels, p, gosa * 5, min, max);
+                            if (x < stride - 1)
+                                SetLimitedPaletteGosa(gosaPixels, p + 1, gosa * 3, min, max);
+                            if (x > 0)
+                                SetLimitedPaletteGosa(gosaPixels, p - 1, gosa * 1, min, max);
+                        }
+                        pp += -2;
+                    }
+                }
+            }
+
+            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, replacePixels, width);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -638,7 +726,11 @@ namespace _20200330_誤差拡散
 
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
+            var sw = new Stopwatch();
+            sw.Start();
             MyImage.Source = GosaKakusan2(MyPalette, MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
         }
 
         private void Button3_Click(object sender, RoutedEventArgs e)
@@ -648,8 +740,7 @@ namespace _20200330_誤差拡散
 
 
         private void Button4_Click(object sender, RoutedEventArgs e)
-        {
-            //MyImage.Source = new FormatConvertedBitmap((BitmapSource)MyImage.Source, PixelFormats.BlackWhite, null, 0);
+        {            
             MyImage.Source = GosaKakusan4(MyPalette, MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
         }
 
@@ -665,7 +756,25 @@ namespace _20200330_誤差拡散
 
         private void Button7_Click(object sender, RoutedEventArgs e)
         {
+            var sw = new Stopwatch();
+            sw.Start();
             MyImage.Source = ReplaceColor蛇行3(MyPalette, MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+        private void Button8_Click(object sender, RoutedEventArgs e)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = ReplaceColor蛇行4xy(MyPalette, MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+        private void ButtonBlackWhite_Click(object sender, RoutedEventArgs e)
+        {
+            MyImage.Source = new FormatConvertedBitmap(MyBitmapSource, PixelFormats.BlackWhite, null, 0);
         }
     }
 }
