@@ -56,6 +56,8 @@ namespace _20200401_誤差拡散2値
 
         private void MyInitialize()
         {
+            MyGrid.MouseLeftButtonDown += (s, e) => Panel.SetZIndex(MyImageOrigin, 1);
+            MyGrid.MouseLeftButtonUp += (s, e) => Panel.SetZIndex(MyImageOrigin, -1);
             string imagePath;
             imagePath = @"D:\ブログ用\チェック用2\WP_20200328_11_22_52_Pro_2020_03_28_午後わてん.jpg";
             //imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
@@ -72,7 +74,7 @@ namespace _20200401_誤差拡散2値
 
             (MyPixels, MyBitmapSource) = MakeBitmapSourceAndPixelData(imagePath, PixelFormats.Gray8, 96, 96);
             MyImage.Source = MyBitmapSource;
-            
+            MyImageOrigin.Source = MyBitmapSource;
             
         }
 

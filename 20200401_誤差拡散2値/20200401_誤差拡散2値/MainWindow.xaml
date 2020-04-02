@@ -11,11 +11,12 @@
       <ColumnDefinition/>
       <ColumnDefinition Width="150"/>
     </Grid.ColumnDefinitions>
-    <Grid>
-      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True">
+      <Grid x:Name="MyGrid">
+        <Image x:Name="MyImageOrigin" Stretch="None" UseLayoutRounding="True"/>
         <Image x:Name="MyImage" Stretch="None" UseLayoutRounding="True"/>
-      </ScrollViewer>
-    </Grid>
+      </Grid>
+    </ScrollViewer>
     <StackPanel Grid.Column="1">
       <Button x:Name="ButtonCopy" Content="Copy" Click="ButtonCopy_Click"/>
       <Button x:Name="ButtonBlackWhite" Content="PixelFormatsBlackWhite" Click="ButtonBlackWhite_Click"/>
