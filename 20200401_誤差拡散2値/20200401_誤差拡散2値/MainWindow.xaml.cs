@@ -30,6 +30,28 @@ namespace _20200401_誤差拡散2値
             this.Title = this.ToString();
 
             MyInitialize();
+            //this.Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            //using (var stream = assembly.GetManifestResourceStream("_20200401_誤差拡散2値.grayScale.bmp"))
+            //{
+            //    if (stream != null)
+            //    {
+            //        MyImage.Source = BitmapFrame.Create(stream);
+            //    }
+            //}
+
+            using (var stream = assembly.GetManifestResourceStream("_20200401_誤差拡散2値.新しいフォルダー.grayscale256x256.png"))
+            {
+                if (stream != null)
+                {
+                    MyImage.Source = BitmapFrame.Create(stream);
+                }
+            }
+
         }
 
         private void MyInitialize()
@@ -37,7 +59,7 @@ namespace _20200401_誤差拡散2値
             string imagePath;
             imagePath = @"D:\ブログ用\チェック用2\WP_20200328_11_22_52_Pro_2020_03_28_午後わてん.jpg";
             //imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
-            imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
+            //imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\grayscale256x256.png";
             //imagePath = @"D:\ブログ用\テスト用画像\Michelangelo's_David_-_63_grijswaarden.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
@@ -46,11 +68,12 @@ namespace _20200401_誤差拡散2値
             //imagePath = @"D:\ブログ用\テスト用画像\ﾈｺは見ている.png";
             //imagePath = @"D:\ブログ用\テスト用画像\NEC_2097_.jpg";
             //imagePath = @"D:\ブログ用\テスト用画像\NEC_1456_2018_03_17_午後わてん_256x192.png";
+            
 
             (MyPixels, MyBitmapSource) = MakeBitmapSourceAndPixelData(imagePath, PixelFormats.Gray8, 96, 96);
             MyImage.Source = MyBitmapSource;
-
-
+            
+            
         }
 
         private BitmapSource FloydSteinberg(byte[] source, int width, int height, int stride)
@@ -62,6 +85,10 @@ namespace _20200401_誤差拡散2値
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
+
+            //  * 7
+            //3 5 1
+
             int bottomP = (height - 1) * stride;//最下段判定用、これ未満なら最下段ではないことになる
             for (int y = 0; y < height; y++)
             {
@@ -202,6 +229,10 @@ namespace _20200401_誤差拡散2値
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
+
+            //    * 7 5
+            //3 5 7 5 3
+            //1 3 5 3 1
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
@@ -233,7 +264,7 @@ namespace _20200401_誤差拡散2値
                         }
                         if (x > 0)
                         {
-                            SetGosa(gosaPixels, p + stride - 1, gosa * 4);
+                            SetGosa(gosaPixels, p + stride - 1, gosa * 5);
                             if (x > 1)
                             {
                                 SetGosa(gosaPixels, p + stride - 2, gosa * 3);
@@ -283,6 +314,10 @@ namespace _20200401_誤差拡散2値
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
+
+            //    * 7 5
+            //3 5 7 5 3
+            //1 3 5 3 1
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
@@ -356,6 +391,9 @@ namespace _20200401_誤差拡散2値
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
+
+            //    * 7
+            //1 3 5
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
@@ -368,11 +406,11 @@ namespace _20200401_誤差拡散2値
 
                     if (x < width - 1)
                     {
-                        SetGosa(gosaPixels, p + 1, gosa * 7);                        
+                        SetGosa(gosaPixels, p + 1, gosa * 7);
                     }
                     if (y < height - 1)
                     {
-                        SetGosa(gosaPixels, p + stride, gosa * 5);                        
+                        SetGosa(gosaPixels, p + stride, gosa * 5);
                         if (x > 0)
                         {
                             SetGosa(gosaPixels, p + stride - 1, gosa * 3);
@@ -381,13 +419,13 @@ namespace _20200401_誤差拡散2値
                                 SetGosa(gosaPixels, p + stride - 2, gosa * 1);
                             }
                         }
-                    }                    
+                    }
                 }
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
 
-        private BitmapSource ShiauFanDithering(byte[] source, int width, int height, int stride)
+        private BitmapSource ShiauFan(byte[] source, int width, int height, int stride)
         {
             int count = source.Length;
             byte[] pixels = new byte[count];
@@ -396,6 +434,10 @@ namespace _20200401_誤差拡散2値
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
+
+            //    * 4
+            //1 1 2
+
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
@@ -427,8 +469,7 @@ namespace _20200401_誤差拡散2値
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
 
-
-        private BitmapSource ShiauFanDithering2(byte[] source, int width, int height, int stride)
+        private BitmapSource ShiauFan2(byte[] source, int width, int height, int stride)
         {
             int count = source.Length;
             byte[] pixels = new byte[count];
@@ -437,6 +478,9 @@ namespace _20200401_誤差拡散2値
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
+            //      * 8
+            //1 1 2 4
+
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
@@ -471,8 +515,7 @@ namespace _20200401_誤差拡散2値
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
 
-
-        private BitmapSource StuckiDithering(byte[] source, int width, int height, int stride)
+        private BitmapSource Stucki(byte[] source, int width, int height, int stride)
         {
             int count = source.Length;
             byte[] pixels = new byte[count];
@@ -546,7 +589,7 @@ namespace _20200401_誤差拡散2値
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
 
-        private BitmapSource BurkesDithering(byte[] source, int width, int height, int stride)
+        private BitmapSource Burkes(byte[] source, int width, int height, int stride)
         {
             int count = source.Length;
             byte[] pixels = new byte[count];
@@ -566,7 +609,7 @@ namespace _20200401_誤差拡散2値
 
                     //    * 4 2
                     //1 2 4 2 1
-                    
+
                     if (x < width - 1)
                     {
                         SetGosa(gosaPixels, p + 1, gosa * 4);
@@ -594,11 +637,222 @@ namespace _20200401_誤差拡散2値
                                 SetGosa(gosaPixels, p + stride - 2, gosa * 1);
                             }
                         }
-                    }                    
+                    }
                 }
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
+
+        private BitmapSource Sierra(byte[] source, int width, int height, int stride)
+        {
+            int count = source.Length;
+            byte[] pixels = new byte[count];
+            double[] gosaPixels = new double[count];
+            Array.Copy(source, pixels, count);
+            Array.Copy(source, gosaPixels, count);
+            int p, yp;//座標
+            double gosa;
+            for (int y = 0; y < height; y++)
+            {
+                yp = y * stride;
+                for (int x = 0; x < width; x++)
+                {
+                    p = yp + x;
+                    SetBlackOrWhite(gosaPixels[p], pixels, p);
+                    gosa = (gosaPixels[p] - pixels[p]) / 32.0;
+
+                    //    * 5 3
+                    //2 4 5 4 2
+                    //  2 3 2
+                    if (x < width - 1)
+                    {
+                        SetGosa(gosaPixels, p + 1, gosa * 5);
+                        if (x < width - 2)
+                        {
+                            SetGosa(gosaPixels, p + 2, gosa * 3);
+                        }
+                    }
+                    if (y < height - 1)
+                    {
+                        SetGosa(gosaPixels, p + stride, gosa * 5);
+                        if (x < width - 1)
+                        {
+                            SetGosa(gosaPixels, p + stride + 1, gosa * 4);
+                            if (x < width - 2)
+                            {
+                                SetGosa(gosaPixels, p + stride + 2, gosa * 2);
+                            }
+                        }
+                        if (x > 0)
+                        {
+                            SetGosa(gosaPixels, p + stride - 1, gosa * 4);
+                            if (x > 1)
+                            {
+                                SetGosa(gosaPixels, p + stride - 2, gosa * 2);
+                            }
+                        }
+                    }
+                    if (y < height - 2)
+                    {
+                        SetGosa(gosaPixels, p + (stride * 2), gosa * 3);
+                        if (x < width - 1)
+                        {
+                            SetGosa(gosaPixels, p + (stride * 2) + 1, gosa * 2);
+                        }
+                        if (x > 0)
+                        {
+                            SetGosa(gosaPixels, p + (stride * 2) - 1, gosa * 2);
+                        }
+                    }
+                }
+            }
+            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
+        }
+
+        private BitmapSource SierraTwoRow(byte[] source, int width, int height, int stride)
+        {
+            int count = source.Length;
+            byte[] pixels = new byte[count];
+            double[] gosaPixels = new double[count];
+            Array.Copy(source, pixels, count);
+            Array.Copy(source, gosaPixels, count);
+            int p, yp;//座標
+            double gosa;
+            for (int y = 0; y < height; y++)
+            {
+                yp = y * stride;
+                for (int x = 0; x < width; x++)
+                {
+                    p = yp + x;
+                    SetBlackOrWhite(gosaPixels[p], pixels, p);
+                    gosa = (gosaPixels[p] - pixels[p]) / 16.0;
+
+                    //    * 4 3
+                    //1 2 3 2 1
+
+                    if (x < width - 1)
+                    {
+                        SetGosa(gosaPixels, p + 1, gosa * 4);
+                        if (x < width - 2)
+                        {
+                            SetGosa(gosaPixels, p + 2, gosa * 3);
+                        }
+                    }
+                    if (y < height - 1)
+                    {
+                        SetGosa(gosaPixels, p + stride, gosa * 3);
+                        if (x < width - 1)
+                        {
+                            SetGosa(gosaPixels, p + stride + 1, gosa * 2);
+                            if (x < width - 2)
+                            {
+                                SetGosa(gosaPixels, p + stride + 2, gosa * 1);
+                            }
+                        }
+                        if (x > 0)
+                        {
+                            SetGosa(gosaPixels, p + stride - 1, gosa * 2);
+                            if (x > 1)
+                            {
+                                SetGosa(gosaPixels, p + stride - 2, gosa * 1);
+                            }
+                        }
+                    }
+                }
+            }
+            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
+        }
+
+        private BitmapSource SierraLite(byte[] source, int width, int height, int stride)
+        {
+            int count = source.Length;
+            byte[] pixels = new byte[count];
+            double[] gosaPixels = new double[count];
+            Array.Copy(source, pixels, count);
+            Array.Copy(source, gosaPixels, count);
+            int p, yp;//座標
+            double gosa;
+            for (int y = 0; y < height; y++)
+            {
+                yp = y * stride;
+                for (int x = 0; x < width; x++)
+                {
+                    p = yp + x;
+                    SetBlackOrWhite(gosaPixels[p], pixels, p);
+                    gosa = (gosaPixels[p] - pixels[p]) / 4.0;
+
+                    //  * 2
+                    //1 1
+
+                    if (x < width - 1)
+                    {
+                        SetGosa(gosaPixels, p + 1, gosa * 2);
+                    }
+                    if (y < height - 1)
+                    {
+                        SetGosa(gosaPixels, p + stride, gosa * 1);
+
+                        if (x > 0)
+                        {
+                            SetGosa(gosaPixels, p + stride - 1, gosa * 1);
+                        }
+                    }
+                }
+            }
+            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
+        }
+
+
+        private BitmapSource Atkinson(byte[] source, int width, int height, int stride)
+        {
+            int count = source.Length;
+            byte[] pixels = new byte[count];
+            double[] gosaPixels = new double[count];
+            Array.Copy(source, pixels, count);
+            Array.Copy(source, gosaPixels, count);
+            int p, yp;//座標
+            double gosa;
+            for (int y = 0; y < height; y++)
+            {
+                yp = y * stride;
+                for (int x = 0; x < width; x++)
+                {
+                    p = yp + x;
+                    SetBlackOrWhite(gosaPixels[p], pixels, p);
+                    gosa = (gosaPixels[p] - pixels[p]) / 8;
+
+                    //  * 1 1
+                    //1 1 1
+                    //  1
+                    if (x < width - 1)
+                    {
+                        SetGosa(gosaPixels, p + 1, gosa * 1);
+                        if (x < width - 2)
+                        {
+                            SetGosa(gosaPixels, p + 2, gosa * 1);
+                        }
+                    }
+                    if (y < height - 1)
+                    {
+                        SetGosa(gosaPixels, p + stride, gosa * 1);
+                        if (x < width - 1)
+                        {
+                            SetGosa(gosaPixels, p + stride + 1, gosa * 1);
+                        }
+                        if (x > 0)
+                        {
+                            SetGosa(gosaPixels, p + stride - 1, gosa * 1);
+                        }
+                    }
+                    if (y < height - 2)
+                    {
+                        SetGosa(gosaPixels, p + (stride * 2), gosa * 1);
+                    }
+                }
+            }
+            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
+        }
+
 
 
 
@@ -657,6 +911,7 @@ namespace _20200401_誤差拡散2値
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
             MyImage.Source = FloydSteinbergLimit(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button2.Content = nameof(FloydSteinbergLimit);
         }
 
         private void Button3_Click(object sender, RoutedEventArgs e)
@@ -673,22 +928,25 @@ namespace _20200401_誤差拡散2値
         {
 
             MyImage.Source = JaJuNi(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button5.Content = nameof(JaJuNi);
         }
 
         private void Button6_Click(object sender, RoutedEventArgs e)
         {
             MyImage.Source = JaJuNiLimit(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button6.Content = nameof(JaJuNiLimit);
         }
 
         private void Button7_Click(object sender, RoutedEventArgs e)
         {
             MyImage.Source = FloydSteinbergDervatives(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button7.Content = nameof(FloydSteinbergDervatives);
         }
 
         private void Button8_Click(object sender, RoutedEventArgs e)
         {
-            MyImage.Source = ShiauFanDithering(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-            Button8.Content = nameof(ShiauFanDithering);
+            MyImage.Source = ShiauFan(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button8.Content = nameof(ShiauFan);
         }
 
 
@@ -752,20 +1010,44 @@ namespace _20200401_誤差拡散2値
 
         private void Button9_Click(object sender, RoutedEventArgs e)
         {
-            MyImage.Source = ShiauFanDithering2(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-            Button9.Content = nameof(ShiauFanDithering2);
+            MyImage.Source = ShiauFan2(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button9.Content = nameof(ShiauFan2);
         }
 
         private void Button10_Click(object sender, RoutedEventArgs e)
         {
-            MyImage.Source = StuckiDithering(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-            Button10.Content = nameof(StuckiDithering);
+            MyImage.Source = Stucki(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button10.Content = nameof(Stucki);
         }
 
         private void Button11_Click(object sender, RoutedEventArgs e)
         {
-            MyImage.Source = BurkesDithering(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-            Button10.Content = nameof(BurkesDithering);
+            MyImage.Source = Burkes(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button11.Content = nameof(Burkes);
+        }
+
+        private void Button12_Click(object sender, RoutedEventArgs e)
+        {
+            MyImage.Source = Sierra(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button12.Content = nameof(Sierra);
+        }
+
+        private void Button13_Click(object sender, RoutedEventArgs e)
+        {
+            MyImage.Source = SierraTwoRow(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button13.Content = nameof(SierraTwoRow);
+        }
+
+        private void Button14_Click(object sender, RoutedEventArgs e)
+        {
+            MyImage.Source = SierraLite(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button14.Content = nameof(SierraLite);
+        }
+
+        private void Button15_Click(object sender, RoutedEventArgs e)
+        {
+            MyImage.Source = Atkinson(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button15.Content = nameof(Atkinson);
         }
     }
 }

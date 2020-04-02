@@ -31,6 +31,10 @@
       <Button x:Name="Button9" Content="button8" Click="Button9_Click"/>
       <Button x:Name="Button10" Content="button8" Click="Button10_Click"/>
       <Button x:Name="Button11" Content="button8" Click="Button11_Click"/>
+      <Button x:Name="Button12" Content="button8" Click="Button12_Click"/>
+      <Button x:Name="Button13" Content="button8" Click="Button13_Click"/>
+      <Button x:Name="Button14" Content="button8" Click="Button14_Click"/>
+      <Button x:Name="Button15" Content="button8" Click="Button15_Click"/>
     </StackPanel>
   </Grid>
 </Window>
