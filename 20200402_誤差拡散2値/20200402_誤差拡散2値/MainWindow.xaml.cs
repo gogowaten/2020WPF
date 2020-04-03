@@ -69,10 +69,12 @@ namespace _20200402_誤差拡散2値
             //imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
             //imagePath = @"D:\ブログ用\テスト用画像\gray127.png";//これは中間じゃないみたい
             //imagePath = @"D:\ブログ用\テスト用画像\gray250.png";
+            //imagePath = @"D:\ブログ用\テスト用画像\HSVRectH90.png";
             //imagePath = @"D:\ブログ用\テスト用画像\ﾈｺは見ている.png";
             //imagePath = @"D:\ブログ用\テスト用画像\NEC_2097_.jpg";
             //imagePath = @"D:\ブログ用\テスト用画像\NEC_1456_2018_03_17_午後わてん_256x192.png";
-            //ローカルの画像をセット
+            //imagePath = @"D:\ブログ用\テスト用画像\NEC_0541_2017_07_21_午後わてん_.jpg";
+            ////ローカルの画像をセット
             //(MyPixels, MyBitmapSource) = MakeBitmapSourceAndPixelData(imagePath, PixelFormats.Gray8, 96, 96);
 
 
@@ -156,7 +158,7 @@ namespace _20200402_誤差拡散2値
 
         /// <summary>
         /// しきい値127.5で 0 or 255、127.5未満は0、127.5以上は255に置き換える
-        /// 127.49999999999999999...は0、127.5以上は255
+        /// 127.49999999999999999...は0、127.5以上は255だから、整数の場合は127.5を四捨五入した128未満が0、それ以外は255にすればいい？
         /// </summary>
         /// <param name="value">対象の値</param>
         /// <param name="pixels">0 or 255を入れる配列</param>
@@ -169,7 +171,7 @@ namespace _20200402_誤差拡散2値
                 pixels[p] = 255;
         }
 
-        //Jarvis, Judice, and Nink
+        //Jarvis, Judice, and Ninke
         private BitmapSource D2_JaJuNi(byte[] source, int width, int height, int stride)
         {
             int count = source.Length;
