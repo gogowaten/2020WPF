@@ -59,10 +59,11 @@ namespace _20200402_誤差拡散2値
         {
             MyGrid.MouseLeftButtonDown += (s, e) => Panel.SetZIndex(MyImageOrigin, 1);
             MyGrid.MouseLeftButtonUp += (s, e) => Panel.SetZIndex(MyImageOrigin, -1);
-            string imagePath;
-            imagePath = @"D:\ブログ用\チェック用2\WP_20200328_11_22_52_Pro_2020_03_28_午後わてん.jpg";
+
+            //string imagePath;
+            //imagePath = @"D:\ブログ用\チェック用2\WP_20200328_11_22_52_Pro_2020_03_28_午後わてん.jpg";
             //imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
-            imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
+            //imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\grayscale256x256.png";
             //imagePath = @"D:\ブログ用\テスト用画像\Michelangelo's_David_-_63_grijswaarden.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
@@ -71,34 +72,57 @@ namespace _20200402_誤差拡散2値
             //imagePath = @"D:\ブログ用\テスト用画像\ﾈｺは見ている.png";
             //imagePath = @"D:\ブログ用\テスト用画像\NEC_2097_.jpg";
             //imagePath = @"D:\ブログ用\テスト用画像\NEC_1456_2018_03_17_午後わてん_256x192.png";
+            //ローカルの画像をセット
+            //(MyPixels, MyBitmapSource) = MakeBitmapSourceAndPixelData(imagePath, PixelFormats.Gray8, 96, 96);
 
 
-            (MyPixels, MyBitmapSource) = MakeBitmapSourceAndPixelData(imagePath, PixelFormats.Gray8, 96, 96);
+            //アプリに埋め込んだ画像をセット
+            SetResourceImage();
+
+            //画像を表示
             MyImage.Source = MyBitmapSource;
             MyImageOrigin.Source = MyBitmapSource;
 
         }
+        //アプリに埋め込んだ画像をセット
+        private void SetResourceImage()
+        {
+            string imagePath = "_20200402_誤差拡散2値.grayScale.bmp";
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using (var stream = assembly.GetManifestResourceStream(imagePath))
+            {
+                if (stream != null)
+                {
+                    BitmapSource bitmap = BitmapFrame.Create(stream);
+                    bitmap = new FormatConvertedBitmap(bitmap, PixelFormats.Gray8, null, 0);
+                    MyBitmapSource = bitmap;
+                    MyPixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight];
+                    bitmap.CopyPixels(MyPixels, bitmap.PixelWidth, 0);
+                }
+            }
+        }
+
+
         /// <summary>
-        /// 誤差拡散、FloydSteinberg、グレースケール画像専用
+        /// 誤差拡散、FloydSteinberg、PixelFormat.Gray8グレースケール画像専用
         /// </summary>
         /// <param name="source">元画像のピクセルの輝度値</param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        /// <param name="stride"></param>
+        /// <param name="stride">横1行分のbyte数</param>
         /// <returns></returns>
         private BitmapSource D1_FloydSteinberg(byte[] source, int width, int height, int stride)
         {
             int count = source.Length;
             byte[] pixels = new byte[count];//変換先画像用
             double[] gosaPixels = new double[count];//誤差計算用
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;//誤差(変換前 - 変換後)
 
             //  * 7
             //3 5 1
-
+            //￣16￣
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
@@ -130,13 +154,27 @@ namespace _20200402_誤差拡散2値
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
 
+        /// <summary>
+        /// しきい値127.5で 0 or 255、127.5未満は0、127.5以上は255に置き換える
+        /// 127.49999999999999999...は0、127.5以上は255
+        /// </summary>
+        /// <param name="value">対象の値</param>
+        /// <param name="pixels">0 or 255を入れる配列</param>
+        /// <param name="p">配列のIndex</param>
+        private void SetBlackOrWhite(double value, byte[] pixels, int p)
+        {
+            if (127.5 > value)
+                pixels[p] = 0;
+            else
+                pixels[p] = 255;
+        }
+
         //Jarvis, Judice, and Nink
         private BitmapSource D2_JaJuNi(byte[] source, int width, int height, int stride)
         {
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
@@ -144,6 +182,7 @@ namespace _20200402_誤差拡散2値
             //    * 7 5
             //3 5 7 5 3
             //1 3 5 3 1
+            //￣48￣
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
@@ -159,46 +198,46 @@ namespace _20200402_誤差拡散2値
                         gosaPixels[p + 1] += gosa * 7;
                         if (x < width - 2)
                         {
-                            gosaPixels[p + 2] +=gosa * 5;
+                            gosaPixels[p + 2] += gosa * 5;
                         }
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 7;
+                        gosaPixels[p + stride] += gosa * 7;
                         if (x < width - 1)
                         {
-                            gosaPixels[p + stride + 1] +=gosa * 5;
+                            gosaPixels[p + stride + 1] += gosa * 5;
                             if (x < width - 2)
                             {
-                                gosaPixels[p + stride + 2] +=gosa * 3;
+                                gosaPixels[p + stride + 2] += gosa * 3;
                             }
                         }
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 5;
+                            gosaPixels[p + stride - 1] += gosa * 5;
                             if (x > 1)
                             {
-                                gosaPixels[p + stride - 2] +=gosa * 3;
+                                gosaPixels[p + stride - 2] += gosa * 3;
                             }
                         }
                     }
                     if (y < height - 2)
                     {
-                        gosaPixels[p + (stride * 2)] +=gosa * 5;
+                        gosaPixels[p + (stride * 2)] += gosa * 5;
                         if (x < width - 1)
                         {
-                            gosaPixels[p + (stride * 2) + 1] +=gosa * 3;
+                            gosaPixels[p + (stride * 2) + 1] += gosa * 3;
                             if (x < width - 2)
                             {
-                                gosaPixels[p + (stride * 2) + 2] +=gosa * 1;
+                                gosaPixels[p + (stride * 2) + 2] += gosa * 1;
                             }
                         }
                         if (x > 0)
                         {
-                            gosaPixels[p + (stride * 2) - 1] +=gosa * 3;
+                            gosaPixels[p + (stride * 2) - 1] += gosa * 3;
                             if (x > 1)
                             {
-                                gosaPixels[p + (stride * 2) - 2] +=gosa * 1;
+                                gosaPixels[p + (stride * 2) - 2] += gosa * 1;
                             }
                         }
                     }
@@ -206,7 +245,7 @@ namespace _20200402_誤差拡散2値
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
-      
+
 
 
         //Floyd-Steinberg derivatives
@@ -215,13 +254,13 @@ namespace _20200402_誤差拡散2値
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
 
             //    * 7
             //1 3 5
+            //￣16￣
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
@@ -234,17 +273,17 @@ namespace _20200402_誤差拡散2値
 
                     if (x < width - 1)
                     {
-                        gosaPixels[p + 1] +=gosa * 7;
+                        gosaPixels[p + 1] += gosa * 7;
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 5;
+                        gosaPixels[p + stride] += gosa * 5;
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 3;
+                            gosaPixels[p + stride - 1] += gosa * 3;
                             if (x > 1)
                             {
-                                gosaPixels[p + stride - 2] +=gosa * 1;
+                                gosaPixels[p + stride - 2] += gosa * 1;
                             }
                         }
                     }
@@ -258,13 +297,13 @@ namespace _20200402_誤差拡散2値
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
 
             //    * 4
             //1 1 2
+            //￣8￣
 
             for (int y = 0; y < height; y++)
             {
@@ -278,17 +317,17 @@ namespace _20200402_誤差拡散2値
 
                     if (x < width - 1)
                     {
-                        gosaPixels[p + 1] +=gosa * 4;
+                        gosaPixels[p + 1] += gosa * 4;
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 2;
+                        gosaPixels[p + stride] += gosa * 2;
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 1;
+                            gosaPixels[p + stride - 1] += gosa * 1;
                             if (x > 1)
                             {
-                                gosaPixels[p + stride - 2] +=gosa * 1;
+                                gosaPixels[p + stride - 2] += gosa * 1;
                             }
                         }
                     }
@@ -302,12 +341,12 @@ namespace _20200402_誤差拡散2値
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
             //      * 8
             //1 1 2 4
+            //￣16￣
 
             for (int y = 0; y < height; y++)
             {
@@ -320,20 +359,20 @@ namespace _20200402_誤差拡散2値
 
                     if (x < width - 1)
                     {
-                        gosaPixels[p + 1] +=gosa * 8;
+                        gosaPixels[p + 1] += gosa * 8;
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 4;
+                        gosaPixels[p + stride] += gosa * 4;
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 2;
+                            gosaPixels[p + stride - 1] += gosa * 2;
                             if (x > 1)
                             {
-                                gosaPixels[p + stride - 2] +=gosa * 1;
+                                gosaPixels[p + stride - 2] += gosa * 1;
                                 if (x > 2)
                                 {
-                                    gosaPixels[p + stride - 3] +=gosa * 1;
+                                    gosaPixels[p + stride - 3] += gosa * 1;
                                 }
                             }
                         }
@@ -348,7 +387,6 @@ namespace _20200402_誤差拡散2値
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
@@ -364,51 +402,52 @@ namespace _20200402_誤差拡散2値
                     //    * 8 4
                     //2 4 8 4 2
                     //1 2 4 2 1
+                    //￣42￣
                     if (x < width - 1)
                     {
-                        gosaPixels[p + 1] +=gosa * 8;
+                        gosaPixels[p + 1] += gosa * 8;
                         if (x < width - 2)
                         {
-                            gosaPixels[p + 2] +=gosa * 4;
+                            gosaPixels[p + 2] += gosa * 4;
                         }
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 8;
+                        gosaPixels[p + stride] += gosa * 8;
                         if (x < width - 1)
                         {
-                            gosaPixels[p + stride + 1] +=gosa * 4;
+                            gosaPixels[p + stride + 1] += gosa * 4;
                             if (x < width - 2)
                             {
-                                gosaPixels[p + stride + 2] +=gosa * 2;
+                                gosaPixels[p + stride + 2] += gosa * 2;
                             }
                         }
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 4;
+                            gosaPixels[p + stride - 1] += gosa * 4;
                             if (x > 1)
                             {
-                                gosaPixels[p + stride - 2] +=gosa * 2;
+                                gosaPixels[p + stride - 2] += gosa * 2;
                             }
                         }
                     }
                     if (y < height - 2)
                     {
-                        gosaPixels[p + (stride * 2)] +=gosa * 4;
+                        gosaPixels[p + (stride * 2)] += gosa * 4;
                         if (x < width - 1)
                         {
-                            gosaPixels[p + (stride * 2) + 1] +=gosa * 2;
+                            gosaPixels[p + (stride * 2) + 1] += gosa * 2;
                             if (x < width - 2)
                             {
-                                gosaPixels[p + (stride * 2) + 2] +=gosa * 1;
+                                gosaPixels[p + (stride * 2) + 2] += gosa * 1;
                             }
                         }
                         if (x > 0)
                         {
-                            gosaPixels[p + (stride * 2) - 1] +=gosa * 2;
+                            gosaPixels[p + (stride * 2) - 1] += gosa * 2;
                             if (x > 1)
                             {
-                                gosaPixels[p + (stride * 2) - 2] +=gosa * 1;
+                                gosaPixels[p + (stride * 2) - 2] += gosa * 1;
                             }
                         }
                     }
@@ -422,7 +461,6 @@ namespace _20200402_誤差拡散2値
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
@@ -437,32 +475,33 @@ namespace _20200402_誤差拡散2値
 
                     //    * 4 2
                     //1 2 4 2 1
+                    //￣16￣
 
                     if (x < width - 1)
                     {
-                        gosaPixels[p + 1] +=gosa * 4;
+                        gosaPixels[p + 1] += gosa * 4;
                         if (x < width - 2)
                         {
-                            gosaPixels[p + 2] +=gosa * 2;
+                            gosaPixels[p + 2] += gosa * 2;
                         }
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 4;
+                        gosaPixels[p + stride] += gosa * 4;
                         if (x < width - 1)
                         {
-                            gosaPixels[p + stride + 1] +=gosa * 2;
+                            gosaPixels[p + stride + 1] += gosa * 2;
                             if (x < width - 2)
                             {
-                                gosaPixels[p + stride + 2] +=gosa * 1;
+                                gosaPixels[p + stride + 2] += gosa * 1;
                             }
                         }
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 2;
+                            gosaPixels[p + stride - 1] += gosa * 2;
                             if (x > 1)
                             {
-                                gosaPixels[p + stride - 2] +=gosa * 1;
+                                gosaPixels[p + stride - 2] += gosa * 1;
                             }
                         }
                     }
@@ -476,7 +515,6 @@ namespace _20200402_誤差拡散2値
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
@@ -492,44 +530,45 @@ namespace _20200402_誤差拡散2値
                     //    * 5 3
                     //2 4 5 4 2
                     //  2 3 2
+                    //￣32￣
                     if (x < width - 1)
                     {
-                        gosaPixels[p + 1] +=gosa * 5;
+                        gosaPixels[p + 1] += gosa * 5;
                         if (x < width - 2)
                         {
-                            gosaPixels[p + 2] +=gosa * 3;
+                            gosaPixels[p + 2] += gosa * 3;
                         }
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 5;
+                        gosaPixels[p + stride] += gosa * 5;
                         if (x < width - 1)
                         {
-                            gosaPixels[p + stride + 1] +=gosa * 4;
+                            gosaPixels[p + stride + 1] += gosa * 4;
                             if (x < width - 2)
                             {
-                                gosaPixels[p + stride + 2] +=gosa * 2;
+                                gosaPixels[p + stride + 2] += gosa * 2;
                             }
                         }
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 4;
+                            gosaPixels[p + stride - 1] += gosa * 4;
                             if (x > 1)
                             {
-                                gosaPixels[p + stride - 2] +=gosa * 2;
+                                gosaPixels[p + stride - 2] += gosa * 2;
                             }
                         }
                     }
                     if (y < height - 2)
                     {
-                        gosaPixels[p + (stride * 2)] +=gosa * 3;
+                        gosaPixels[p + (stride * 2)] += gosa * 3;
                         if (x < width - 1)
                         {
-                            gosaPixels[p + (stride * 2) + 1] +=gosa * 2;
+                            gosaPixels[p + (stride * 2) + 1] += gosa * 2;
                         }
                         if (x > 0)
                         {
-                            gosaPixels[p + (stride * 2) - 1] +=gosa * 2;
+                            gosaPixels[p + (stride * 2) - 1] += gosa * 2;
                         }
                     }
                 }
@@ -542,7 +581,6 @@ namespace _20200402_誤差拡散2値
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
@@ -557,32 +595,33 @@ namespace _20200402_誤差拡散2値
 
                     //    * 4 3
                     //1 2 3 2 1
+                    //￣16￣
 
                     if (x < width - 1)
                     {
-                        gosaPixels[p + 1] +=gosa * 4;
+                        gosaPixels[p + 1] += gosa * 4;
                         if (x < width - 2)
                         {
-                            gosaPixels[p + 2] +=gosa * 3;
+                            gosaPixels[p + 2] += gosa * 3;
                         }
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 3;
+                        gosaPixels[p + stride] += gosa * 3;
                         if (x < width - 1)
                         {
-                            gosaPixels[p + stride + 1] +=gosa * 2;
+                            gosaPixels[p + stride + 1] += gosa * 2;
                             if (x < width - 2)
                             {
-                                gosaPixels[p + stride + 2] +=gosa * 1;
+                                gosaPixels[p + stride + 2] += gosa * 1;
                             }
                         }
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 2;
+                            gosaPixels[p + stride - 1] += gosa * 2;
                             if (x > 1)
                             {
-                                gosaPixels[p + stride - 2] +=gosa * 1;
+                                gosaPixels[p + stride - 2] += gosa * 1;
                             }
                         }
                     }
@@ -596,7 +635,6 @@ namespace _20200402_誤差拡散2値
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
@@ -611,18 +649,19 @@ namespace _20200402_誤差拡散2値
 
                     //  * 2
                     //1 1
+                    //￣4￣
 
                     if (x < width - 1)
                     {
-                        gosaPixels[p + 1] +=gosa * 2;
+                        gosaPixels[p + 1] += gosa * 2;
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 1;
+                        gosaPixels[p + stride] += gosa * 1;
 
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 1;
+                            gosaPixels[p + stride - 1] += gosa * 1;
                         }
                     }
                 }
@@ -636,7 +675,6 @@ namespace _20200402_誤差拡散2値
             int count = source.Length;
             byte[] pixels = new byte[count];
             double[] gosaPixels = new double[count];
-            Array.Copy(source, pixels, count);
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;
@@ -652,30 +690,82 @@ namespace _20200402_誤差拡散2値
                     //  * 1 1
                     //1 1 1
                     //  1
+                    //￣8￣
                     if (x < width - 1)
                     {
-                        gosaPixels[p + 1] +=gosa * 1;
+                        gosaPixels[p + 1] += gosa * 1;
                         if (x < width - 2)
                         {
-                            gosaPixels[p + 2] +=gosa * 1;
+                            gosaPixels[p + 2] += gosa * 1;
                         }
                     }
                     if (y < height - 1)
                     {
-                        gosaPixels[p + stride] +=gosa * 1;
+                        gosaPixels[p + stride] += gosa * 1;
                         if (x < width - 1)
                         {
-                            gosaPixels[p + stride + 1] +=gosa * 1;
+                            gosaPixels[p + stride + 1] += gosa * 1;
                         }
                         if (x > 0)
                         {
-                            gosaPixels[p + stride - 1] +=gosa * 1;
+                            gosaPixels[p + stride - 1] += gosa * 1;
                         }
                     }
                     if (y < height - 2)
                     {
-                        gosaPixels[p + (stride * 2)] +=gosa * 1;
+                        gosaPixels[p + (stride * 2)] += gosa * 1;
                     }
+                }
+            }
+            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
+        }
+
+
+
+        private BitmapSource D12(byte[] source, int width, int height, int stride)
+        {
+            int count = source.Length;
+            byte[] pixels = new byte[count];
+            double[] gosaPixels = new double[count];
+            Array.Copy(source, gosaPixels, count);
+            int p, yp;//座標
+            double gosa;
+            for (int y = 0; y < height; y++)
+            {
+                yp = y * stride;
+                for (int x = 0; x < width; x++)
+                {
+                    p = yp + x;
+                    SetBlackOrWhite(gosaPixels[p], pixels, p);
+                    gosa = (gosaPixels[p] - pixels[p]) / 7;
+
+                    //  * 3
+                    //1 2 1
+                    //
+                    if (x < width - 1)
+                    {
+                        gosaPixels[p + 1] += gosa * 3;
+                        //if (x < width - 2)
+                        //{
+                        //    gosaPixels[p + 2] += gosa * 1;
+                        //}
+                    }
+                    if (y < height - 1)
+                    {
+                        gosaPixels[p + stride] += gosa * 2;
+                        if (x < width - 1)
+                        {
+                            gosaPixels[p + stride + 1] += gosa * 1;
+                        }
+                        if (x > 0)
+                        {
+                            gosaPixels[p + stride - 1] += gosa * 1;
+                        }
+                    }
+                    //if (y < height - 2)
+                    //{
+                    //    gosaPixels[p + (stride * 2)] += gosa * 1;
+                    //}
                 }
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
@@ -691,23 +781,7 @@ namespace _20200402_誤差拡散2値
 
 
 
-
-
         //
-        /// <summary>
-        /// しきい値で2値に置き換え、しきい値は127.5固定で、127.5未満は0、127.5以上は255に置き換える
-        /// 127.49999999999999999...は0、127.5以上は255
-        /// </summary>
-        /// <param name="value">対象の値</param>
-        /// <param name="pixels">配列</param>
-        /// <param name="p">配列のIndex</param>
-        private void SetBlackOrWhite(double value, byte[] pixels, int p)
-        {
-            if (127.5 > value)
-                pixels[p] = 0;
-            else
-                pixels[p] = 255;
-        }
 
 
 
@@ -751,7 +825,7 @@ namespace _20200402_誤差拡散2値
         private void Button4_Click(object sender, RoutedEventArgs e)
         {
             MyImage.Source = D4_ShiauFan(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-            Button2.Content = nameof(D4_ShiauFan);
+            Button4.Content = nameof(D4_ShiauFan);
         }
 
         private void Button5_Click(object sender, RoutedEventArgs e)
@@ -856,11 +930,11 @@ namespace _20200402_誤差拡散2値
             Button11.Content = nameof(D11_Atkinson);
         }
 
-        //private void Button12_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D8_Sierra(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button12.Content = nameof(D8_Sierra);
-        //}
+        private void Button12_Click(object sender, RoutedEventArgs e)
+        {
+            MyImage.Source = D12(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button12.Content = nameof(D12);
+        }
 
         //private void Button13_Click(object sender, RoutedEventArgs e)
         //{
