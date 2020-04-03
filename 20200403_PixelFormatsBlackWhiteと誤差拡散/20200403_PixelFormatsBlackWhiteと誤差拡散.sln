@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29926.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20200403_PixelFormatsBlackWhiteと誤差拡散", "20200403_PixelFormatsBlackWhiteと誤差拡散\20200403_PixelFormatsBlackWhiteと誤差拡散.csproj", "{CCDB7E76-3248-4D24-A17E-ED955C90342E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CCDB7E76-3248-4D24-A17E-ED955C90342E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCDB7E76-3248-4D24-A17E-ED955C90342E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCDB7E76-3248-4D24-A17E-ED955C90342E}.Debug|x64.ActiveCfg = Debug|x64
+		{CCDB7E76-3248-4D24-A17E-ED955C90342E}.Debug|x64.Build.0 = Debug|x64
+		{CCDB7E76-3248-4D24-A17E-ED955C90342E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCDB7E76-3248-4D24-A17E-ED955C90342E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCDB7E76-3248-4D24-A17E-ED955C90342E}.Release|x64.ActiveCfg = Release|x64
+		{CCDB7E76-3248-4D24-A17E-ED955C90342E}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A11CD3D9-71C6-4F6C-92FF-B3EB204814AF}
+	EndGlobalSection
+EndGlobal
