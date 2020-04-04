@@ -64,7 +64,7 @@ namespace _20200404_誤差拡散法蛇行走査
             this.AllowDrop = true;
             this.Drop += MainWindow_Drop;
 
-            string imagePath;
+            //string imagePath;
             //imagePath = @"D:\ブログ用\チェック用2\WP_20200328_11_22_52_Pro_2020_03_28_午後わてん.jpg";
             //imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
             //imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
