@@ -60,6 +60,8 @@ namespace _20200402_誤差拡散2値
             MyGrid.MouseLeftButtonDown += (s, e) => Panel.SetZIndex(MyImageOrigin, 1);
             MyGrid.MouseLeftButtonUp += (s, e) => Panel.SetZIndex(MyImageOrigin, -1);
 
+            this.AllowDrop = true;
+            this.Drop += MainWindow_Drop;
             //string imagePath;
             //imagePath = @"D:\ブログ用\チェック用2\WP_20200328_11_22_52_Pro_2020_03_28_午後わてん.jpg";
             //imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
@@ -86,6 +88,25 @@ namespace _20200402_誤差拡散2値
             MyImageOrigin.Source = MyBitmapSource;
 
         }
+
+        private void MainWindow_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop) == false) { return; }
+            string[] filePath = (string[])e.Data.GetData(DataFormats.FileDrop);
+            (MyPixels, MyBitmapSource) = MakeBitmapSourceAndPixelData(filePath[0], PixelFormats.Gray8, 96, 96);
+
+            if (MyImageOrigin == null)
+            {
+                MessageBox.Show("画像として開くことができなかった");
+            }
+            else
+            {
+                MyImageOrigin.Source = MyBitmapSource;
+                MyImageOrigin.Source = MyBitmapSource;
+                MyImage.Source = MyBitmapSource;
+            }
+        }
+
         //アプリに埋め込んだ画像をセット
         private void SetResourceImage()
         {

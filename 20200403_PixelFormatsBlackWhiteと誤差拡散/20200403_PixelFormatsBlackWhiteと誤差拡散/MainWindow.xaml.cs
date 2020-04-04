@@ -43,7 +43,7 @@ namespace _20200403_PixelFormatsBlackWhiteと誤差拡散
             imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
             imagePath = @"D:\ブログ用\テスト用画像\grayscale256x256.png";
             //imagePath = @"D:\ブログ用\テスト用画像\Michelangelo's_David_-_63_grijswaarden.bmp";
-            //imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
+            imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
             //imagePath = @"D:\ブログ用\テスト用画像\gray127.png";//これは中間じゃないみたい
             //imagePath = @"D:\ブログ用\テスト用画像\gray250.png";
             //imagePath = @"D:\ブログ用\テスト用画像\HSVRectH90.png";
@@ -366,6 +366,90 @@ namespace _20200403_PixelFormatsBlackWhiteと誤差拡散
 
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
+        }
+
+        private byte[] D5_Matrix3x2蛇行Pixels(byte[] source, int width, int height, int stride, int[,] matrix, int bunbo)
+        {
+            int count = source.Length;
+            byte[] pixels = new byte[count];//変換先画像用
+            double[] gosaPixels = new double[count];//誤差計算用
+            Array.Copy(source, gosaPixels, count);
+            int p, yp;//座標
+            double gosa;//誤差(変換前 - 変換後)
+
+            //  * 7
+            //3 5 1
+            //￣16￣
+            //matrix = new int[,] { { 0, 0, 7 }, { 3, 5, 1 } };
+            //bunbo = 16;
+            for (int y = 0; y < height; y++)
+            {
+                yp = y * stride;
+                if (y % 2 == 0)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        //注目ピクセルのインデックス
+                        p = yp + x;
+                        //しきい値127.5未満なら0にする、それ以外は255にする
+                        SetBlackOrWhite(gosaPixels[p], pixels, p);
+                        gosa = (gosaPixels[p] - pixels[p]) / bunbo;
+
+                        //誤差拡散
+                        if (x != width - 1)//右端ではない
+                        {
+                            gosaPixels[p + 1] += gosa * matrix[0, 2];
+                        }
+
+                        if (y != height - 1)//下端ではない
+                        {
+                            p += stride;
+                            if (x != 0)//左端ではない
+                            {
+                                gosaPixels[p - 1] += gosa * matrix[1, 0];
+                            }
+                            gosaPixels[p] += gosa * matrix[1, 1];
+                            if (x != width - 1)//右端ではない
+                            {
+                                gosaPixels[p + 1] += gosa * matrix[1, 2];
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = width - 1; x >= 0; x -= 1)
+                    {
+                        //注目ピクセルのインデックス
+                        p = yp + x;
+                        //しきい値127.5未満なら0にする、それ以外は255にする
+                        SetBlackOrWhite(gosaPixels[p], pixels, p);
+                        gosa = (gosaPixels[p] - pixels[p]) / bunbo;
+
+                        //誤差拡散
+                        if (x != 0)//左端ではない
+                        {
+                            gosaPixels[p - 1] += gosa * matrix[0, 2];
+                        }
+
+                        if (y != height - 1)//下端ではない
+                        {
+                            p += stride;
+                            if (x != 0)//左端ではない
+                            {
+                                gosaPixels[p - 1] += gosa * matrix[1, 2];
+                            }
+                            gosaPixels[p] += gosa * matrix[1, 1];
+                            if (x != width - 1)//右端ではない
+                            {
+                                gosaPixels[p + 1] += gosa * matrix[1, 0];
+                            }
+                        }
+                    }
+                }
+
+            }
+            return pixels;
         }
 
 
@@ -858,15 +942,16 @@ namespace _20200403_PixelFormatsBlackWhiteと誤差拡散
 
         private void Button4_Click(object sender, RoutedEventArgs e)
         {
-            int[,] matrix = new int[,] { { 0, 0, 7 }, { 3, 5, 1 } };
-            MyImage.Source = D4_Matrix3x2蛇行(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth, matrix, 16);
+            //int[,] matrix = new int[,] { { 0, 0, 7 }, { 3, 5, 1 } };
+            int[,] matrix = new int[,] { { 0, 0, 16 }, { 6, 10, 0 } };
+            MyImage.Source = D4_Matrix3x2蛇行(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth, matrix, 32);
             Button4.Content = nameof(D4_Matrix3x2蛇行);
         }
 
         private void Button5_Click(object sender, RoutedEventArgs e)
         {
             int bunbo = 16;
-            
+
             //var matrix = MakeMatrix2x3(bunbo);
             var matrix = MakeRandomMatrix2x3(bunbo);
             string str = "";
@@ -905,10 +990,9 @@ namespace _20200403_PixelFormatsBlackWhiteと誤差拡散
         {
             var r = new Random();
             var ll = new List<int>();
-            
             int nokori = bunbo;
-            //int[] vs = new int[4];
             int temp;
+            //4つの乱数作成、4つの合計はbunboになるようにする
             for (int j = 0; j < 3; j++)
             {
                 temp = (int)(r.NextDouble() * nokori);
@@ -917,14 +1001,17 @@ namespace _20200403_PixelFormatsBlackWhiteと誤差拡散
             }
             ll.Add(nokori);
 
+            //4つの乱数を配列に入れる、入れる場所はランダムにする
             int[] ii = new int[4];
             for (int k = 3; k >= 0; k--)
             {
-                int v = r.Next(k+1);
+                int v = r.Next(k + 1);
                 ii[k] = ll[v];
                 ll.RemoveAt(v);
             }
-            int[,] matrix = new int[2,3];
+
+            //誤差拡散法用のマトリックス作成
+            int[,] matrix = new int[2, 3];
             matrix[0, 0] = 0;
             matrix[0, 1] = 0;
             matrix[0, 2] = ii[0];
@@ -934,11 +1021,103 @@ namespace _20200403_PixelFormatsBlackWhiteと誤差拡散
             return matrix;
         }
 
+        private List<int[,]> MakeMatrix2x3List(int bunbo)
+        {
+            int[,] matrix;
+            List<int[,]> list = new List<int[,]>();
+            for (int i = 0; i <= bunbo; i++)
+            {
+                for (int j = 0; j <= bunbo; j++)
+                {
+                    for (int k = 0; k <= bunbo; k++)
+                    {
+                        for (int l = 0; l <= bunbo; l++)
+                        {
+                            //4つの合計がbunboになるときだけ作成
+                            if (i + j + k + l == bunbo)
+                            {
+                                matrix = new int[2, 3];
+                                matrix[0, 0] = 0;
+                                matrix[0, 1] = 0;
+                                matrix[0, 2] = i;
+                                matrix[1, 1] = j;
+                                matrix[1, 2] = k;
+                                matrix[1, 0] = l;
+                                list.Add(matrix);
+                            }
+                        }
+                    }
+                }
+            }
+            return list;
+        }
 
         private void Button6_Click(object sender, RoutedEventArgs e)
         {
-            MyImage.Source = D6_Stucki(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-            Button6.Content = nameof(D6_Stucki);
+            List<int[,]> matrixList = MakeMatrix2x3List(16);
+            //int[,] vv = new int[,] { { 0, 0, 7 }, { 3, 5, 1 } };
+            //matrixList = new List<int[,]>();
+            //matrixList.Add(vv);
+
+            //foreach (int[,] item in matrixList)
+            //{
+            //    var pixels = D5_Matrix3x2蛇行Pixels(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth, item, 16);
+            //    var (b, w) = Hikaku2(pixels);
+            //    if (b < 20)
+            //    {
+            //        if (b > -20)
+            //        {
+            //        string str = MatrixToString(item);
+            //        str += $"_B={b}, W={w}";
+            //        System.Diagnostics.Debug.WriteLine(str);
+
+            //        }
+
+            //    }
+
+            //}
+            for (int i = 0; i < matrixList.Count; i++)
+            {
+                var pixels = D5_Matrix3x2蛇行Pixels(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth, matrixList[i], 16);
+                var (b, w) = Hikaku2(pixels);
+                if (b < 80 && b>-80)
+                {
+                    
+                    {
+                        string str = MatrixToString(matrixList[i]);
+                        str += $"_B={b}, W={w}";
+                        System.Diagnostics.Debug.WriteLine(str);
+
+                    }
+
+                }
+            }
+
+        }
+        private string MatrixToString(int[,] matrix)
+        {
+            string str = "";
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    str += matrix[i, j] + ",";
+                }
+            }
+            return str;
+        }
+        private (int b, int w) Hikaku2(byte[] pixels)
+        {
+            int b = 0;
+            int w = 0;
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                if (BlackWhitePixels[i] == 0) { b++; }
+                else { w++; }
+                if (pixels[i] == 0) b--;
+                else w--;
+            }
+            return (b, w);
         }
 
         private void Button7_Click(object sender, RoutedEventArgs e)
