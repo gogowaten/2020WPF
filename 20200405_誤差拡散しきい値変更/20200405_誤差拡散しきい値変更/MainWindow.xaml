@@ -31,7 +31,7 @@
       <Button x:Name="Button1" Content="button1" Click="Button1_Click"/>
       <Button x:Name="Button2" Content="button2" Click="Button2_Click"/>
       <Button x:Name="Button3" Content="button3" Click="Button3_Click"/>
-      <Button x:Name="Button4" Content="button4" Click="Button4_Click"/>
+      <!--<Button x:Name="Button4" Content="button4" Click="Button4_Click"/>
       <Button x:Name="Button5" Content="button5" Click="Button5_Click"/>
       <Button x:Name="Button6" Content="button6" Click="Button6_Click"/>
       <Button x:Name="Button7" Content="button7" Click="Button7_Click"/>
@@ -39,7 +39,7 @@
       <Button x:Name="Button9" Content="button9" Click="Button9_Click"/>
       <Button x:Name="Button10" Content="button10" Click="Button10_Click"/>
       <Button x:Name="Button11" Content="button11" Click="Button11_Click"/>
-      <Button x:Name="Button12" Content="button12" Click="Button12_Click"/>
+      <Button x:Name="Button12" Content="button12" Click="Button12_Click"/>-->
       <!--<Button x:Name="Button13" Content="button8" Click="Button13_Click"/>
       <Button x:Name="Button14" Content="button8" Click="Button14_Click"/>
       <Button x:Name="Button15" Content="button8" Click="Button15_Click"/>-->

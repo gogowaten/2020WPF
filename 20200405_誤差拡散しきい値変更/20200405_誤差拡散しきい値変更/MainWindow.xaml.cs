@@ -74,6 +74,7 @@ namespace _20200405_誤差拡散しきい値変更
             imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
             imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
             imagePath = @"D:\ブログ用\テスト用画像\grayscale256x256.png";
+            imagePath = @"D:\ブログ用\テスト用画像\grayScaleHorizontal255to0.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\Michelangelo's_David_-_63_grijswaarden.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
             //imagePath = @"D:\ブログ用\テスト用画像\gray127.png";//これは中間じゃないみたい
@@ -116,25 +117,7 @@ namespace _20200405_誤差拡散しきい値変更
             }
         }
 
-        //アプリに埋め込んだ画像をセット
-        private void SetResourceImage()
-        {
-            string imagePath = "_20200404_誤差拡散法蛇行走査.grayScale.bmp";
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            using (var stream = assembly.GetManifestResourceStream(imagePath))
-            {
-                if (stream != null)
-                {
-                    BitmapSource bitmap = BitmapFrame.Create(stream);
-                    bitmap = new FormatConvertedBitmap(bitmap, PixelFormats.Gray8, null, 0);
-                    MyBitmapSource = bitmap;
-                    MyPixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight];
-                    bitmap.CopyPixels(MyPixels, bitmap.PixelWidth, 0);
-                }
-            }
-        }
-
-
+       
         /// <summary>
         /// 誤差拡散、FloydSteinberg、PixelFormat.Gray8グレースケール画像専用
         /// </summary>
@@ -320,21 +303,114 @@ namespace _20200405_誤差拡散しきい値変更
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
 
-        //可変しきい値？
+        //可変しきい値？これであっているのかわからん
         private void SetBlackOrWhite2(double value, byte[] pixels, int p)
         {
-            //var t = (value * 13 + 128) / 14;
-            var t = (value * 7 + 128) / 8;
-            //var t = (value * 3 + 128) / 4;
+            //var t = (value * 13 + 128) / 14;//これだと大きすぎるらしい
+            //var t = (value * 7 + 128) / 8;//これくらいから
+            var t = (value * 3 + 128) / 4;//これくらいまでがいいらしい
 
-            if (100 > t)
+            if (127.5 > t)
                 pixels[p] = 0;
             else
                 pixels[p] = 255;
         }
 
 
-    
+        //全く変化ない、理解できていないから書き方間違っていると思う
+        //IIEEJ 43(1): 91-107 (2014)
+        //https://www.jstage.jst.go.jp/article/iieej/43/1/43_91/_pdf
+        private BitmapSource D1_FloydSteinberg3(byte[] source, int width, int height, int stride, double m)
+        {
+            int count = source.Length;
+            byte[] pixels = new byte[count];//変換先画像用
+            double[] gosaPixels = new double[count];//誤差計算用
+            Array.Copy(source, gosaPixels, count);
+            int p, yp;//座標
+            double gosa;//誤差(変換前 - 変換後)
+
+            for (int y = 0; y < height; y++)
+            {
+                yp = y * stride;
+                if (y % 2 == 0)
+                {
+                    //偶数行は右進行
+                    //->->->
+                    //  * 7
+                    //3 5 1
+                    //￣16￣
+                    for (int x = 0; x < width; x++)
+                    {
+                        //注目ピクセルのインデックス
+                        p = yp + x;
+                        //しきい値127.5未満なら0にする、それ以外は255にする
+                        SetBlackOrWhite3(gosaPixels[p], pixels, p, m);
+                        //誤差拡散
+                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
+                        if (x != width - 1)
+                            //右
+                            gosaPixels[p + 1] += gosa * 7;
+                        if (y < height - 1)
+                        {
+                            p += stride;
+                            //下
+                            gosaPixels[p] += gosa * 5;
+                            if (x != 0)
+                                //左下
+                                gosaPixels[p - 1] += gosa * 3;
+                            if (x != width - 1)
+                                //右下
+                                gosaPixels[p + 1] += gosa * 1;
+                        }
+                    }
+                }
+                else
+                {
+                    //奇数行は左進行
+                    //<-<-<-
+                    //7 *
+                    //1 5 3
+                    //￣16￣
+                    for (int x = width - 1; x >= 0; x--)
+                    {
+                        //注目ピクセルのインデックス
+                        p = yp + x;
+                        //しきい値127.5未満なら0にする、それ以外は255にする
+                        SetBlackOrWhite3(gosaPixels[p], pixels, p, m);
+                        //誤差拡散
+                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
+                        if (x != 0)
+                            //左
+                            gosaPixels[p - 1] += gosa * 7;
+                        if (y < height - 1)
+                        {
+                            p += stride;
+                            //下
+                            gosaPixels[p] += gosa * 5;
+                            if (x != width - 1)
+                                //右下
+                                gosaPixels[p + 1] += gosa * 3;
+                            if (x != 0)
+                                //左下
+                                gosaPixels[p - 1] += gosa * 1;
+                        }
+                    }
+                }
+            }
+            BinaryPixels2 = pixels;
+            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
+        }
+        private void SetBlackOrWhite3(double value, byte[] pixels, int p, double m)
+        {
+            m = 0.8;
+            double threshold = m * (value - 127.5) + 127.5;            
+            if (value < threshold)
+                pixels[p] = 0;
+            else
+                pixels[p] = 255;
+        }
+
+
 
 
 
@@ -381,42 +457,11 @@ namespace _20200405_誤差拡散しきい値変更
             //Button2.Content = nameof(D2_JaJuNi);
         }
 
-        //private void Button3_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D3_FloydSteinbergDervatives(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button3.Content = nameof(D3_FloydSteinbergDervatives);
-        //}
-
-        //private void Button4_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D4_ShiauFan(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button4.Content = nameof(D4_ShiauFan);
-        //}
-
-        //private void Button5_Click(object sender, RoutedEventArgs e)
-        //{
-
-        //    MyImage.Source = D5_ShiauFan2(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button5.Content = nameof(D5_ShiauFan2);
-        //}
-
-        //private void Button6_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D6_Stucki(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button6.Content = nameof(D6_Stucki);
-        //}
-
-        //private void Button7_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D7_Burkes(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button7.Content = nameof(D7_Burkes);
-        //}
-
-        //private void Button8_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D8_Sierra(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button8.Content = nameof(D8_Sierra);
-        //}
+        private void Button3_Click(object sender, RoutedEventArgs e)
+        {
+            MyImage.Source = D1_FloydSteinberg3(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth,0.8);
+            Button3.Content = nameof(D1_FloydSteinberg3);
+        }
 
 
         #region 画像読み込み
@@ -477,29 +522,6 @@ namespace _20200405_誤差拡散しきい値変更
             MyImage.Source = new FormatConvertedBitmap(MyBitmapSource, PixelFormats.BlackWhite, null, 0);
         }
 
-        //private void Button9_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D9_SierraTwoRow(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button9.Content = nameof(D9_SierraTwoRow);
-        //}
-
-        //private void Button10_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D10_SierraLite(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button10.Content = nameof(D10_SierraLite);
-        //}
-
-        //private void Button11_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D11_Atkinson(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button11.Content = nameof(D11_Atkinson);
-        //}
-
-        //private void Button12_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D12(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button12.Content = nameof(D12);
-        //}
 
         private void ButtonHikaku_Click(object sender, RoutedEventArgs e)
         {
@@ -515,22 +537,6 @@ namespace _20200405_誤差拡散しきい値変更
             TextBlockHikaku.Text = $"black={b}, white={w}";
         }
 
-        //private void Button13_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D9_SierraTwoRow(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button13.Content = nameof(D9_SierraTwoRow);
-        //}
-
-        //private void Button14_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D10_SierraLite(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button14.Content = nameof(D10_SierraLite);
-        //}
-
-        //private void Button15_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = D11_Atkinson(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //    Button15.Content = nameof(D11_Atkinson);
-        //}
+       
     }
 }
