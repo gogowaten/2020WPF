@@ -32,7 +32,7 @@ namespace _20200406_誤差拡散グリーンノイズ法
             MyInitialize();
         }
 
-    
+
         private void MyInitialize()
         {
             //画像をクリックした時
@@ -48,6 +48,7 @@ namespace _20200406_誤差拡散グリーンノイズ法
             imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
             imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
             imagePath = @"D:\ブログ用\テスト用画像\grayscale256x256.png";
+            imagePath = @"D:\ブログ用\テスト用画像\grayScaleHorizontal255to0.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\Michelangelo's_David_-_63_grijswaarden.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
             //imagePath = @"D:\ブログ用\テスト用画像\gray127.png";//これは中間じゃないみたい
@@ -210,7 +211,7 @@ namespace _20200406_誤差拡散グリーンノイズ法
             else
                 pixels[p] = 255;
         }
-        
+
         //グリーンノイズ法？
         //127.5で2値化してから誤差拡散
         private BitmapSource D2_GreenNoise(byte[] source, int width, int height, int stride)
@@ -222,7 +223,7 @@ namespace _20200406_誤差拡散グリーンノイズ法
             int p, yp;//座標
             double gosa;//誤差(変換前 - 変換後)
             double gain = 0.5;
-            double greenNoise=0;
+            double greenNoise = 0;
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
@@ -243,8 +244,8 @@ namespace _20200406_誤差拡散グリーンノイズ法
                         p = yp + x;
                         //グリーンノイズ量
                         if (x != 0)
-                            greenNoise += pixels[p-1] * (7 / 16.0);
-                        if (y !=0)
+                            greenNoise += pixels[p - 1] * (7 / 16.0);
+                        if (y != 0)
                         {
                             greenNoise += pixels[p - stride] * (5 / 16.0);
                             if (x != 0)
@@ -289,9 +290,9 @@ namespace _20200406_誤差拡散グリーンノイズ法
                         //注目ピクセルのインデックス
                         p = yp + x;
                         //グリーンノイズ量
-                        if (x != width-1)
+                        if (x != width - 1)
                             greenNoise += pixels[p + 1] * 7 / 16.0;
-                        if (y !=0)
+                        if (y != 0)
                         {
                             greenNoise += pixels[p - stride] * 5 / 16.0;
                             if (x != 0)
@@ -334,95 +335,131 @@ namespace _20200406_誤差拡散グリーンノイズ法
             else
                 pixels[p] = 255;
         }
-        private void ToBinary(byte[] pixels, byte[] source)
-        {
-            for (int i = 0; i < source.Length; i++)
-            {
-                if (source[i] < 127.5)
-                    pixels[i] = 0;
-                else
-                    pixels[i] = 255;
-            }
 
-        }
 
 
         //Floyd-Steinberg derivatives
-        private BitmapSource D3_FloydSteinbergDervatives(byte[] source, int width, int height, int stride)
+        private BitmapSource D3_GreenNoise2(byte[] source, int width, int height, int stride)
         {
             int count = source.Length;
-            byte[] pixels = new byte[count];
-            double[] gosaPixels = new double[count];
+            byte[] pixels = new byte[count];//変換先画像用
+            double[] gosaPixels = new double[count];//誤差計算用
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
-            double gosa;
-
+            double gosa;//誤差(変換前 - 変換後)
+            double gain = 0.5;
+            double greenNoise = 0;
             for (int y = 0; y < height; y++)
             {
                 yp = y * stride;
                 if (y % 2 == 0)
                 {
-                    //    * 7
-                    //1 3 5
+                    //偶数行は右進行
+                    //->->->
+                    //  * 7
+                    //3 5 1
+                    //￣16￣
+
+                    //1 5 3
+                    //7 *
                     //￣16￣
                     for (int x = 0; x < width; x++)
                     {
+                        //注目ピクセルのインデックス
                         p = yp + x;
-                        SetBlackOrWhite(gosaPixels[p], pixels, p);
-                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
-
-
-                        if (x < width - 1)
+                        //グリーンノイズ量
+                        if (x != 0)
+                            greenNoise += GetGreenNoise(pixels[p - 1], 7 / 16.0);
+                        if (y != 0)
                         {
-                            gosaPixels[p + 1] += gosa * 7;
+                            greenNoise += GetGreenNoise(pixels[p - stride], 5 / 16.0);
+                            if (x != 0)
+                                greenNoise += GetGreenNoise(pixels[p - stride - 1], 1 / 16.0);
+                            if (x != width - 1)
+                                greenNoise += GetGreenNoise(pixels[p - stride + 1], 3 / 16.0);
                         }
+                        greenNoise *= gain;
+                        gosaPixels[p] += greenNoise;
+
+                        //しきい値127.5未満なら0にする、それ以外は255にする
+                        SetBlackOrWhite2(gosaPixels[p], pixels, p);
+                        //誤差拡散
+                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
+                        if (x != width - 1)
+                            //右
+                            gosaPixels[p + 1] += gosa * 7;
                         if (y < height - 1)
                         {
-                            gosaPixels[p + stride] += gosa * 5;
-                            if (x > 0)
-                            {
-                                gosaPixels[p + stride - 1] += gosa * 3;
-                                if (x > 1)
-                                {
-                                    gosaPixels[p + stride - 2] += gosa * 1;
-                                }
-                            }
+                            p += stride;
+                            //下
+                            gosaPixels[p] += gosa * 5;
+                            if (x != 0)
+                                //左下
+                                gosaPixels[p - 1] += gosa * 3;
+                            if (x != width - 1)
+                                //右下
+                                gosaPixels[p + 1] += gosa * 1;
                         }
+                        greenNoise = 0;
                     }
                 }
                 else
                 {
-                    //  7 *
-                    //    5 3 1
-                    //  ￣16￣
+                    //奇数行は左進行
+                    //<-<-<-
+                    //7 *
+                    //1 5 3
+                    //￣16￣
                     for (int x = width - 1; x >= 0; x--)
                     {
+                        //注目ピクセルのインデックス
                         p = yp + x;
-                        SetBlackOrWhite(gosaPixels[p], pixels, p);
-                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
-
-                        if (x != 0)
+                        //グリーンノイズ量
+                        if (x != width - 1)
+                            greenNoise += GetGreenNoise(pixels[p + 1], 7 / 16.0);
+                        if (y != 0)
                         {
-                            gosaPixels[p - 1] += gosa * 7;
+                            greenNoise += GetGreenNoise(pixels[p - stride], 5 / 16.0);
+                            if (x != 0)
+                                greenNoise += GetGreenNoise(pixels[p - stride - 1], 3 / 16.0);
+                            if (x != width - 1)
+                                greenNoise += GetGreenNoise(pixels[p - stride + 1], 1 / 16.0);
                         }
+                        greenNoise *= gain;
+                        gosaPixels[p] += greenNoise;
+
+                        //しきい値127.5未満なら0にする、それ以外は255にする
+                        SetBlackOrWhite2(gosaPixels[p], pixels, p);
+                        //誤差拡散
+                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
+                        if (x != 0)
+                            //左
+                            gosaPixels[p - 1] += gosa * 7;
                         if (y < height - 1)
                         {
-                            gosaPixels[p + stride] += gosa * 5;
+                            p += stride;
+                            //下
+                            gosaPixels[p] += gosa * 5;
                             if (x != width - 1)
-                            {
-                                gosaPixels[p + stride + 1] += gosa * 3;
-                                if (x < width - 2)
-                                {
-                                    gosaPixels[p + stride + 2] += gosa * 1;
-                                }
-                            }
+                                //右下
+                                gosaPixels[p + 1] += gosa * 3;
+                            if (x != 0)
+                                //左下
+                                gosaPixels[p - 1] += gosa * 1;
                         }
+                        greenNoise = 0;
                     }
                 }
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
-
+        private double GetGreenNoise(byte value, double rate)
+        {
+            double gn = 127.5 * rate;
+            if (value == 255)
+                gn = -gn;
+            return gn;
+        }
 
 
 
@@ -470,8 +507,8 @@ namespace _20200406_誤差拡散グリーンノイズ法
 
         private void Button3_Click(object sender, RoutedEventArgs e)
         {
-            MyImage.Source = D3_FloydSteinbergDervatives(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-            Button3.Content = nameof(D3_FloydSteinbergDervatives);
+            MyImage.Source = D3_GreenNoise2(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            Button3.Content = nameof(D3_GreenNoise2);
         }
 
         //private void Button4_Click(object sender, RoutedEventArgs e)
