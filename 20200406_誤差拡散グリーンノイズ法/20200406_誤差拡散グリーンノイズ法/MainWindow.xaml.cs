@@ -13,6 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+//あかん、わからん
+
 namespace _20200406_誤差拡散グリーンノイズ法
 {
     /// <summary>
@@ -347,7 +349,7 @@ namespace _20200406_誤差拡散グリーンノイズ法
             Array.Copy(source, gosaPixels, count);
             int p, yp;//座標
             double gosa;//誤差(変換前 - 変換後)
-            double gain = 0.5;
+            double gain = 0.2;
             double greenNoise = 0;
             for (int y = 0; y < height; y++)
             {
@@ -369,14 +371,14 @@ namespace _20200406_誤差拡散グリーンノイズ法
                         p = yp + x;
                         //グリーンノイズ量
                         if (x != 0)
-                            greenNoise += GetGreenNoise(pixels[p - 1], 7 / 16.0);
+                            greenNoise += GetGreenNoise(gosaPixels[p - 1], 7 / 16.0,pixels[p-1]);
                         if (y != 0)
                         {
-                            greenNoise += GetGreenNoise(pixels[p - stride], 5 / 16.0);
+                            greenNoise += GetGreenNoise(gosaPixels[p - stride], 5 / 16.0, pixels[p-stride]);
                             if (x != 0)
-                                greenNoise += GetGreenNoise(pixels[p - stride - 1], 1 / 16.0);
+                                greenNoise += GetGreenNoise(gosaPixels[p - stride - 1], 1 / 16.0, pixels[p-stride-1]);
                             if (x != width - 1)
-                                greenNoise += GetGreenNoise(pixels[p - stride + 1], 3 / 16.0);
+                                greenNoise += GetGreenNoise(gosaPixels[p - stride + 1], 3 / 16.0, pixels[p-stride+1]);
                         }
                         greenNoise *= gain;
                         gosaPixels[p] += greenNoise;
@@ -416,14 +418,14 @@ namespace _20200406_誤差拡散グリーンノイズ法
                         p = yp + x;
                         //グリーンノイズ量
                         if (x != width - 1)
-                            greenNoise += GetGreenNoise(pixels[p + 1], 7 / 16.0);
+                            greenNoise += GetGreenNoise(gosaPixels[p + 1], 7 / 16.0, pixels[p+1]);
                         if (y != 0)
                         {
-                            greenNoise += GetGreenNoise(pixels[p - stride], 5 / 16.0);
+                            greenNoise += GetGreenNoise(gosaPixels[p - stride], 5 / 16.0, pixels[p-stride]);
                             if (x != 0)
-                                greenNoise += GetGreenNoise(pixels[p - stride - 1], 3 / 16.0);
+                                greenNoise += GetGreenNoise(gosaPixels[p - stride - 1], 3 / 16.0, pixels[p-stride-1]);
                             if (x != width - 1)
-                                greenNoise += GetGreenNoise(pixels[p - stride + 1], 1 / 16.0);
+                                greenNoise += GetGreenNoise(gosaPixels[p - stride + 1], 1 / 16.0, pixels[p-stride+1]);
                         }
                         greenNoise *= gain;
                         gosaPixels[p] += greenNoise;
@@ -453,11 +455,13 @@ namespace _20200406_誤差拡散グリーンノイズ法
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
-        private double GetGreenNoise(byte value, double rate)
+        private double GetGreenNoise(double P, double rate,byte Q)
         {
-            double gn = 127.5 * rate;
-            if (value == 255)
-                gn = -gn;
+            double gn;
+            //gn = P - Q;
+            gn = Q;
+            //rate = 0.25;
+            gn *= rate;
             return gn;
         }
 
