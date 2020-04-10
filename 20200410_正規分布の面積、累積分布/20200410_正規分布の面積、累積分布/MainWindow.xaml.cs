@@ -65,6 +65,8 @@ namespace _20200410_正規分布の面積_累積分布
         /// <returns></returns>
         private decimal ProbabilityDensity(decimal x, double average, double variance)
         {
+            if (variance == 0)
+                return 0m;
             double xa = (double)x - average;
             double ei = -(xa * xa / (2 * variance));//expIndex
             double e = Math.Pow(Math.Exp(1), ei);
