@@ -369,7 +369,15 @@ namespace _20200324_画像を白黒2値に変換
             return Ave平均輝度;
         }
 
+        private void Kittler()
+        {
+            if (OriginBitmap == null) { return; }
+            IsBinary = true;
+            int threshold = 1;
+            double max = 0;
+            int countAll = CountHistogram(0, 256);
 
+        }
         //大津の2値化？
         private void Auto2()
         {
