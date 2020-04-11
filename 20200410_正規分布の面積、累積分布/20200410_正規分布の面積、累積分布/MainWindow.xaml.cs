@@ -26,6 +26,8 @@ namespace _20200410_正規分布の面積_累積分布
             decimal resolution = 1000m;
             var vv = CumulativeDistribution(begin, end, average, variance, resolution);
             var mm = MyCalc(vs, begin, end, resolution);
+            vs = new int[] { 2, 2, 2 };
+            //var neko = CumulativeDistribution(2, 2, 2, Variance(vs, 2), 1);//0
         }
 
         private decimal MyCalc(int[] specimen, decimal begin, decimal end, decimal resolution)

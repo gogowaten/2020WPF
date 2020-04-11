@@ -35,9 +35,11 @@
       </StackPanel>
       <GroupBox Header="閾値設定" Padding="2" Margin="4,0,4,4">
         <StackPanel>
-      <Button Name="ButtonAverageBrightness" Content="平均" Margin="2" ToolTip="全体の平均"/>
-      <Button Name="ButtonAuto" Content="最小平均差" Margin="2" ToolTip="2つの範囲の平均差が最小になる値"/>
+          <Button Name="ButtonAverageBrightness" Content="平均" Margin="2" ToolTip="全体の平均"/>
+          <Button Name="ButtonAuto" Content="最小平均差" Margin="2" ToolTip="2つの範囲の平均差が最小になる値"/>
           <Button Name="ButtonAuto2" Content="大津の2値化" Margin="2" ToolTip="分離度が最大になる値"/>
+          <Button Name="ButtonKittler" Content="Kittler" Margin="2" ToolTip="Kittler"/>
+          <Button Name="ButtonTest" Content="Kittler" Margin="2" Click="ButtonTest_Click"/>
         </StackPanel>
       </GroupBox>
       <Button Name="ButtonSaveImage" Content="保存" Margin="2,10"/>

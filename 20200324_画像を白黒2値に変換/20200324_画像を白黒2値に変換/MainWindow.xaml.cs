@@ -53,6 +53,8 @@ namespace _20200324_画像を白黒2値に変換
             ButtonAverageBrightness.Click += ButtonAverageBrightness_Click;
             ButtonAuto.Click += ButtonAuto_Click;
             ButtonAuto2.Click += ButtonAuto2_Click;
+            ButtonKittler.Click += ButtonKittler_Click;
+
             ButtonEXE.Click += ButtonEXE_Click;
             ScrollNumeric.ValueChanged += ScrollNumeric_ValueChanged;
             ScrollNumeric.MouseWheel += ScrollNumeric_MouseWheel;
@@ -61,6 +63,8 @@ namespace _20200324_画像を白黒2値に変換
             MyGrid.MouseLeftButtonDown += (s, e) => Panel.SetZIndex(MyImageOrigin, 1);//画像クリック中は元の画像を表示
             MyGrid.MouseLeftButtonUp += (s, e) => Panel.SetZIndex(MyImageOrigin, -1);//クリックを離したら変換後画像表示
         }
+
+
 
         #region 操作
         //2値化画像をコピー
@@ -96,7 +100,10 @@ namespace _20200324_画像を白黒2値に変換
             IsBinary = true;
         }
 
-
+        private void ButtonKittler_Click(object sender, RoutedEventArgs e)
+        {
+            Kittler();
+        }
         private void ButtonAuto2_Click(object sender, RoutedEventArgs e)
         {
             Auto2();
@@ -374,8 +381,47 @@ namespace _20200324_画像を白黒2値に変換
             if (OriginBitmap == null) { return; }
             IsBinary = true;
             int threshold = 1;
-            double max = 0;
+            double min = double.MaxValue;
             int countAll = CountHistogram(0, 256);
+            double aAverage;
+            double bAverage;
+            double aVariance;
+            double bVariance;
+            int aCount;
+            int bCount;
+            for (int i = 1; i < 256; i++)
+            {
+                aCount = CountHistogram(0, i);
+                bCount = CountHistogram(i, 256);
+                aAverage = AverageHistogram(0, i, aCount);
+                bAverage = AverageHistogram(i, 256, bCount);
+                aVariance = VarianceHistogram(0, i, aCount, aAverage);
+                bVariance = VarianceHistogram(i, 256, bCount, bAverage);
+                //var av = VarianceHistogram2(0, i, MyHistogram);
+                //var bv = VarianceHistogram2(i, 256, MyHistogram);
+                var aRate = (double)aCount / countAll;
+                var bRate = (double)bCount / countAll;
+                var aStdev = Math.Sqrt(aVariance);                
+                var bStdev = Math.Sqrt(bVariance);
+                
+                double aLog, bLog;
+                if (aStdev == 0)
+                    aLog = 0.5;
+                else aLog = aRate * Math.Log10(aStdev / aRate);
+
+                if (bStdev == 0)
+                    bLog = 0.5;
+                else bLog = bRate * Math.Log10(bStdev / bRate);
+
+                var E = aLog + bLog;
+                if (min > E)
+                {
+                    min = E;
+                    threshold = i;
+                }
+            }
+            if (ScrollNumeric.Value == threshold) { ChangeBlackWhite(); }
+            else { ScrollNumeric.Value = threshold; }
 
         }
         //大津の2値化？
@@ -441,29 +487,27 @@ namespace _20200324_画像を白黒2値に変換
 
         }
 
-        //未使用
-        //
+
         /// <summary>
         /// ヒストグラムから指定範囲の分散を計算
         /// </summary>
         /// <param name="begin">範囲の始まり</param>
-        /// <param name="end">範囲の終わり</param>
+        /// <param name="end">範囲の終わり(未満なので、100指定なら99まで計算する)</param>
         /// <param name="count">範囲の画素数</param>
         /// <param name="average">範囲の平均値</param>
         /// <returns></returns>
         private double VarianceHistogram(int begin, int end, int count, double average)
-        {
-            double total = 0;
-            for (int i = begin; i < end; i++)
+        {            
+            long total = 0;
+            for (long i = begin; i < end; i++)
             {
-                int val = MyHistogram[i];
-                double diviation = i - average;
-                total += diviation * diviation * i;
+                total += i * i * MyHistogram[i];//2乗の累計
             }
-            return total / count;
+            //分散 = 2乗の平均 - 平均値の2乗
+            return (total / (double)count) - (average * average);
         }
 
-        //
+      
         /// <summary>
         /// ヒストグラムから指定範囲の平均輝度値
         /// </summary>
@@ -555,6 +599,13 @@ namespace _20200324_画像を白黒2値に変換
             }
 
             return source;
+        }
+
+        private void ButtonTest_Click(object sender, RoutedEventArgs e)
+        {
+//            if (OriginBitmap == null) { return; }
+           
+
         }
     }
 }
