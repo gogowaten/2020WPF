@@ -376,45 +376,23 @@ namespace _20200324_画像を白黒2値に変換
             return Ave平均輝度;
         }
 
+        //Kittlerの方法
+        //大津の2値化の改良版
         private void Kittler()
         {
             if (OriginBitmap == null) { return; }
             IsBinary = true;
             int threshold = 1;
             double min = double.MaxValue;
-            int countAll = CountHistogram(0, 256);
-            double aAverage;
-            double bAverage;
-            double aVariance;
-            double bVariance;
-            int aCount;
-            int bCount;
+            double aError, bError;
+
             for (int i = 1; i < 256; i++)
             {
-                aCount = CountHistogram(0, i);
-                bCount = CountHistogram(i, 256);
-                aAverage = AverageHistogram(0, i, aCount);
-                bAverage = AverageHistogram(i, 256, bCount);
-                aVariance = VarianceHistogram(0, i, aCount, aAverage);
-                bVariance = VarianceHistogram(i, 256, bCount, bAverage);
-                //var av = VarianceHistogram2(0, i, MyHistogram);
-                //var bv = VarianceHistogram2(i, 256, MyHistogram);
-                var aRate = (double)aCount / countAll;
-                var bRate = (double)bCount / countAll;
-                var aStdev = Math.Sqrt(aVariance);                
-                var bStdev = Math.Sqrt(bVariance);
-                
-                double aLog, bLog;
-                if (aStdev == 0)
-                    aLog = 0.5;
-                else aLog = aRate * Math.Log10(aStdev / aRate);
-
-                if (bStdev == 0)
-                    bLog = 0.5;
-                else bLog = bRate * Math.Log10(bStdev / bRate);
-
-                var E = aLog + bLog;
-                if (min > E)
+                aError = KittlerSub(MyHistogram, 0, i);//A範囲の誤判定量
+                bError = KittlerSub(MyHistogram, i, 256);//B範囲の誤判定量
+                //誤判定合計が最小になる閾値を探す
+                var E = aError + bError;
+                if (E < min)
                 {
                     min = E;
                     threshold = i;
@@ -422,8 +400,24 @@ namespace _20200324_画像を白黒2値に変換
             }
             if (ScrollNumeric.Value == threshold) { ChangeBlackWhite(); }
             else { ScrollNumeric.Value = threshold; }
-
         }
+        private double KittlerSub(int[] histogram, int begin, int end)
+        {
+            double ave = AverageHistogram(histogram, begin, end);//平均
+            double varp = VarianceHistogram(begin, end, ave);//分散
+            int count = CountHistogram(histogram, 0, 256);//全画素数
+            if (double.IsNaN(varp) || varp == 0)
+                //分散が計算不能or0なら対象外になるように、大きな値(1.0)を返す
+                return 1.0;
+            else
+            {
+                double ratio = CountHistogram(histogram, begin, end);
+                ratio /= count;//画素数比率
+                return ratio * Math.Log10(varp / ratio);
+            }
+        }
+
+
         //大津の2値化？
         private void Auto2()
         {
@@ -431,11 +425,11 @@ namespace _20200324_画像を白黒2値に変換
             IsBinary = true;
             int threshold = 1;
             double max = 0;
-            int countAll = CountHistogram(0, 256);
+            int countAll = CountHistogram(MyHistogram, 0, 256);
             for (int i = 0; i < 256; i++)
             {
-                int count1 = CountHistogram(0, i);
-                int count2 = CountHistogram(i, 256);
+                int count1 = CountHistogram(MyHistogram, 0, i);
+                int count2 = CountHistogram(MyHistogram, i, 256);
 
                 if (count1 != 0 && count2 != 0)
                 {
@@ -465,11 +459,11 @@ namespace _20200324_画像を白黒2値に変換
             IsBinary = true;
             int threshold = 1;
             double min = double.MaxValue;
-            double allAve = AverageHistogram(0, 256, CountHistogram(0, 256));
+            double allAve = AverageHistogram(0, 256, CountHistogram(MyHistogram, 0, 256));
             for (int i = 1; i < 256; i++)
             {
-                int count1 = CountHistogram(0, i);
-                int count2 = CountHistogram(i, 256);
+                int count1 = CountHistogram(MyHistogram, 0, i);
+                int count2 = CountHistogram(MyHistogram, i, 256);
                 if (count1 != 0 && count2 != 0)
                 {
                     double ave1 = AverageHistogram(0, i, count1);//ヒストグラムから指定範囲の平均輝度値取得
@@ -497,7 +491,7 @@ namespace _20200324_画像を白黒2値に変換
         /// <param name="average">範囲の平均値</param>
         /// <returns></returns>
         private double VarianceHistogram(int begin, int end, int count, double average)
-        {            
+        {
             long total = 0;
             for (long i = begin; i < end; i++)
             {
@@ -506,8 +500,30 @@ namespace _20200324_画像を白黒2値に変換
             //分散 = 2乗の平均 - 平均値の2乗
             return (total / (double)count) - (average * average);
         }
+        private double VarianceHistogram(int begin, int end, double average)
+        {
+            long total = 0;
+            long count = 0;
+            for (long i = begin; i < end; i++)
+            {
+                total += i * i * MyHistogram[i];//2乗の累計
+                count += MyHistogram[i];
+            }
+            //分散 = 2乗の平均 - 平均値の2乗
+            return (total / (double)count) - (average * average);
+        }
+        private double VarianceHistogram2(int begin, int end, int count, double average)
+        {
+            double total = 0;
+            for (int i = begin; i < end; i++)
+            {
+                total += (average - i) * (average - i) * MyHistogram[i];
 
-      
+            }
+            //分散 = 2乗の平均 - 平均値の2乗
+            return (total / count) - (average * average);
+        }
+
         /// <summary>
         /// ヒストグラムから指定範囲の平均輝度値
         /// </summary>
@@ -517,12 +533,24 @@ namespace _20200324_画像を白黒2値に変換
         /// <returns></returns>
         private double AverageHistogram(int begin, int end, int count)
         {
-            double total = 0;
+            long total = 0;
             for (int i = begin; i < end; i++)
             {
                 total += i * MyHistogram[i];
             }
-            return total / count;
+            return total / (double)count;
+        }
+
+        private double AverageHistogram(int[] histogram, int begin, int end)
+        {
+            long total = 0;
+            long count = 0;
+            for (int i = begin; i < end; i++)
+            {
+                total += i * histogram[i];
+                count += histogram[i];
+            }
+            return total / (double)count;
         }
 
         //
@@ -532,13 +560,14 @@ namespace _20200324_画像を白黒2値に変換
         /// <param name="begin">範囲の始まり</param>
         /// <param name="end">範囲の終わり(未満なので、100指定なら99まで計算する)</param>
         /// <returns></returns>
-        private int CountHistogram(int begin, int end)
+        private int CountHistogram(int[] histogram, int begin, int end)
         {
             int count = 0;
             for (int i = begin; i < end; i++)
             {
-                int val = MyHistogram[i];
-                if (val != 0) { count += val; }
+                //int val = MyHistogram[i];
+                //if (val != 0) { count += val; }
+                count += histogram[i];
             }
             return count;
         }
@@ -603,8 +632,26 @@ namespace _20200324_画像を白黒2値に変換
 
         private void ButtonTest_Click(object sender, RoutedEventArgs e)
         {
-//            if (OriginBitmap == null) { return; }
-           
+            if (OriginBitmap == null) { return; }
+            IsBinary = true;
+            int threshold = 1;
+            double min = double.MaxValue;
+            double aLog, bLog;
+
+            for (int i = 1; i < 256; i++)
+            {
+                aLog = KittlerSub(MyHistogram, 0, i);
+                bLog = KittlerSub(MyHistogram, i, 256);
+
+                var E = aLog + bLog;
+                if (E < min)
+                {
+                    min = E;
+                    threshold = i;
+                }
+            }
+            if (ScrollNumeric.Value == threshold) { ChangeBlackWhite(); }
+            else { ScrollNumeric.Value = threshold; }
 
         }
     }
