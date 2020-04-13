@@ -51,8 +51,8 @@ namespace _20200413_Kittler2値化閾値
             int threshold = 1;//閾値
             for (int i = 1; i < 8; i++)
             {
-                aError = KittlerSub(histogram, 0, i);//A範囲の誤差
-                bError = KittlerSub(histogram, i, 8);//B範囲の誤差
+                aError = KittlerSub(histogram, 0, i);//A範囲(しきい値未満)の誤差
+                bError = KittlerSub(histogram, i, 8);//B範囲(しきい値以上)の誤差
                 var E = aError + bError;
                 //誤差の総量が最小になるインデックスを閾値にする
                 if (E < min)
