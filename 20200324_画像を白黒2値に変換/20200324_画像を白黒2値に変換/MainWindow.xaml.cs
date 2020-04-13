@@ -30,10 +30,10 @@ namespace _20200324_画像を白黒2値に変換
     public partial class MainWindow : Window
     {
         BitmapSource OriginBitmap;//元の画像
-        //BitmapSource BinarizedBitmap;//2値化した画像
-        int[] MyHistogram;
-        string ImageFileFullPath;
-        bool IsBinary = false;
+                                  //BitmapSource BinarizedBitmap;//2値化した画像
+        private int[] MyHistogram;
+        private string ImageFileFullPath;
+        private bool IsBinary = false;
 
         public MainWindow()
         {
