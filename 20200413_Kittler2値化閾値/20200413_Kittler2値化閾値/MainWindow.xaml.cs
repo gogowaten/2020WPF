@@ -149,6 +149,7 @@ namespace _20200413_Kittler2値化閾値
         }
 
 
+        //配列からヒストグラムの配列作成
         private int[] MakeHistogram0to7(int[] vs)
         {
             int[] histogram = new int[8];
