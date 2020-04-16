@@ -192,8 +192,8 @@ namespace _20200416_局所的可変しきい値で2値化
         private byte[] Sauvola(byte[] pixels, int width, int height, int stride)
         {
             byte[] result = new byte[pixels.Length];
-            double SauvolaK = ScrollBarSauvola.Value;// 0.5;// ScrollBarNiblack.Value;
-            int SauvolaR = (int)ScrollBarSauvolaR.Value;// 128;
+            double SauvolaK = ScrollBarSauvola.Value;// 0.5がいいらしい
+            int SauvolaR = (int)ScrollBarSauvolaR.Value;// 128がいいらしい
             Parallel.For(0, height, y =>
             {
                 int p;
@@ -223,10 +223,7 @@ namespace _20200416_局所的可変しきい値で2値化
                     }
 
                     (double stdev, double average) vv = StdevAndAverage(localArea, effectiveNumber);
-                    //if (vv.stdev != 0)
                     threshold = vv.average * (1 + SauvolaK * (vv.stdev / SauvolaR - 1));
-                    //else
-                    //    threshold = 127.5;
 
                     if (pixels[p] < threshold)
                         result[p] = 0;
@@ -249,6 +246,77 @@ namespace _20200416_局所的可変しきい値で2値化
             }
             double average = aveTotal / (double)effectiveNumber;
             return (Math.Sqrt((squareToral / (double)effectiveNumber) - (average * average)), average);
+        }
+
+
+        private byte[] Bernsen(byte[] pixels, int width, int height, int stride)
+        {
+            byte[] result = new byte[pixels.Length];
+            double contrastThreshold = 15.0;
+            Parallel.For(0, height, y =>
+            {
+                int p;
+                byte[] localArea = new byte[15 * 15];
+                int effectiveNumber;//有効数
+                double threshold;
+                for (int x = 0; x < width; x++)
+                {
+                    p = y * stride + x;
+                    effectiveNumber = 0;
+
+                    for (int i = -7; i < 8; i++)
+                    {
+                        int yy = y + i;
+                        if (yy >= 0 && yy < height)
+                        {
+                            for (int j = -7; j < 8; j++)
+                            {
+                                int xx = x + j;
+                                if (xx >= 0 && xx < width)
+                                {
+                                    localArea[effectiveNumber] = pixels[(yy * stride) + xx];
+                                    effectiveNumber++;
+                                }
+                            }
+                        }
+                    }
+
+                    
+                    (byte min, byte max) = MinMax(localArea, effectiveNumber);
+
+                    if (max - min >= contrastThreshold)
+                    {
+                        threshold = (max + min) / 2.0;
+                    }
+                    else
+                        threshold = 127.5;
+
+
+
+
+                    if (pixels[p] < threshold)
+                        result[p] = 0;
+                    else
+                        result[p] = 255;
+                }
+            });
+            return result;
+        }
+
+        private (byte min, byte max) MinMax(byte[] vs, int effectiveNumber)
+        {
+            byte min = byte.MaxValue;
+            byte max = byte.MinValue;
+            byte v;
+            for (int i = 0; i < effectiveNumber; i++)
+            {
+                v = vs[i];
+                if (min > v)
+                    min = v;
+                if (max < v)
+                    max = v;
+            }
+            return (min, max);
         }
 
         private BitmapSource MakeBitmapSource(byte[] pixels, int width, int height, int stride)
@@ -352,10 +420,15 @@ namespace _20200416_局所的可変しきい値で2値化
         }
 
 
-        //private void Button4_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MyImage.Source = GosaKakusan4(MyPalette, MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-        //}
+        private void Button4_Click(object sender, RoutedEventArgs e)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            byte[] pixels = Bernsen(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            MyImage.Source = MakeBitmapSource(pixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
 
         //private void Button5_Click(object sender, RoutedEventArgs e)
         //{
@@ -388,6 +461,34 @@ namespace _20200416_局所的可変しきい値で2値化
         private void ButtonBlackWhite_Click(object sender, RoutedEventArgs e)
         {
             MyImage.Source = new FormatConvertedBitmap(MyBitmapSource, PixelFormats.BlackWhite, null, 0);
+        }
+
+        private void ScrollBarSauvolaR_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (e.Delta > 0)
+                ScrollBarSauvolaR.Value += ScrollBarSauvolaR.LargeChange;
+            else
+                ScrollBarSauvolaR.Value -= ScrollBarSauvolaR.LargeChange;
+        }
+
+        private void ButtonPaste_Click(object sender, RoutedEventArgs e)
+        {
+            //8bitグレースケールに変換して読み込む
+            BitmapSource bmp = Clipboard.GetImage();
+            if (bmp == null)
+            {
+                MessageBox.Show("not Image");
+                return;
+            }
+            bmp = new FormatConvertedBitmap(bmp, PixelFormats.Gray8, null, 0);
+            int w = bmp.PixelWidth;
+            int h = bmp.PixelHeight;
+            int stride = w;
+            MyPixels = new byte[h * stride];
+            bmp.CopyPixels(MyPixels, stride, 0);
+            MyBitmapSource = bmp;
+            MyImage.Source = MyBitmapSource;
+            MyImageOrigin.Source = MyBitmapSource;
         }
     }
 }
