@@ -188,6 +188,55 @@ namespace _20200416_局所的可変しきい値で2値化
             return result;
         }
 
+
+        private byte[] Sauvola(byte[] pixels, int width, int height, int stride)
+        {
+            byte[] result = new byte[pixels.Length];
+            double SauvolaK = ScrollBarSauvola.Value;// 0.5;// ScrollBarNiblack.Value;
+            int SauvolaR = (int)ScrollBarSauvolaR.Value;// 128;
+            Parallel.For(0, height, y =>
+            {
+                int p;
+                byte[] localArea = new byte[15 * 15];
+                int effectiveNumber;//有効数
+                double threshold = 127.5;
+                for (int x = 0; x < width; x++)
+                {
+                    p = y * stride + x;
+                    effectiveNumber = 0;
+
+                    for (int i = -7; i < 8; i++)
+                    {
+                        int yy = y + i;
+                        if (yy >= 0 && yy < height)
+                        {
+                            for (int j = -7; j < 8; j++)
+                            {
+                                int xx = x + j;
+                                if (xx >= 0 && xx < width)
+                                {
+                                    localArea[effectiveNumber] = pixels[(yy * stride) + xx];
+                                    effectiveNumber++;
+                                }
+                            }
+                        }
+                    }
+
+                    (double stdev, double average) vv = StdevAndAverage(localArea, effectiveNumber);
+                    //if (vv.stdev != 0)
+                    threshold = vv.average * (1 + SauvolaK * (vv.stdev / SauvolaR - 1));
+                    //else
+                    //    threshold = 127.5;
+
+                    if (pixels[p] < threshold)
+                        result[p] = 0;
+                    else
+                        result[p] = 255;
+                }
+            });
+            return result;
+        }
+
         //配列の標準偏差と平均値
         private (double stdev, double average) StdevAndAverage(byte[] vs, int effectiveNumber)
         {
@@ -296,8 +345,8 @@ namespace _20200416_局所的可変しきい値で2値化
         {
             var sw = new Stopwatch();
             sw.Start();
-            //byte[] pixels = NiblackKai(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
-            //MyImage.Source = MakeBitmapSource(pixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            byte[] pixels = Sauvola(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
+            MyImage.Source = MakeBitmapSource(pixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth);
             sw.Stop();
             TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
         }

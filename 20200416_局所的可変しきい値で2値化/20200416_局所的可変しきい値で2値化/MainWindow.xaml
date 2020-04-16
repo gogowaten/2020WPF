@@ -36,7 +36,28 @@
       </StackPanel>
       <Button x:Name="Button1" Content="button1" Click="Button1_Click"/>
       <Button x:Name="Button2" Content="マルチ" Click="Button2_Click"/>
-      <Button x:Name="Button3" Content="button3" Click="Button3_Click"/>
+      <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="TextBlockSauvola" Width="80" Text="{Binding ElementName=ScrollBarSauvola, Path=Value, StringFormat=0.0, Mode=OneWay}"
+                   FontSize="20" VerticalAlignment="Center" TextAlignment="Center" IsEnabled="False"/>
+        <ScrollBar x:Name="ScrollBarSauvola" Value="0.5" Minimum="-0.5" Maximum="1.5" SmallChange="0.1" LargeChange="0.1" RenderTransformOrigin="0.5,0.5">
+          <ScrollBar.RenderTransform>
+            <TransformGroup>
+              <RotateTransform Angle="180"/>
+            </TransformGroup>
+          </ScrollBar.RenderTransform>
+        </ScrollBar>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="TextBlockSauvolaR" Width="80" Text="{Binding ElementName=ScrollBarSauvolaR, Path=Value, StringFormat=000, Mode=OneWay}"
+                   FontSize="20" VerticalAlignment="Center" TextAlignment="Center" IsEnabled="False"/>
+        <ScrollBar x:Name="ScrollBarSauvolaR" Value="128" Minimum="0" Maximum="255" SmallChange="1" LargeChange="1" RenderTransformOrigin="0.5,0.5">
+          <ScrollBar.RenderTransform>
+            <TransformGroup>
+              <RotateTransform Angle="180"/>
+            </TransformGroup>
+          </ScrollBar.RenderTransform>
+        </ScrollBar>
+      </StackPanel><Button x:Name="Button3" Content="button3" Click="Button3_Click"/>
       <!--<Button x:Name="Button4" Content="button4" Click="Button4_Click"/>
       <Button x:Name="Button5" Content="button5" Click="Button5_Click"/>
       <Button x:Name="Button6" Content="button6" Click="Button6_Click"/>
