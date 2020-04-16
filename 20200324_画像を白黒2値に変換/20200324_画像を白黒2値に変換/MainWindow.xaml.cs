@@ -345,37 +345,7 @@ namespace _20200324_画像を白黒2値に変換
         #endregion 画像保存
 
 
-        //画像全体の平均輝度取得
-        private double GetAvegareBrightness()
-        {
-
-            long pixelsCount = 0;
-            long totalBrightness = 0;
-            for (int i = 0; i < MyHistogram.Length; ++i)
-            {
-                pixelsCount += MyHistogram[i];
-                totalBrightness += MyHistogram[i] * i;
-            }
-            return totalBrightness / pixelsCount;
-        }
-
-        //未使用
-        //全体の輝度値の平均をしきい値にする
-        private int GetThresholdAverage()
-        {
-
-            int Pixels画素数 = 0;
-            long Sum累計輝度 = 0;
-            for (int i = 0; i < 256; ++i)
-            {
-                Pixels画素数 += MyHistogram[i];
-                Sum累計輝度 += MyHistogram[i] * i;
-            }
-            int Ave平均輝度 = 0;//平均
-            Ave平均輝度 = (int)(Sum累計輝度 / Pixels画素数);
-            return Ave平均輝度;
-        }
-
+   
         //Kittlerの方法
         //大津の2値化の改良版
         private void Kittler()
@@ -403,16 +373,23 @@ namespace _20200324_画像を白黒2値に変換
             else
                 ScrollNumeric.Value = threshold; 
         }
+        /// <summary>
+        /// 誤分類量 = 範囲の画素数比率 * Log(分散 / 範囲の画素数比率)
+        /// </summary>
+        /// <param name="histogram">ヒストグラム</param>
+        /// <param name="begin">範囲の開始点</param>
+        /// <param name="end">範囲の終了点、未満で指定なので100指定の場合は99まで計算になる</param>
+        /// <returns></returns>
         private double KittlerSub(int[] histogram, int begin, int end)
         {
             double ave = AverageHistogram(histogram, begin, end);//平均
             double varp = VarianceHistogram(begin, end, ave);//分散
-            int count = CountHistogram(histogram, 0, 256);//全画素数
             if (double.IsNaN(varp) || varp == 0)
                 //分散が計算不能or0なら対象外になるように、大きな値(1.0)を返す
                 return 1.0;
             else
             {
+                int count = CountHistogram(histogram, 0, 256);//全画素数
                 double ratio = CountHistogram(histogram, begin, end);
                 ratio /= count;//画素数比率
                 return ratio * Math.Log10(varp / ratio);
@@ -579,6 +556,37 @@ namespace _20200324_画像を白黒2値に変換
                 histogram[pixels[i]]++;
             }
             return histogram;
+        }
+
+        //画像全体の平均輝度取得
+        private double GetAvegareBrightness()
+        {
+
+            long pixelsCount = 0;
+            long totalBrightness = 0;
+            for (int i = 0; i < MyHistogram.Length; ++i)
+            {
+                pixelsCount += MyHistogram[i];
+                totalBrightness += MyHistogram[i] * i;
+            }
+            return totalBrightness / pixelsCount;
+        }
+
+        //未使用
+        //全体の輝度値の平均をしきい値にする
+        private int GetThresholdAverage()
+        {
+
+            int Pixels画素数 = 0;
+            long Sum累計輝度 = 0;
+            for (int i = 0; i < 256; ++i)
+            {
+                Pixels画素数 += MyHistogram[i];
+                Sum累計輝度 += MyHistogram[i] * i;
+            }
+            int Ave平均輝度 = 0;//平均
+            Ave平均輝度 = (int)(Sum累計輝度 / Pixels画素数);
+            return Ave平均輝度;
         }
 
 
