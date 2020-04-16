@@ -398,8 +398,10 @@ namespace _20200324_画像を白黒2値に変換
                     threshold = i;
                 }
             }
-            if (ScrollNumeric.Value == threshold) { ChangeBlackWhite(); }
-            else { ScrollNumeric.Value = threshold; }
+            if (ScrollNumeric.Value == threshold)  
+                ChangeBlackWhite(); 
+            else
+                ScrollNumeric.Value = threshold; 
         }
         private double KittlerSub(int[] histogram, int begin, int end)
         {
@@ -500,6 +502,8 @@ namespace _20200324_画像を白黒2値に変換
             //分散 = 2乗の平均 - 平均値の2乗
             return (total / (double)count) - (average * average);
         }
+
+        //分散
         private double VarianceHistogram(int begin, int end, double average)
         {
             long total = 0;
@@ -512,18 +516,7 @@ namespace _20200324_画像を白黒2値に変換
             //分散 = 2乗の平均 - 平均値の2乗
             return (total / (double)count) - (average * average);
         }
-        private double VarianceHistogram2(int begin, int end, int count, double average)
-        {
-            double total = 0;
-            for (int i = begin; i < end; i++)
-            {
-                total += (average - i) * (average - i) * MyHistogram[i];
-
-            }
-            //分散 = 2乗の平均 - 平均値の2乗
-            return (total / count) - (average * average);
-        }
-
+        
         /// <summary>
         /// ヒストグラムから指定範囲の平均輝度値
         /// </summary>
