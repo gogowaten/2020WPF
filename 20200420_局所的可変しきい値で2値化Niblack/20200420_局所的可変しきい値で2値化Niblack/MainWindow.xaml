@@ -19,13 +19,14 @@
         </Grid>
       </ScrollViewer>
     </Grid>
+    
     <StackPanel Grid.Column="1">
       <Button x:Name="ButtonCopy" Content="Copy" Click="ButtonCopy_Click"/>
       <Button x:Name="ButtonPaste" Content="Paste" Click="ButtonPaste_Click"/>
 
       <TextBlock x:Name="TextBlockTime" Text="time"/>
       <StackPanel Orientation="Horizontal">
-        <TextBlock x:Name="TextBlockNiblack" Width="80" Text="{Binding ElementName=ScrollBarNiblack, Path=Value, StringFormat=0.0, Mode=OneWay}"
+        <TextBlock x:Name="TextBlockNiblack" Width="50" Text="{Binding ElementName=ScrollBarNiblack, Path=Value, StringFormat=0.0, Mode=OneWay}"
                    FontSize="20" VerticalAlignment="Center" TextAlignment="Center" IsEnabled="False"/>
         <ScrollBar x:Name="ScrollBarNiblack" Value="-0.2" Minimum="-1.0" Maximum="1.0" SmallChange="0.1" LargeChange="0.1" RenderTransformOrigin="0.5,0.5">
           <ScrollBar.RenderTransform>
@@ -35,8 +36,21 @@
           </ScrollBar.RenderTransform>
         </ScrollBar>
       </StackPanel>
+      <StackPanel Orientation="Horizontal">        
+        <TextBlock x:Name="TextBlockNiblackNear" Width="50" Text="{Binding ElementName=ScrollBarNiblackNear, Path=Value, StringFormat=0, Mode=OneWay}"
+                   FontSize="20" VerticalAlignment="Center" TextAlignment="Center" IsEnabled="False"/>
+        <ScrollBar x:Name="ScrollBarNiblackNear" Value="1" Minimum="1" Maximum="20" SmallChange="1" LargeChange="1" RenderTransformOrigin="0.5,0.5">
+          <ScrollBar.RenderTransform>
+            <TransformGroup>
+              <RotateTransform Angle="180"/>
+            </TransformGroup>
+          </ScrollBar.RenderTransform>
+        </ScrollBar>
+      </StackPanel>
+
       <Button x:Name="Button1" Content="NiblackSingleThread" Click="Button1_Click"/>
       <Button x:Name="Button2" Content="NiblackマルチThread" Click="Button2_Click"/>
+      <Button x:Name="Button3" Content="test" Click="Button3_Click"/>
 
       <StackPanel Orientation="Horizontal">
         <TextBlock x:Name="TextBlockSauvola" Width="80" Text="{Binding ElementName=ScrollBarSauvola, Path=Value, StringFormat=0.0, Mode=OneWay}"
@@ -61,12 +75,11 @@
           </ScrollBar.RenderTransform>
         </ScrollBar>
       </StackPanel>
-      <Button x:Name="Button3" Content="Sauvola" Click="Button3_Click"/>
-      <Button x:Name="Button4" Content="Bernsen's" Click="Button4_Click"/>
+      <Button x:Name="Button4" Content="average" Click="Button4_Click"/>
       <Button x:Name="Button5" Content="button5" Click="Button5_Click"/>
-      <!--<Button x:Name="Button6" Content="button6" Click="Button6_Click"/>
+      <Button x:Name="Button6" Content="button6" Click="Button6_Click"/>
       <Button x:Name="Button7" Content="button7" Click="Button7_Click"/>
-      <Button x:Name="Button8" Content="button8" Click="Button8_Click"/>-->
+      <!--<Button x:Name="Button8" Content="button8" Click="Button8_Click"/>-->
     </StackPanel>
   </Grid>
 </Window>
