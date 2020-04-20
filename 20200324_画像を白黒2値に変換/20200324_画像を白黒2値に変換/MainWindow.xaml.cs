@@ -307,10 +307,8 @@ namespace _20200324_画像を白黒2値に変換
                 }
 
                 encoder.Frames.Add(BitmapFrame.Create(GetSaveImage()));
-                using (var fs = new FileStream(saveFileDialog.FileName, FileMode.Create, FileAccess.Write))
-                {
-                    encoder.Save(fs);
-                }
+                using var fs = new FileStream(saveFileDialog.FileName, FileMode.Create, FileAccess.Write);
+                encoder.Save(fs);
 
             }
         }
@@ -318,7 +316,7 @@ namespace _20200324_画像を白黒2値に変換
         //保存時の初期ファイル名取得
         private string GetSaveFileName()
         {
-            string fileName = "";
+            string fileName;
             fileName = System.IO.Path.GetFileNameWithoutExtension(ImageFileFullPath);
             if (Radio1bpp.IsChecked == true) { fileName += "_1bpp白黒2値"; }
             else if (Radio8bpp.IsChecked == true) { fileName += "_8bpp白黒2値"; }
