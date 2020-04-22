@@ -41,7 +41,7 @@ https://stackoverflow.com/questions/27629285/setting-rendertransform-in-a-nested
         <TextBlock Text="範囲" VerticalAlignment="Center"/>
         <TextBlock x:Name="TextBlockNiblackNear" Width="50" Text="{Binding ElementName=ScrollBarLocalArea, Path=Value, StringFormat=0, Mode=OneWay}"
                    FontSize="20" VerticalAlignment="Center" TextAlignment="Center" IsEnabled="False"/>
-        <ScrollBar x:Name="ScrollBarLocalArea" Value="2" Minimum="1" Maximum="20" SmallChange="1" LargeChange="1"
+        <ScrollBar x:Name="ScrollBarLocalArea" Value="7" Minimum="1" Maximum="20" SmallChange="1" LargeChange="1"
                    MouseWheel="ScrollBarLocalArea_MouseWheel">
         </ScrollBar>
 
@@ -75,7 +75,7 @@ https://stackoverflow.com/questions/27629285/setting-rendertransform-in-a-nested
       <Button x:Name="Button5" Content="button5" Click="Button5_Click"/>
       <Button x:Name="Button6" Content="button6" Click="Button6_Click"/>
       <Button x:Name="Button7" Content="button7" Click="Button7_Click"/>
-      <!--<Button x:Name="Button8" Content="button8" Click="Button8_Click"/>-->
+      <Button x:Name="Button8" Content="button8" Click="Button8_Click"/>
     </StackPanel>
   </Grid>
 </Window>
