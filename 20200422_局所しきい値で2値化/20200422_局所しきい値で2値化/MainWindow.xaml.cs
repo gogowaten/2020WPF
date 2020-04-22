@@ -149,60 +149,57 @@ namespace _20200422_局所しきい値で2値化
         /// <returns></returns>
         private BitmapSource LocalThreshold(byte[] pixels, int width, int height, int stride, int near)
         {
-            //局所範囲のピクセル数
-            int count;
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    long total = 0;
-                    count = 0;
-                    for (int i = -near; i <= near; i++)
-                    {
-                        int yy = y + i;
-                        if (yy >= 0 && yy < height)//y座標有効判定
-                        {
-                            for (int j = -near; j <= near; j++)
-                            {
-                                int xx = x + j;
-                                if (xx >= 0 && xx < width)//x座標有効判定
-                                {
-                                    total += pixels[(y + i) * stride + x + j];
-                                    count++;
-                                }
-                            }
-                        }
-                    }
+            Parallel.For(0, height, y =>
+              {
+                  for (int x = 0; x < width; x++)
+                  {
+                      long total = 0;
+                      //局所範囲のピクセル数
+                      int count = 0;
+                      for (int i = -near; i <= near; i++)
+                      {
+                          int yy = y + i;
+                          if (yy >= 0 && yy < height)//y座標有効判定
+                          {
+                              for (int j = -near; j <= near; j++)
+                              {
+                                  int xx = x + j;
+                                  if (xx >= 0 && xx < width)//x座標有効判定
+                                  {
+                                      total += pixels[(y + i) * stride + x + j];
+                                      count++;
+                                  }
+                              }
+                          }
+                      }
 
-                    //局所範囲の平均値をしきい値にして2値化
-                    double threshold = total / (double)count;
-                    int p = (y * stride) + x;//注目ピクセルのインデックス
-                    if (pixels[p] < threshold)
-                        result[p] = 0;
-                    else
-                        result[p] = 255;
-                }
-            }
+                      //局所範囲の平均値をしきい値にして2値化
+                      double threshold = total / (double)count;
+                      int p = (y * stride) + x;//注目ピクセルのインデックス
+                      if (pixels[p] < threshold)
+                          result[p] = 0;
+                      else
+                          result[p] = 255;
+                  }
+              });
             return MakeBitmapSource(result, width, height, stride);
         }
 
         private BitmapSource LocalThresholdNiblack(byte[] pixels, int width, int height, int stride, int near, double k)
-        {
-            //局所範囲のピクセル数
-            int count;
+        {   
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < height; y++)
+            Parallel.For(0, height, y =>
             {
                 for (int x = 0; x < width; x++)
                 {
                     long total = 0;
                     long squareTotal = 0;//2乗の合計
-                    count = 0;
+                    int count = 0;//局所範囲のピクセル数
                     for (int i = -near; i <= near; i++)
                     {
                         int yy = y + i;
@@ -233,7 +230,7 @@ namespace _20200422_局所しきい値で2値化
                     else
                         result[p] = 255;
                 }
-            }
+            });
             return MakeBitmapSource(result, width, height, stride);
         }
 
@@ -245,18 +242,17 @@ namespace _20200422_局所しきい値で2値化
             int stride = w;
             byte[] pixels = new byte[h * stride];
             bitmap.CopyPixels(pixels, stride, 0);
-            //局所範囲のピクセル数
-            int count;
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < h; y++)
+            Parallel.For(0, h, y =>
             {
                 for (int x = 0; x < w; x++)
                 {
                     long total = 0;
                     long squareTotal = 0;//2乗の合計
-                    count = 0;
+                    //局所範囲のピクセル数
+                    int count = 0;
                     for (int i = -near; i <= near; i++)
                     {
                         int yy = y + i;
@@ -288,7 +284,7 @@ namespace _20200422_局所しきい値で2値化
                     else
                         result[p] = 255;
                 }
-            }
+            });
             return MakeBitmapSource(result, w, h, stride);
         }
 
@@ -307,7 +303,7 @@ namespace _20200422_局所しきい値で2値化
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < h; y++)
+            Parallel.For(0, h, y =>
             {
                 for (int x = 0; x < w; x++)
                 {
@@ -344,7 +340,7 @@ namespace _20200422_局所しきい値で2値化
                     else
                         result[p] = 255;
                 }
-            }
+            });
             return MakeBitmapSource(result, w, h, stride);
         }
 
@@ -360,7 +356,7 @@ namespace _20200422_局所しきい値で2値化
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < h; y++)
+            Parallel.For(0, h, y =>
             {
                 for (int x = 0; x < w; x++)
                 {
@@ -390,7 +386,7 @@ namespace _20200422_局所しきい値で2値化
                     else
                         result[p] = 255;
                 }
-            }
+            });
             return MakeBitmapSource(result, w, h, stride);
         }
 
@@ -407,7 +403,7 @@ namespace _20200422_局所しきい値で2値化
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < h; y++)
+            Parallel.For(0, h, y =>
             {
                 for (int x = 0; x < w; x++)
                 {
@@ -437,7 +433,7 @@ namespace _20200422_局所しきい値で2値化
                     else
                         result[p] = 255;
                 }
-            }
+            });
             return MakeBitmapSource(result, w, h, stride);
         }
 
@@ -451,16 +447,16 @@ namespace _20200422_局所しきい値で2値化
             int stride = w;
             byte[] pixels = new byte[h * stride];
             bitmap.CopyPixels(pixels, stride, 0);
-            byte[] window = new byte[(near * 2 + 1) * (near * 2 + 2)];
-            int count;
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < h; y++)
+            Parallel.For(0, h, y =>
             {
+                byte[] window = new byte[(near * 2 + 1) * (near * 2 + 2)];
+
                 for (int x = 0; x < w; x++)
                 {
-                    count = 0;
+                    int count = 0;
                     for (int i = -near; i <= near; i++)
                     {
                         int yy = y + i;
@@ -471,7 +467,7 @@ namespace _20200422_局所しきい値で2値化
                                 int xx = x + j;
                                 if (xx >= 0 && xx < w)//x座標有効判定
                                 {
-                                    byte v = pixels[(y + i) * stride + x + j];
+                                    byte v = pixels[(yy * stride) + xx];
                                     window[count] = v;
                                     count++;
                                 }
@@ -486,7 +482,11 @@ namespace _20200422_局所しきい値で2値化
                     else
                         result[p] = 255;
                 }
-            }
+            });
+            //for (int y = 0; y < h; y++)
+            //{
+
+            //}
             return MakeBitmapSource(result, w, h, stride);
         }
         private double GetMedian(byte[] vs, int length)
@@ -500,6 +500,7 @@ namespace _20200422_局所しきい値で2値化
             }
         }
 
+        //わからん、どこか間違っている
         private BitmapSource LocalThresholdPhansalkar(BitmapSource bitmap, int near)
         {
             //Bitmapから配列作成
@@ -558,15 +559,238 @@ namespace _20200422_局所しきい値で2値化
             return MakeBitmapSource(result, w, h, stride);
         }
 
+        //大津の2値化、時間かかる
+        private BitmapSource LocalThresholdOotu(BitmapSource bitmap, int near)
+        {
+            //Bitmapから配列作成
+            int w = bitmap.PixelWidth;
+            int h = bitmap.PixelHeight;
+            int stride = w;
+            byte[] pixels = new byte[h * stride];
+            bitmap.CopyPixels(pixels, stride, 0);
+            //2値に置き換えた用
+            byte[] result = new byte[pixels.Length];
+            //2値化
 
+            Parallel.For(0, h, y =>
+            {
+                int count;
+                byte[] window = new byte[(near * 2 + 1) * (near * 2 + 2)];
+                for (int x = 0; x < w; x++)
+                {
+                    count = 0;
+                    for (int i = -near; i <= near; i++)
+                    {
+                        int yy = y + i;
+                        if (yy >= 0 && yy < h)//y座標有効判定
+                        {
+                            for (int j = -near; j <= near; j++)
+                            {
+                                int xx = x + j;
+                                if (xx >= 0 && xx < w)//x座標有効判定
+                                {
+                                    byte v = pixels[(yy) * stride + xx];
+                                    window[count] = v;
+                                    count++;
+                                }
+                            }
+                        }
+                    }
 
-        //private double GetThresholdNiblack(long total, long squareTotal, int count, double k)
-        //{
-        //    double average = total / (double)count;
-        //    double stdev = Math.Sqrt((squareTotal / (double)count) - (average * average));
-        //    return average + (k * stdev);
-        //}
+                    double threshold = GetThresholdOotu(window, count);
+                    //double threshold = GetThresholdOotu(window, count);
+                    int p = (y * stride) + x;//注目ピクセルのインデックス
+                    if (pixels[p] < threshold)
+                        result[p] = 0;
+                    else
+                        result[p] = 255;
+                }
+            });
 
+            return MakeBitmapSource(result, w, h, stride);
+        }
+        private int GetThresholdOotu(byte[] window, int count)
+        {
+            double allCount = count;
+            double max = double.MinValue;
+            int threshold = 0;
+            //ここをパラレルにしても速くならない
+            for (int i = 1; i < 256; i++)
+            {
+                int aCount = 0;
+                int bCount = 0;
+                int aTotal = 0;
+                int bTotal = 0;
+                for (int j = 0; j < count; j++)
+                {
+                    byte v = window[j];
+                    if (v < i)
+                    {
+                        aTotal += v;
+                        aCount++;
+                    }
+                    else
+                    {
+                        bTotal += v;
+                        bCount++;
+                    }
+                }
+                double aRatio = aCount / allCount;
+                double bRatio = bCount / allCount;
+                double aAverage = aTotal / allCount;
+                double bAverage = bTotal / allCount;
+                double X = aRatio * bRatio * ((aAverage - bAverage) * (aAverage - bAverage));
+                if (X > max)
+                {
+                    max = X;
+                    threshold = i;
+                }
+            }
+            return threshold;
+        }
+
+        #region 失敗、どこか間違っている
+        //大津の2値化でヒストグラム使ってみたけど違う、結果も違うし処理時間10倍
+        private BitmapSource LocalThresholdOotu2(BitmapSource bitmap, int near)
+        {
+            //Bitmapから配列作成
+            int w = bitmap.PixelWidth;
+            int h = bitmap.PixelHeight;
+            int stride = w;
+            byte[] pixels = new byte[h * stride];
+            bitmap.CopyPixels(pixels, stride, 0);
+            //2値に置き換えた用
+            byte[] result = new byte[pixels.Length];
+            //2値化
+            int[] histogram = new int[256];
+            for (int y = 0; y < h; y++)
+            {
+                int count;
+                Array.Clear(histogram, 0, 256);
+                for (int x = 0; x < w; x++)
+                {
+                    count = 0;
+                    for (int i = -near; i <= near; i++)
+                    {
+                        int yy = y + i;
+                        if (yy >= 0 && yy < h)//y座標有効判定
+                        {
+                            for (int j = -near; j <= near; j++)
+                            {
+                                int xx = x + j;
+                                if (xx >= 0 && xx < w)//x座標有効判定
+                                {
+                                    byte v = pixels[(yy * stride) + xx];
+                                    histogram[v]++;
+                                    count++;
+                                }
+                            }
+                        }
+                    }
+
+                    double threshold = GetThresholdOotu3(histogram, count);
+                    int p = (y * stride) + x;//注目ピクセルのインデックス
+                    if (pixels[p] < threshold)
+                        result[p] = 0;
+                    else
+                        result[p] = 255;
+                }
+            }
+            //Parallel.For(0, h, y =>
+            //{
+
+            //});
+
+            return MakeBitmapSource(result, w, h, stride);
+        }
+        private int GetThresholdOotu2(int[] histogram, int count)
+        {
+            double allCount = count;
+            double max = double.MinValue;
+            int threshold = 0;
+            for (int i = 1; i < 256; i++)
+            {
+                int aCount = 0;
+                int bCount = 0;
+                int aTotal = 0;
+                int bTotal = 0;
+                for (int j = 0; j < i; j++)
+                {
+                    aCount += histogram[j];
+                    aTotal += histogram[j] * j;
+                }
+                for (int j = i; j < 256; j++)
+                {
+                    bCount += histogram[j];
+                    bTotal += histogram[j] * j;
+                }
+                double aRatio = aCount / allCount;
+                double bRatio = bCount / allCount;
+                double aAverage = aTotal / allCount;
+                double bAverage = bTotal / allCount;
+                double X = aRatio * bRatio * ((aAverage - bAverage) * (aAverage - bAverage));
+                if (X > max)
+                {
+                    max = X;
+                    threshold = i;
+                }
+            }
+            return threshold;
+        }
+        private int GetThresholdOotu3(int[] histogram, int count)
+        {
+            double allCount = count;
+            double max = double.MinValue;
+            int threshold = 0;
+            for (int i = 1; i < 256; i++)
+            {
+                int aCount = CountHistogram(histogram, 0, i);
+                int bCount = CountHistogram(histogram, i, 256);
+                double aRatio = aCount / allCount;
+                double bRatio = bCount / allCount;
+                double aAverage = AverageHistogram(histogram, 0, i);
+                double bAverage = AverageHistogram(histogram, i, 256);
+                double X = aRatio * bRatio * ((aAverage - bAverage) * (aAverage - bAverage));
+                if (X > max)
+                {
+                    max = X;
+                    threshold = i;
+                }
+            }
+            return threshold;
+        }
+
+        private double AverageHistogram(int[] histogram, int begin, int end)
+        {
+            long total = 0;
+            long count = 0;
+            for (int i = begin; i < end; i++)
+            {
+                total += i * histogram[i];
+                count += histogram[i];
+            }
+            return total / (double)count;
+        }
+        private int CountHistogram(int[] histogram, int begin, int end)
+        {
+            int count = 0;
+            for (int i = begin; i < end; i++)
+            {
+                count += histogram[i];
+            }
+            return count;
+        }
+
+        private int[] MakeHistogram(byte[] vs, int count)
+        {
+            int[] histogram = new int[256];
+            for (int i = 0; i < count; i++)
+            {
+                histogram[vs[i]]++;
+            }
+            return histogram;
+        }
+        #endregion
 
         private BitmapSource LocalThresholdMulti(byte[] pixels, int width, int height, int stride, int near)
         {
@@ -1163,6 +1387,25 @@ namespace _20200422_局所しきい値で2値化
         }
 
 
+        private void Button9_Click(object sender, RoutedEventArgs e)
+        {
+            Button9.Content = nameof(LocalThresholdOotu);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = LocalThresholdOotu(MyBitmapSource, (int)ScrollBarLocalArea.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+        private void Button10_Click(object sender, RoutedEventArgs e)
+        {
+            //Button10.Content = nameof(LocalThresholdOotu2);
+            //var sw = new Stopwatch();
+            //sw.Start();
+            //MyImage.Source = LocalThresholdOotu2(MyBitmapSource, (int)ScrollBarLocalArea.Value);
+            //sw.Stop();
+            //TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
 
         private void ButtonPaste_Click(object sender, RoutedEventArgs e)
         {
@@ -1192,5 +1435,6 @@ namespace _20200422_局所しきい値で2値化
             else
                 sb.Value -= sb.LargeChange;
         }
+
     }
 }
