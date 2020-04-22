@@ -23,7 +23,6 @@ namespace _20200416_局所的可変しきい値で2値化
     {
         BitmapSource MyBitmapSource;
         byte[] MyPixels;
-        byte[] MyPalette;
 
         public MainWindow()
         {
@@ -77,11 +76,7 @@ namespace _20200416_局所的可変しきい値で2値化
             MyImage.Source = MyBitmapSource;
             MyImageOrigin.Source = MyBitmapSource;
 
-            MyPalette = new byte[] { 32, 96, 160, 224 };
-            //MyPalette = new byte[] { 0, 128, 255 };
-            MyPalette = new byte[] { 64, 192 };
-            //MyPalette = new byte[] { 0, 255 };
-
+           
         }
 
 
