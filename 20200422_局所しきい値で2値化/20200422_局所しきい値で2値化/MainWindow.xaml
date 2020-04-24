@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20200422_局所しきい値で2値化"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="614">
+        Title="MainWindow" Height="700" Width="614">
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition/>
@@ -20,10 +20,9 @@
       </ScrollViewer>
     </Grid>
 
-    <StackPanel Grid.Column="1" Margin="10,0">
+    <StackPanel Grid.Column="1" Margin="8">
       <!--wpf - Setting RenderTransform in a nested style - Stack Overflow
 https://stackoverflow.com/questions/27629285/setting-rendertransform-in-a-nested-style-->
-
       <StackPanel.Resources>
         <Style TargetType="{x:Type ScrollBar}">
           <Setter Property="RenderTransform">
@@ -39,13 +38,81 @@ https://stackoverflow.com/questions/27629285/setting-rendertransform-in-a-nested
       <Button x:Name="ButtonCopy" Content="Copy" Click="ButtonCopy_Click"/>
       <Button x:Name="ButtonPaste" Content="Paste" Click="ButtonPaste_Click"/>
       <TextBlock x:Name="TextBlockTime" Text="time" HorizontalAlignment="Center"/>
+
+
+      <Button x:Name="Button5" Content="Bernsen" Click="Button5_Click"/>
+      <Button x:Name="Button10" Content="Bernsen" Click="Button10_Click"/>
+      <Button x:Name="Button7" Content="Contrast" Click="Button7_Click"/>
+      <GroupBox Header="MidGray">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="c = " VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding ElementName=ScrollBarMidGray, Path=Value, StringFormat=000}"
+                   FontSize="20" VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
+            <ScrollBar x:Name="ScrollBarMidGray" Value="0" SmallChange="1" LargeChange="10"
+                   Minimum="-255" Maximum="255" MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="default = 0"/>
+            <Button x:Name="Button6" Content="button6" Click="Button6_Click"/>
+          </StackPanel>
+        </StackPanel>
+      </GroupBox>
+
+      <GroupBox Header="Median">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="c = " VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding ElementName=ScrollBarMedian, Path=Value, StringFormat=000}"
+                   FontSize="20" VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
+            <ScrollBar x:Name="ScrollBarMedian" Value="0" SmallChange="1" LargeChange="10"
+                   Minimum="-255" Maximum="255" MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="default = 0"/>
+          <Button x:Name="Button8" Content="button8" Click="Button8_Click"/>
+          </StackPanel>
+        </StackPanel>
+      </GroupBox>
+
+      
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+        <TextBlock Text="範囲" VerticalAlignment="Center"/>
+        <TextBlock x:Name="TextBlockNiblackNear" Width="50" Text="{Binding ElementName=ScrollBarLocalArea, Path=Value, StringFormat=0, Mode=OneWay}"
+                   FontSize="20" VerticalAlignment="Center" TextAlignment="Center" IsEnabled="False"/>
+        <ScrollBar x:Name="ScrollBarLocalArea" Value="7" Minimum="1" Maximum="20" SmallChange="1" LargeChange="1"
+                   MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="1=3x3, 2=5x5...10=21x21">
+        </ScrollBar>
+      </StackPanel>
+
+
+      <GroupBox Header="Average">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="c = " VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding ElementName=ScrollBarAverage, Path=Value, StringFormat=000}"
+                   FontSize="20" VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
+            <ScrollBar x:Name="ScrollBarAverage" Value="0" SmallChange="1" LargeChange="10"
+                   Minimum="-255" Maximum="255" MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="default = 0"/>
+          <Button x:Name="Button2" Content="button2" Click="Button2_Click"/>
+          </StackPanel>
+        </StackPanel>
+      </GroupBox>
+      
+      <GroupBox Header="Niblack">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="k = " VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding ElementName=ScrollBarNiblack, Path=Value, StringFormat=0.0}"
+                   FontSize="20" VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
+            <ScrollBar x:Name="ScrollBarNiblack" Value="-0.2" SmallChange="0.1" LargeChange="0.1"
+                   Minimum="-1.0" Maximum="1.0" MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="default = -0.2"/>            
+          <Button x:Name="Button3" Content="button3" Click="Button3_Click"/>
+          </StackPanel>
+        </StackPanel>
+      </GroupBox>
+      
       <GroupBox Header="Sauvola">
         <StackPanel>
           <StackPanel Orientation="Horizontal">
             <TextBlock Text="k = " VerticalAlignment="Center"/>
             <TextBlock Text="{Binding ElementName=ScrollBarSauvolaK, Path=Value, StringFormat=0.0}"
                    FontSize="20" VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
-            <ScrollBar x:Name="ScrollBarSauvolaK" Value="0.5" Minimum="-0.5" Maximum="1.5" SmallChange="0.1" LargeChange="0.1"
+            <ScrollBar x:Name="ScrollBarSauvolaK" Value="0.5" Minimum="-0.5" Maximum="1.5" SmallChange="0.01" LargeChange="0.1"
                    MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="default = 0.5"/>
             <TextBlock Text="r = " VerticalAlignment="Center" Margin="10,0,0,0"/>
             <TextBlock Text="{Binding ElementName=ScrollBarSauvolaR, Path=Value, StringFormat=000}"
@@ -56,25 +123,13 @@ https://stackoverflow.com/questions/27629285/setting-rendertransform-in-a-nested
           <Button x:Name="Button4" Content="button4" Click="Button4_Click"/>
         </StackPanel>
       </GroupBox>
-      <GroupBox Header="Niblack">
-        <StackPanel>
-          <StackPanel Orientation="Horizontal">
-            <TextBlock Text="k = " VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding ElementName=ScrollBarNiblack, Path=Value, StringFormat=0.0}"
-                   FontSize="20" VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
-            <ScrollBar x:Name="ScrollBarNiblack" Value="-0.2" SmallChange="0.1" LargeChange="0.1"
-                   Minimum="-1.0" Maximum="1.0" MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="default = -0.2"/>            
-          </StackPanel>
-          <Button x:Name="Button3" Content="button3" Click="Button3_Click"/>
-        </StackPanel>
-      </GroupBox>
-      
+
       <GroupBox Header="Phansalskar">
         <StackPanel>
           <StackPanel Orientation="Horizontal">
             <TextBlock Text="k = " VerticalAlignment="Center"/>
             <TextBlock Text="{Binding ElementName=ScrollBarPhansalkerK, Path=Value, StringFormat=0.00}"
-                   FontSize="20" VerticalAlignment="Center" Width="40" TextAlignment="Right" ToolTip="default = 0.25"/>
+                   FontSize="20" VerticalAlignment="Center" Width="45" TextAlignment="Right" ToolTip="default = 0.25"/>
             <ScrollBar x:Name="ScrollBarPhansalkerK" Value="0.25" SmallChange="0.01" LargeChange="0.1"
                    Minimum="-1.0" Maximum="1.0" MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="default = 0.25"/>
             
@@ -88,24 +143,34 @@ https://stackoverflow.com/questions/27629285/setting-rendertransform-in-a-nested
         </StackPanel>
       </GroupBox>
 
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-        <TextBlock Text="範囲" VerticalAlignment="Center"/>
-        <TextBlock x:Name="TextBlockNiblackNear" Width="50" Text="{Binding ElementName=ScrollBarLocalArea, Path=Value, StringFormat=0, Mode=OneWay}"
-                   FontSize="20" VerticalAlignment="Center" TextAlignment="Center" IsEnabled="False"/>
-        <ScrollBar x:Name="ScrollBarLocalArea" Value="7" Minimum="1" Maximum="20" SmallChange="1" LargeChange="1"
-                   MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="1=3x3, 2=5x5...10=21x21">
-        </ScrollBar>
-      </StackPanel>
+      <GroupBox Header="LimitedAverage">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="k = " VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding ElementName=ScrollBarLimitedAverageK, Path=Value, StringFormat=000}"
+                   FontSize="20" VerticalAlignment="Center" Width="45" TextAlignment="Right"/>
+            <ScrollBar x:Name="ScrollBarLimitedAverageK" Value="0" SmallChange="1" LargeChange="10"
+                   Minimum="-255" Maximum="255" MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="default = 0"/>
+
+            <TextBlock Text="g = " VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <TextBlock Text="{Binding ElementName=ScrollBarLimitedAverageG, Path=Value, StringFormat=0.00}"
+                   FontSize="20" VerticalAlignment="Center"/>
+            <ScrollBar x:Name="ScrollBarLimitedAverageG" Value="0.1" Minimum="0.0" Maximum="0.5" SmallChange="0.01" LargeChange="0.01"
+                   MouseWheel="ScrollBarLocalArea_MouseWheel" ToolTip="default = 0.1"/>
+          </StackPanel>
+          <Button x:Name="Button11" Content="LimitedAverage" Click="Button11_Click"/>
+        </StackPanel>
+      </GroupBox>
+      
       <!--<Button x:Name="Button1" Content="button1" Click="Button1_Click"/>-->
-      <Button x:Name="Button2" Content="button2" Click="Button2_Click"/>
+      <!--<Button x:Name="Button2" Content="button2" Click="Button2_Click"/>-->
       <!--<Button x:Name="Button3" Content="button3" Click="Button3_Click"/>-->
 
-      <Button x:Name="Button5" Content="button5" Click="Button5_Click"/>
-      <Button x:Name="Button6" Content="button6" Click="Button6_Click"/>
-      <Button x:Name="Button7" Content="button7" Click="Button7_Click"/>
-      <Button x:Name="Button8" Content="button8" Click="Button8_Click"/>
-      <Button x:Name="Button9" Content="button9" Click="Button9_Click"/>
-      <Button x:Name="Button10" Content="button10" Click="Button10_Click"/>
+      
+      <!--<Button x:Name="Button6" Content="button6" Click="Button6_Click"/>-->
+      <!--<Button x:Name="Button8" Content="button8" Click="Button8_Click"/>-->
+      <Button x:Name="Button9" Content="大津" Click="Button9_Click"/>
+      <!--<Button x:Name="Button11" Content="test" Click="Button11_Click"/>-->
     </StackPanel>
   </Grid>
 </Window>

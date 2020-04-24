@@ -157,14 +157,20 @@ namespace _20200422_局所しきい値で2値化
         /// <param name="stride"></param>
         /// <param name="near">範囲を1以上で指定、1なら上下左右1ピクセルで3x3マスの範囲になる、2なら5x5</param>
         /// <returns></returns>
-        private BitmapSource LocalThreshold(byte[] pixels, int width, int height, int stride, int near)
+        private BitmapSource LocalAverage(BitmapSource bitmap, int near, double C = 0)
         {
+            //Bitmapから配列作成
+            int w = bitmap.PixelWidth;
+            int h = bitmap.PixelHeight;
+            int stride = w;
+            byte[] pixels = new byte[h * stride];
+            bitmap.CopyPixels(pixels, stride, 0);
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            Parallel.For(0, height, y =>
+            Parallel.For(0, h, y =>
               {
-                  for (int x = 0; x < width; x++)
+                  for (int x = 0; x < w; x++)
                   {
                       long total = 0;
                       //局所範囲のピクセル数
@@ -172,12 +178,12 @@ namespace _20200422_局所しきい値で2値化
                       for (int i = -near; i <= near; i++)
                       {
                           int yy = y + i;
-                          if (yy >= 0 && yy < height)//y座標有効判定
+                          if (yy >= 0 && yy < h)//y座標有効判定
                           {
                               for (int j = -near; j <= near; j++)
                               {
                                   int xx = x + j;
-                                  if (xx >= 0 && xx < width)//x座標有効判定
+                                  if (xx >= 0 && xx < w)//x座標有効判定
                                   {
                                       total += pixels[(yy * stride) + xx];
                                       count++;
@@ -187,7 +193,7 @@ namespace _20200422_局所しきい値で2値化
                       }
 
                       //局所範囲の平均値をしきい値にして2値化
-                      double threshold = total / (double)count;
+                      double threshold = total / (double)count - C;
                       int p = (y * stride) + x;//注目ピクセルのインデックス
                       if (pixels[p] < threshold)
                           result[p] = 0;
@@ -195,17 +201,23 @@ namespace _20200422_局所しきい値で2値化
                           result[p] = 255;
                   }
               });
-            return MakeBitmapSource(result, width, height, stride);
+            return MakeBitmapSource(result, w, h, stride);
         }
 
-        private BitmapSource LocalThresholdNiblack(byte[] pixels, int width, int height, int stride, int near, double k)
+        private BitmapSource Niblack(BitmapSource bitmap, int near, double k)
         {
+            //Bitmapから配列作成
+            int w = bitmap.PixelWidth;
+            int h = bitmap.PixelHeight;
+            int stride = w;
+            byte[] pixels = new byte[h * stride];
+            bitmap.CopyPixels(pixels, stride, 0);
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            Parallel.For(0, height, y =>
+            Parallel.For(0, h, y =>
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < w; x++)
                 {
                     long total = 0;
                     long squareTotal = 0;//2乗の合計
@@ -213,12 +225,12 @@ namespace _20200422_局所しきい値で2値化
                     for (int i = -near; i <= near; i++)
                     {
                         int yy = y + i;
-                        if (yy >= 0 && yy < height)//y座標有効判定
+                        if (yy >= 0 && yy < h)//y座標有効判定
                         {
                             for (int j = -near; j <= near; j++)
                             {
                                 int xx = x + j;
-                                if (xx >= 0 && xx < width)//x座標有効判定
+                                if (xx >= 0 && xx < w)//x座標有効判定
                                 {
                                     int v = pixels[(yy * stride) + xx];
                                     total += v;
@@ -241,10 +253,10 @@ namespace _20200422_局所しきい値で2値化
                         result[p] = 255;
                 }
             });
-            return MakeBitmapSource(result, width, height, stride);
+            return MakeBitmapSource(result, w, h, stride);
         }
 
-        private BitmapSource LocalThresholdSauvola(BitmapSource bitmap, int near, double kValue, int rValue)
+        private BitmapSource Sauvola(BitmapSource bitmap, int near, double kValue, int rValue)
         {
             //Bitmapから配列作成
             int w = bitmap.PixelWidth;
@@ -302,7 +314,15 @@ namespace _20200422_局所しきい値で2値化
         //https://github.com/shimat/opencvsharp/blob/master/src/OpenCvSharp.Extensions/Binarizer.cs
 
         //MinMaxの中間をしきい値にする
-        private BitmapSource LocalThresholdBernsen(BitmapSource bitmap, int near, byte contrastMin, byte bgThreshold)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <param name="near"></param>
+        /// <param name="contrastMin">15</param>
+        /// <param name="bgThreshold">128</param>
+        /// <returns></returns>
+        private BitmapSource Bernsen(BitmapSource bitmap, int near, byte contrastMin, byte bgThreshold)
         {
             //Bitmapから配列作成
             int w = bitmap.PixelWidth;
@@ -339,6 +359,7 @@ namespace _20200422_局所しきい値で2値化
                     double threshold;
                     int contrast = max - min;
                     if (contrast < contrastMin)
+                        //15未満の時
                         threshold = bgThreshold;
                     else
                         threshold = (max + min) / 2.0;
@@ -354,8 +375,60 @@ namespace _20200422_局所しきい値で2値化
             return MakeBitmapSource(result, w, h, stride);
         }
 
+        private BitmapSource Bernsen2(BitmapSource bitmap, int near)
+        {
+            //Bitmapから配列作成
+            int w = bitmap.PixelWidth;
+            int h = bitmap.PixelHeight;
+            int stride = w;
+            byte[] pixels = new byte[h * stride];
+            bitmap.CopyPixels(pixels, stride, 0);
+            //2値に置き換えた用
+            byte[] result = new byte[pixels.Length];
+            //2値化
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    byte min = byte.MaxValue;
+                    byte max = byte.MinValue;
+                    for (int i = -near; i <= near; i++)
+                    {
+                        int yy = y + i;
+                        if (yy >= 0 && yy < h)//y座標有効判定
+                        {
+                            for (int j = -near; j <= near; j++)
+                            {
+                                int xx = x + j;
+                                if (xx >= 0 && xx < w)//x座標有効判定
+                                {
+                                    byte v = pixels[(yy * stride) + xx];
+                                    if (v < min) min = v;
+                                    if (v > max) max = v;
+                                }
+                            }
+                        }
+                    }
+
+                    int p = (y * stride) + x;//注目ピクセルのインデックス
+                    byte pv = pixels[p];
+                    double mid = (max + min) / 2.0;
+                    if (max - min < 15)
+                    {
+                        result[p] = mid >= 128 ? (byte)255 : (byte)0;
+                    }
+                    else
+                    {
+                        result[p] = pv >= mid ? (byte)255 : (byte)0;
+                    }
+                }
+            }
+            return MakeBitmapSource(result, w, h, stride);
+        }
+
+
         //MinMaxの中間をしきい値にする
-        private BitmapSource LocalThresholdMidGray(BitmapSource bitmap, int near)
+        private BitmapSource MidGray(BitmapSource bitmap, int near, double c = 0.0)
         {
             //Bitmapから配列作成
             int w = bitmap.PixelWidth;
@@ -389,7 +462,7 @@ namespace _20200422_局所しきい値で2値化
                             }
                         }
                     }
-                    double threshold = (max + min) / 2.0;
+                    double threshold = (max + min) / 2.0 - c;
                     int p = (y * stride) + x;//注目ピクセルのインデックス
                     if (pixels[p] < threshold)
                         result[p] = 0;
@@ -402,7 +475,7 @@ namespace _20200422_局所しきい値で2値化
 
 
         //MinMaxの差をしきい値にする
-        private BitmapSource LocalThresholdContrast(BitmapSource bitmap, int near)
+        private BitmapSource Contrast(BitmapSource bitmap, int near)
         {
             //Bitmapから配列作成
             int w = bitmap.PixelWidth;
@@ -449,7 +522,7 @@ namespace _20200422_局所しきい値で2値化
 
 
         //Medianの差をしきい値にする
-        private BitmapSource LocalThresholdMedian(BitmapSource bitmap, int near)
+        private BitmapSource Median(BitmapSource bitmap, int near, double c = 0)
         {
             //Bitmapから配列作成
             int w = bitmap.PixelWidth;
@@ -485,7 +558,7 @@ namespace _20200422_局所しきい値で2値化
                         }
                     }
                     Array.Sort(window);
-                    double threshold = GetMedian(window, count);
+                    double threshold = GetMedian(window, count) - c;
                     int p = (y * stride) + x;//注目ピクセルのインデックス
                     if (pixels[p] < threshold)
                         result[p] = 0;
@@ -511,7 +584,10 @@ namespace _20200422_局所しきい値で2値化
         }
 
         //わからん、どこか間違っている→しきい値計算のとき、平均値に掛けるじゃなくて足すだと思う
-        private BitmapSource LocalThresholdPhansalkar(BitmapSource bitmap, int near, double k, double r)
+        //しきい値 = 平均値 * (1 + p * exp(-q * 平均値) + k * ((標準偏差 / r) -1))、これだと真っ黒になる
+        //しきい値 = 平均値 + (1 + p * exp(-q * 平均値) + k * ((標準偏差 / r) -1))、これだと期待通りになる
+        //k = 0.25, r = 0.5, p = 2, q = 10、pとqは固定でkとrで調整
+        private BitmapSource Phansalkar(BitmapSource bitmap, int near, double k, double r)
         {
             //Bitmapから配列作成
             int w = bitmap.PixelWidth;
@@ -572,7 +648,7 @@ namespace _20200422_局所しきい値で2値化
         }
 
         //大津の2値化、時間かかる
-        private BitmapSource LocalThresholdOotu(BitmapSource bitmap, int near)
+        private BitmapSource Ootu(BitmapSource bitmap, int near)
         {
             //Bitmapから配列作成
             int w = bitmap.PixelWidth;
@@ -601,16 +677,16 @@ namespace _20200422_局所しきい値で2値化
                                 int xx = x + j;
                                 if (xx >= 0 && xx < w)//x座標有効判定
                                 {
-                                    byte v = pixels[(yy) * stride + xx];
+                                    //局所の値を配列に入れる
+                                    byte v = pixels[(yy * stride) + xx];
                                     window[count] = v;
                                     count++;
                                 }
                             }
                         }
                     }
-
+                    //局所の値の配列から大津の方法でしきい値計算
                     double threshold = GetThresholdOotu(window, count);
-                    //double threshold = GetThresholdOotu(window, count);
                     int p = (y * stride) + x;//注目ピクセルのインデックス
                     if (pixels[p] < threshold)
                         result[p] = 0;
@@ -626,6 +702,8 @@ namespace _20200422_局所しきい値で2値化
             double allCount = count;
             double max = double.MinValue;
             int threshold = 0;
+            //しきい値を1～255まで全て試して、AB両範囲の分離度が最大になるところを探す
+            //分離度x = A画素割合 * B画素割合 * (A平均 - B平均) ^ 2
             //ここをパラレルにしても速くならない
             for (int i = 1; i < 256; i++)
             {
@@ -661,7 +739,68 @@ namespace _20200422_局所しきい値で2値化
             return threshold;
         }
 
-        private BitmapSource LocalThresholdTest(BitmapSource bitmap, int near)
+
+        //        PowerPoint Presentation
+        //https://ocw.kyoto-u.ac.jp/ja/09-faculty-of-engineering-jp/image-processing/pdf/dip_04.pdf
+        //平均値制限法
+
+        private BitmapSource LimitedAverage(BitmapSource bitmap, int near,double k,double gamma)
+        {
+            //Bitmapから配列作成
+            int w = bitmap.PixelWidth;
+            int h = bitmap.PixelHeight;
+            int stride = w;
+            byte[] pixels = new byte[h * stride];
+            bitmap.CopyPixels(pixels, stride, 0);
+            //2値に置き換えた用
+            byte[] result = new byte[pixels.Length];
+            //2値化
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    double count = 0;
+                    int total = 0;
+                    for (int i = -near; i <= near; i++)
+                    {
+                        int yy = y + i;
+                        if (yy >= 0 && yy < h)//y座標有効判定
+                        {
+                            for (int j = -near; j <= near; j++)
+                            {
+                                int xx = x + j;
+                                if (xx >= 0 && xx < w)//x座標有効判定
+                                {
+                                    byte v = pixels[(yy * stride) + xx];
+                                    total += v;
+                                    count++;
+                                }
+                            }
+                        }
+                    }
+                    double threshold;
+                    int p = (y * stride) + x;//注目ピクセルのインデックス
+                    double average = total / count;
+                    //double gamma = 0.1;
+                    //k=1~10
+                    threshold = gamma * (k - 1) + (1 - 2 * gamma) * average;
+
+                    if (pixels[p] < threshold)
+                        result[p] = 0;
+                    else
+                        result[p] = 255;
+                }
+            }
+            return MakeBitmapSource(result, w, h, stride);
+        }
+
+
+
+        //        PowerPoint Presentation
+        //https://ocw.kyoto-u.ac.jp/ja/09-faculty-of-engineering-jp/image-processing/pdf/dip_04.pdf
+        //平均値制限法
+
+        private BitmapSource LocalThresholdTest2(BitmapSource bitmap, int near)
         {
             //Bitmapから配列作成
             int w = bitmap.PixelWidth;
@@ -701,9 +840,15 @@ namespace _20200422_局所しきい値で2値化
                             }
                         }
                     }
-                    double average = total / count;
-                    double threshold = ((max + min) / 2.0 + average) / 2.0;
+                    double threshold;
                     int p = (y * stride) + x;//注目ピクセルのインデックス
+                    byte pv = pixels[p];
+                    double average = total / count;
+                    double varp = (squareTotal / count) - (average * average);
+                    int mid = max - min;
+                    double r = 0.1;
+                    threshold = r * (10 - 1) + (1 - 2 * r) * average;
+                    
                     if (pixels[p] < threshold)
                         result[p] = 0;
                     else
@@ -865,48 +1010,8 @@ namespace _20200422_局所しきい値で2値化
         }
         #endregion
 
-        private BitmapSource LocalThresholdMulti(byte[] pixels, int width, int height, int stride, int near)
-        {
-            //2値に置き換えた用
-            byte[] result = new byte[pixels.Length];
-            //2値化
-            Parallel.For(0, height, y =>
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    long total = 0;
-                    int count = 0;//局所範囲のピクセル数
-                    for (int i = -near; i <= near; i++)
-                    {
-                        int yy = y + i;
-                        if (yy >= 0 && yy < height)//y座標有効判定
-                        {
-                            for (int j = -near; j <= near; j++)
-                            {
-                                int xx = x + j;
-                                if (xx >= 0 && xx < width)//x座標有効判定
-                                {
-                                    total += pixels[(y + i) * stride + x + j];
-                                    count++;
-                                }
-                            }
-                        }
-                    }
 
-                    //局所範囲の平均値をしきい値にして2値化
-                    double threshold = total / (double)count;
-                    int p = (y * stride) + x;//注目ピクセルのインデックス
-                    if (pixels[p] < threshold)
-                        result[p] = 0;
-                    else
-                        result[p] = 255;
-                }
-            });
-
-            return MakeBitmapSource(result, width, height, stride);
-        }
-
-
+        #region 局所範囲の計算の高速化はめんどくさいので使っていない
         //局所範囲の合計は差分で計算、画像周縁部は計算しない
         private BitmapSource LocalThreshold差分計算中央部だけ(byte[] pixels, int width, int height, int stride, int near)
         {
@@ -1304,7 +1409,7 @@ namespace _20200422_局所しきい値で2値化
             });
         }
 
-
+        #endregion 局所範囲の計算の高速化はめんどくさいので使っていない
 
 
 
@@ -1367,114 +1472,6 @@ namespace _20200422_局所しきい値で2値化
 
 
 
-
-        private void ButtonCopy_Click(object sender, RoutedEventArgs e)
-        {
-            if (MyImage.Source == null) return;
-            Clipboard.SetImage((BitmapSource)MyImage.Source);
-        }
-
-        private void Button1_Click(object sender, RoutedEventArgs e)
-        {
-            Button1.Content = nameof(LocalThresholdPhansalkar);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThresholdPhansalkar(MyBitmapSource, (int)ScrollBarLocalArea.Value, ScrollBarPhansalkerK.Value, ScrollBarPhansalkerR.Value);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-        private void Button2_Click(object sender, RoutedEventArgs e)
-        {
-            Button2.Content = nameof(LocalThreshold);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThreshold(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth, (int)ScrollBarLocalArea.Value);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-
-        private void Button3_Click(object sender, RoutedEventArgs e)
-        {
-            Button3.Content = nameof(LocalThresholdNiblack);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThresholdNiblack(MyPixels, MyBitmapSource.PixelWidth, MyBitmapSource.PixelHeight, MyBitmapSource.PixelWidth, (int)ScrollBarLocalArea.Value, ScrollBarNiblack.Value);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-
-
-        private void Button4_Click(object sender, RoutedEventArgs e)
-        {
-            Button4.Content = nameof(LocalThresholdSauvola);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThresholdSauvola(MyBitmapSource, (int)ScrollBarLocalArea.Value, ScrollBarSauvolaK.Value, (int)ScrollBarSauvolaR.Value);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-
-        private void Button5_Click(object sender, RoutedEventArgs e)
-        {
-            Button5.Content = nameof(LocalThresholdBernsen);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThresholdBernsen(MyBitmapSource, (int)ScrollBarLocalArea.Value, 15, 128);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-
-        private void Button6_Click(object sender, RoutedEventArgs e)
-        {
-            Button6.Content = nameof(LocalThresholdMidGray);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThresholdMidGray(MyBitmapSource, (int)ScrollBarLocalArea.Value);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-
-        private void Button7_Click(object sender, RoutedEventArgs e)
-        {
-            Button7.Content = nameof(LocalThresholdContrast);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThresholdContrast(MyBitmapSource, (int)ScrollBarLocalArea.Value);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-
-        private void Button8_Click(object sender, RoutedEventArgs e)
-        {
-            Button8.Content = nameof(LocalThresholdMedian);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThresholdMedian(MyBitmapSource, (int)ScrollBarLocalArea.Value);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-
-
-        private void Button9_Click(object sender, RoutedEventArgs e)
-        {
-            Button9.Content = nameof(LocalThresholdOotu);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThresholdOotu(MyBitmapSource, (int)ScrollBarLocalArea.Value);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-
-        private void Button10_Click(object sender, RoutedEventArgs e)
-        {
-            Button10.Content = nameof(LocalThresholdTest);
-            var sw = new Stopwatch();
-            sw.Start();
-            MyImage.Source = LocalThresholdTest(MyBitmapSource, (int)ScrollBarLocalArea.Value);
-            sw.Stop();
-            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
-        }
-
         private void ButtonPaste_Click(object sender, RoutedEventArgs e)
         {
             //8bitグレースケールに変換して読み込む
@@ -1504,5 +1501,131 @@ namespace _20200422_局所しきい値で2値化
                 sb.Value -= sb.LargeChange;
         }
 
+        private void ButtonCopy_Click(object sender, RoutedEventArgs e)
+        {
+            if (MyImage.Source == null) return;
+            Clipboard.SetImage((BitmapSource)MyImage.Source);
+        }
+
+        private void Button1_Click(object sender, RoutedEventArgs e)
+        {
+            Button1.Content = nameof(Phansalkar);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = Phansalkar(MyBitmapSource, (int)ScrollBarLocalArea.Value, ScrollBarPhansalkerK.Value, ScrollBarPhansalkerR.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+        private void Button2_Click(object sender, RoutedEventArgs e)
+        {
+            Button2.Content = nameof(LocalAverage);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = LocalAverage(MyBitmapSource, (int)ScrollBarLocalArea.Value, (int)ScrollBarAverage.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+        private void Button3_Click(object sender, RoutedEventArgs e)
+        {
+            Button3.Content = nameof(Niblack);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = Niblack(MyBitmapSource, (int)ScrollBarLocalArea.Value, ScrollBarNiblack.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+
+        private void Button4_Click(object sender, RoutedEventArgs e)
+        {
+            Button4.Content = nameof(Sauvola);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = Sauvola(MyBitmapSource, (int)ScrollBarLocalArea.Value, ScrollBarSauvolaK.Value, (int)ScrollBarSauvolaR.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+        private void Button5_Click(object sender, RoutedEventArgs e)
+        {
+            Button5.Content = nameof(Bernsen);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = Bernsen(MyBitmapSource, (int)ScrollBarLocalArea.Value, 15, 128);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+        private void Button6_Click(object sender, RoutedEventArgs e)
+        {
+            Button6.Content = nameof(MidGray);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = MidGray(MyBitmapSource, (int)ScrollBarLocalArea.Value, ScrollBarMidGray.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+        private void Button7_Click(object sender, RoutedEventArgs e)
+        {
+            Button7.Content = nameof(Contrast);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = Contrast(MyBitmapSource, (int)ScrollBarLocalArea.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+        private void Button8_Click(object sender, RoutedEventArgs e)
+        {
+            Button8.Content = nameof(Median);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = Median(MyBitmapSource, (int)ScrollBarLocalArea.Value, ScrollBarMedian.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+
+        private void Button9_Click(object sender, RoutedEventArgs e)
+        {
+            int near = (int)ScrollBarLocalArea.Value;
+            long keisanryou = (near * 2 + 1) * (near * 2 + 1) * MyBitmapSource.PixelWidth * MyBitmapSource.PixelHeight;
+            if (keisanryou > 50_000_000)
+            {
+                double zikan = keisanryou / (double)10_000_000;
+                if (MessageBoxResult.Cancel == MessageBox.Show($"処理完了まで{zikan:F1}秒以上かかるかも", "caption", MessageBoxButton.OKCancel))
+                    return;
+            }
+
+            Button9.Content = nameof(Ootu);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = Ootu(MyBitmapSource, (int)ScrollBarLocalArea.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+        private void Button10_Click(object sender, RoutedEventArgs e)
+        {
+            Button10.Content = nameof(Bernsen2);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = Bernsen2(MyBitmapSource, (int)ScrollBarLocalArea.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
+
+
+        private void Button11_Click(object sender, RoutedEventArgs e)
+        {
+            Button11.Content = nameof(LimitedAverage);
+            var sw = new Stopwatch();
+            sw.Start();
+            MyImage.Source = LimitedAverage(MyBitmapSource, (int)ScrollBarLocalArea.Value,ScrollBarLimitedAverageK.Value,ScrollBarLimitedAverageG.Value);
+            sw.Stop();
+            TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
+        }
     }
 }
