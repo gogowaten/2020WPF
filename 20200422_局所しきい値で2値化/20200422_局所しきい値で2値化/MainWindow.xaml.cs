@@ -298,7 +298,8 @@ namespace _20200422_局所しきい値で2値化
                     double variance = (squareTotal / (double)count) - (average * average);
                     double stdev = Math.Sqrt(variance);
                     //平均 * (1 + k * (標準偏差 / r - 1))
-                    double threshold = average * (1 + kValue * (stdev / rValue - 1));
+                    //k=0.5, r=128
+                    double threshold = average * (1 + (kValue * ((stdev / rValue) - 1)));
 
                     int p = (y * stride) + x;//注目ピクセルのインデックス
                     if (pixels[p] < threshold)
@@ -386,7 +387,7 @@ namespace _20200422_局所しきい値で2値化
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < h; y++)
+            Parallel.For(0, h, y =>
             {
                 for (int x = 0; x < w; x++)
                 {
@@ -422,7 +423,7 @@ namespace _20200422_局所しきい値で2値化
                         result[p] = pv >= mid ? (byte)255 : (byte)0;
                     }
                 }
-            }
+            });
             return MakeBitmapSource(result, w, h, stride);
         }
 
@@ -595,20 +596,19 @@ namespace _20200422_局所しきい値で2値化
             int stride = w;
             byte[] pixels = new byte[h * stride];
             bitmap.CopyPixels(pixels, stride, 0);
-            //局所範囲のピクセル数
-            int count;
             double p = 2.0;
             double q = 10.0;
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < h; y++)
+            Parallel.For(0, h, y =>
             {
                 for (int x = 0; x < w; x++)
                 {
                     long total = 0;
-                    long squareTotal = 0;//2乗の合計
-                    count = 0;
+                    long squareTotal = 0;//2乗の合計                                         
+                    int count = 0;//局所範囲のピクセル数
+
                     for (int i = -near; i <= near; i++)
                     {
                         int yy = y + i;
@@ -643,7 +643,7 @@ namespace _20200422_局所しきい値で2値化
                     else
                         result[pIndex] = 255;
                 }
-            }
+            });
             return MakeBitmapSource(result, w, h, stride);
         }
 
@@ -744,7 +744,7 @@ namespace _20200422_局所しきい値で2値化
         //https://ocw.kyoto-u.ac.jp/ja/09-faculty-of-engineering-jp/image-processing/pdf/dip_04.pdf
         //平均値制限法
 
-        private BitmapSource LimitedAverage(BitmapSource bitmap, int near,double k,double gamma)
+        private BitmapSource LimitedAverage(BitmapSource bitmap, int near, double k, double gamma)
         {
             //Bitmapから配列作成
             int w = bitmap.PixelWidth;
@@ -755,7 +755,7 @@ namespace _20200422_局所しきい値で2値化
             //2値に置き換えた用
             byte[] result = new byte[pixels.Length];
             //2値化
-            for (int y = 0; y < h; y++)
+            Parallel.For(0, h, y =>
             {
                 for (int x = 0; x < w; x++)
                 {
@@ -790,7 +790,7 @@ namespace _20200422_局所しきい値で2値化
                     else
                         result[p] = 255;
                 }
-            }
+            });
             return MakeBitmapSource(result, w, h, stride);
         }
 
@@ -848,7 +848,7 @@ namespace _20200422_局所しきい値で2値化
                     int mid = max - min;
                     double r = 0.1;
                     threshold = r * (10 - 1) + (1 - 2 * r) * average;
-                    
+
                     if (pixels[p] < threshold)
                         result[p] = 0;
                     else
@@ -1623,7 +1623,7 @@ namespace _20200422_局所しきい値で2値化
             Button11.Content = nameof(LimitedAverage);
             var sw = new Stopwatch();
             sw.Start();
-            MyImage.Source = LimitedAverage(MyBitmapSource, (int)ScrollBarLocalArea.Value,ScrollBarLimitedAverageK.Value,ScrollBarLimitedAverageG.Value);
+            MyImage.Source = LimitedAverage(MyBitmapSource, (int)ScrollBarLocalArea.Value, ScrollBarLimitedAverageK.Value, ScrollBarLimitedAverageG.Value);
             sw.Stop();
             TextBlockTime.Text = $"{sw.Elapsed.TotalSeconds:F3}秒";
         }
