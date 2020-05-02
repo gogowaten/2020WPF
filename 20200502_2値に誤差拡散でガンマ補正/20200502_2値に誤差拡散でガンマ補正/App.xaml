@@ -1,0 +1,9 @@
+﻿<Application x:Class="_20200502_2値に誤差拡散でガンマ補正.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:_20200502_2値に誤差拡散でガンマ補正"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>

@@ -82,7 +82,7 @@ namespace _20200502_指定2色に変換PixelFormats
 
         }
 
-        private BitmapSource ConvertBitmapIndexed1(BitmapSource source,Color c1,Color c2)
+        private BitmapSource ConvertBitmapIndexed1(BitmapSource source, Color c1, Color c2)
         {
             var cl = new List<Color>() { c1, c2 };
             BitmapPalette palette = new BitmapPalette(cl);
@@ -193,7 +193,7 @@ namespace _20200502_指定2色に変換PixelFormats
         {
             if (MyBitmapSource == null) return;
             //MyImage.Source = ConvertBitmapIndexed1(MyBitmapSource, Colors.Red, Colors.Orange);
-            MyImage.Source = ConvertBitmapIndexed1(MyBitmapSource, Colors.Red, Color.FromRgb(255,100,200));
+            MyImage.Source = ConvertBitmapIndexed1(MyBitmapSource, Colors.Blue, Color.FromRgb(255, 234, 111));
         }
     }
 }
