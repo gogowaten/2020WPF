@@ -91,8 +91,8 @@ namespace _20200502_2値に誤差拡散でガンマ補正
             //imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
             //imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\grayscale256x256.png";
-            //imagePath = @"D:\ブログ用\テスト用画像\Michelangelo's_David_-_63_grijswaarden.bmp";
-            //imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
+            imagePath = @"D:\ブログ用\テスト用画像\Michelangelo's_David_-_63_grijswaarden.bmp";
+            imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
             //imagePath = @"D:\ブログ用\テスト用画像\gray127.png";//これは中間じゃないみたい
             //imagePath = @"D:\ブログ用\テスト用画像\gray250.png";
             //imagePath = @"D:\ブログ用\テスト用画像\ﾈｺは見ている.png";
