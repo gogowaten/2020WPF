@@ -38,9 +38,14 @@ namespace _20200502_2値に誤差拡散でガンマ補正
             MyGrid.MouseLeftButtonDown += (s, e) => Panel.SetZIndex(MyImageOrigin, 1);
             MyGrid.MouseLeftButtonUp += (s, e) => Panel.SetZIndex(MyImageOrigin, -1);
 
-
             MyInitialize();
 
+            //            デバッグビルドでのみ特定のコードがコンパイルされるようにする - .NET Tips(VB.NET, C#...)
+            //https://dobon.net/vb/dotnet/programing/define.html
+
+#if DEBUG
+            MyInitializeForDebug();
+#endif
 
         }
 
@@ -62,28 +67,53 @@ namespace _20200502_2値に誤差拡散でガンマ補正
             }
         }
 
-
         private void MyInitialize()
+        {
+            //アプリに埋め込んだ画像を読み込んで、Gray8に変換して読み込む
+            string path = "_20200502_2値に誤差拡散でガンマ補正.grayScale.bmp";
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using (var stream = assembly.GetManifestResourceStream(path))
+            {
+                if (stream != null)
+                {
+                    var source = BitmapFrame.Create(stream);
+                    MyBitmapSource = new FormatConvertedBitmap(source, PixelFormats.Gray8, null, 0);
+                    SetBitmap(MyBitmapSource);
+                }
+            }
+
+        }
+        private void MyInitializeForDebug()
         {
 
             string imagePath;
             imagePath = @"D:\ブログ用\チェック用2\WP_20200328_11_22_52_Pro_2020_03_28_午後わてん.jpg";
             //imagePath = @"E:\オレ\携帯\2019スマホ\WP_20200328_11_22_52_Pro.jpg";
-            imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
-            imagePath = @"D:\ブログ用\テスト用画像\grayscale256x256.png";
+            //imagePath = @"D:\ブログ用\テスト用画像\grayScale.bmp";
+            //imagePath = @"D:\ブログ用\テスト用画像\grayscale256x256.png";
             //imagePath = @"D:\ブログ用\テスト用画像\Michelangelo's_David_-_63_grijswaarden.bmp";
             //imagePath = @"D:\ブログ用\テスト用画像\gray128.png";//0と255の中間みたい、pixelformats.blackwhiteだと市松模様になる
             //imagePath = @"D:\ブログ用\テスト用画像\gray127.png";//これは中間じゃないみたい
             //imagePath = @"D:\ブログ用\テスト用画像\gray250.png";
             //imagePath = @"D:\ブログ用\テスト用画像\ﾈｺは見ている.png";
             //imagePath = @"D:\ブログ用\テスト用画像\NEC_2097_.jpg";
-            imagePath = @"D:\ブログ用\テスト用画像\NEC_1456_2018_03_17_午後わてん_256x192.png";
+            //imagePath = @"D:\ブログ用\テスト用画像\NEC_1456_2018_03_17_午後わてん_256x192.png";
+
 
             (MyPixels, MyBitmapSource) = MakeBitmapSourceAndPixelData(imagePath, PixelFormats.Gray8, 96, 96);
             MyImage.Source = MyBitmapSource;
             MyImageOrigin.Source = MyBitmapSource;
 
-
+        }
+        private void SetBitmap(BitmapSource source)
+        {
+            MyImage.Source = source;
+            MyImageOrigin.Source = source;
+            //int w = source.PixelWidth;
+            //int h = source.PixelHeight;
+            //int stride = w;
+            //MyPixels = new byte[h * stride];
+            //source.CopyPixels(MyPixels, stride, 0);
 
         }
 
@@ -117,9 +147,7 @@ namespace _20200502_2値に誤差拡散でガンマ補正
                     //注目ピクセルのインデックス
                     p = y * stride + x;
                     //しきい値127.5未満なら0にする、それ以外は255にする
-                    SetBlackOrWhite(gosaPixels[p], pixels, p);
-                    //SetBlackOrWhite2(gosaPixels[p], pixels, p);
-                    //SetBlackOrWhite3(gosaPixels[p], pixels, p);
+                    pixels[p] = (gosaPixels[p] < 127.5) ? (byte)0 : (byte)255;
                     //誤差拡散
                     gosa = (gosaPixels[p] - pixels[p]) / 16.0;
                     if (x != width - 1)
@@ -141,6 +169,7 @@ namespace _20200502_2値に誤差拡散でガンマ補正
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
+
         /// <summary>
         /// しきい値127.5で 0 or 255、127.5未満は0、127.5以上は255に置き換える
         /// 127.49999999999999999...は0、127.5以上は255だから、整数の場合は127.5を四捨五入した128未満が0、それ以外は255にすればいい？
@@ -148,18 +177,6 @@ namespace _20200502_2値に誤差拡散でガンマ補正
         /// <param name="value">対象の値</param>
         /// <param name="pixels">0 or 255を入れる配列</param>
         /// <param name="p">配列のIndex</param>
-
-
-        private void SetBlackOrWhite(double value, byte[] pixels, int p)
-        {
-            double d = value;
-            if (d < 127.5)
-                pixels[p] = 0;
-            else
-                pixels[p] = 255;
-        }
-
-
         //逆ガンマ補正した値を使って誤差拡散
         private BitmapSource D2_GammaByte(BitmapSource source)
         {
@@ -185,7 +202,7 @@ namespace _20200502_2値に誤差拡散でガンマ補正
                     //注目ピクセルのインデックス
                     p = y * stride + x;
                     //しきい値127.5未満なら0にする、それ以外は255にする
-                    SetBlackOrWhite(gosaPixels[p], pixels, p);
+                    pixels[p] = (gosaPixels[p] < 127.5) ? (byte)0 : (byte)255;
                     //誤差拡散
                     gosa = (gosaPixels[p] - pixels[p]) / 16.0;
                     if (x != width - 1)
@@ -222,8 +239,8 @@ namespace _20200502_2値に誤差拡散でガンマ補正
             int p;//座標を配列のインデックスに変換した値用
             double gosa;//誤差(変換前 - 変換後)
 
-            //  * 7
-            //3 5 1
+            //   * 7
+            // 3 5 1
             //￣16￣
             for (int y = 0; y < height; y++)
             {
@@ -234,9 +251,7 @@ namespace _20200502_2値に誤差拡散でガンマ補正
                         //注目ピクセルのインデックス
                         p = y * stride + x;
                         //しきい値127.5未満なら0にする、それ以外は255にする
-                        SetBlackOrWhite(gosaPixels[p], pixels, p);
-                        //SetBlackOrWhite2(gosaPixels[p], pixels, p);
-                        //SetBlackOrWhite3(gosaPixels[p], pixels, p);
+                        pixels[p] = (gosaPixels[p] < 127.5) ? (byte)0 : (byte)255;
                         //誤差拡散
                         gosa = (gosaPixels[p] - pixels[p]) / 16.0;
                         if (x != width - 1)
@@ -256,6 +271,10 @@ namespace _20200502_2値に誤差拡散でガンマ補正
                         }
                     }
                 }
+                //逆方向走査は拡散具合の左右を入れ替える
+                // 7 *
+                // 1 5 3
+                //￣16￣
                 else
                 {
                     for (int x = width - 1; x >= 0; x--)
@@ -263,9 +282,7 @@ namespace _20200502_2値に誤差拡散でガンマ補正
                         //注目ピクセルのインデックス
                         p = y * stride + x;
                         //しきい値127.5未満なら0にする、それ以外は255にする
-                        SetBlackOrWhite(gosaPixels[p], pixels, p);
-                        //SetBlackOrWhite2(gosaPixels[p], pixels, p);
-                        //SetBlackOrWhite3(gosaPixels[p], pixels, p);
+                        pixels[p] = (gosaPixels[p] < 127.5) ? (byte)0 : (byte)255;
                         //誤差拡散
                         gosa = (gosaPixels[p] - pixels[p]) / 16.0;
                         if (x != 0)
@@ -289,14 +306,20 @@ namespace _20200502_2値に誤差拡散でガンマ補正
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
 
-        //逆ガンマ補正
+        //
+        /// <summary>
+        /// 逆ガンマ補正
+        /// </summary>
+        /// <param name="pixels">グレースケール画像の輝度値の配列</param>
+        /// <param name="gamma">2.2が標準</param>
+        /// <returns></returns>
         private byte[] InvertGammaByte(byte[] pixels, double gamma)
         {
             byte[] vs = new byte[pixels.Length];
             for (int i = 0; i < pixels.Length; i++)
             {
                 double d = pixels[i] / 255.0;
-                //四捨五入してもあまり変化ない
+                //四捨五入しても変化なかった
                 //vs[i] = (byte)Math.Round(Math.Pow(d, gamma) * 255.0, MidpointRounding.AwayFromZero);
                 //四捨五入なし
                 vs[i] = (byte)Math.Round(Math.Pow(d, gamma) * 255.0);
@@ -305,6 +328,7 @@ namespace _20200502_2値に誤差拡散でガンマ補正
         }
 
 
+        //double型で計算して最後にbyte型に変換
         private BitmapSource D4_GammaDouble(BitmapSource source)
         {
             int width = source.PixelWidth;
