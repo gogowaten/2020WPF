@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20200506_ガンマ補正してから2値化誤差拡散", "20200506_ガンマ補正してから2値化誤差拡散\20200506_ガンマ補正してから2値化誤差拡散.csproj", "{C5691CFE-BF86-4C7B-A9E1-91D4B06FDF37}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C5691CFE-BF86-4C7B-A9E1-91D4B06FDF37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5691CFE-BF86-4C7B-A9E1-91D4B06FDF37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5691CFE-BF86-4C7B-A9E1-91D4B06FDF37}.Debug|x64.ActiveCfg = Debug|x64
+		{C5691CFE-BF86-4C7B-A9E1-91D4B06FDF37}.Debug|x64.Build.0 = Debug|x64
+		{C5691CFE-BF86-4C7B-A9E1-91D4B06FDF37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5691CFE-BF86-4C7B-A9E1-91D4B06FDF37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5691CFE-BF86-4C7B-A9E1-91D4B06FDF37}.Release|x64.ActiveCfg = Release|x64
+		{C5691CFE-BF86-4C7B-A9E1-91D4B06FDF37}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2CEA71D2-5F11-418D-99FF-04E2A6C1E18A}
+	EndGlobalSection
+EndGlobal
