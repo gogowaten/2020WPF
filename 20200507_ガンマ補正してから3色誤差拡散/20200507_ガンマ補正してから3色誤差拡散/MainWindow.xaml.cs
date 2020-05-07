@@ -228,7 +228,7 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
         }
 
 
-      
+
 
 
         //ここから3色(黒、灰、白)
@@ -516,67 +516,32 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
             //￣16￣
             for (int y = 0; y < height; y++)
             {
-
-                if (y % 2 == 0)
+                for (int x = 0; x < width; x++)
                 {
-                    for (int x = 0; x < width; x++)
-                    {
-                        //注目ピクセルのインデックス
-                        p = y * stride + x;
-                        //4色に変換
-                        if (gosaPixels[p] < 64) pixels[p] = 0;
-                        else if (gosaPixels[p] < 128) pixels[p] = 85;
-                        else if (gosaPixels[p] < 192) pixels[p] = 170;
-                        else pixels[p] = 255;
+                    //注目ピクセルのインデックス
+                    p = y * stride + x;
+                    //4色に変換
+                    if (gosaPixels[p] < 64) pixels[p] = 0;
+                    else if (gosaPixels[p] < 128) pixels[p] = 85;
+                    else if (gosaPixels[p] < 192) pixels[p] = 170;
+                    else pixels[p] = 255;
 
-                        //誤差拡散
-                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
-                        if (x != width - 1)
-                            //右
-                            gosaPixels[p + 1] += gosa * 7;
-                        if (y < height - 1)
-                        {
-                            p += stride;
-                            //下
-                            gosaPixels[p] += gosa * 5;
-                            if (x != 0)
-                                //左下
-                                gosaPixels[p - 1] += gosa * 3;
-                            if (x != width - 1)
-                                //右下
-                                gosaPixels[p + 1] += gosa * 1;
-                        }
-                    }
-                }
-                else
-                {
-                    for (int x = width - 1; x >= 0; x--)
+                    //誤差拡散
+                    gosa = (gosaPixels[p] - pixels[p]) / 16.0;
+                    if (x != width - 1)
+                        //右
+                        gosaPixels[p + 1] += gosa * 7;
+                    if (y < height - 1)
                     {
-                        //注目ピクセルのインデックス
-                        p = y * stride + x;
-                        //4色に変換
-                        if (gosaPixels[p] < 64) pixels[p] = 0;
-                        else if (gosaPixels[p] < 128) pixels[p] = 85;
-                        else if (gosaPixels[p] < 192) pixels[p] = 170;
-                        else pixels[p] = 255;
-
-                        //誤差拡散
-                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
+                        p += stride;
+                        //下
+                        gosaPixels[p] += gosa * 5;
                         if (x != 0)
-                            //左
-                            gosaPixels[p - 1] += gosa * 7;
-                        if (y < height - 1)
-                        {
-                            p += stride;
-                            //下
-                            gosaPixels[p] += gosa * 5;
-                            if (x != 0)
-                                //左下
-                                gosaPixels[p - 1] += gosa * 1;
-                            if (x != width - 1)
-                                //右下
-                                gosaPixels[p + 1] += gosa * 3;
-                        }
+                            //左下
+                            gosaPixels[p - 1] += gosa * 3;
+                        if (x != width - 1)
+                            //右下
+                            gosaPixels[p + 1] += gosa * 1;
                     }
                 }
             }
@@ -618,18 +583,7 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
         }
 
 
-        //private double[] InvertGammaColor(byte[] pixels, int colorsCount, double gamma)
-        //{
-        //    double[] vs = new double[pixels.Length];
-        //    double part = 1.0 / colorsCount;
-        //    int splitCount = colorsCount - 1;
-        //    double[] localGammas = MakeLocalGamma(colorsCount, gamma);
 
-        //    for (int i = 0; i < pixels.Length; i++)
-        //    {
-
-        //    }
-        //}
 
         //多色対応
         private BitmapSource D7_ColorEachGamma(BitmapSource source, int colorsCount)
@@ -641,11 +595,14 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
             source.CopyPixels(pixels, stride, 0);
 
             double gamma1 = 2.2;
-            var table = MakeTable(colorsCount, gamma1);
+
+            //色
+            double stepColor = 255.0 / (colorsCount - 1);//1階調あたり
+            double stepRange = 255.0 / colorsCount;//1範囲あたり
 
             //逆ガンマ補正した値の配列、誤差拡散計算用
-            double[] gosaPixels = new double[pixels.Length];// = InvertEachGamma3Color(pixels, gamma1, gamma2);
-            Array.Copy(pixels, gosaPixels, pixels.Length);
+            double[] gosaPixels = InvertGammaColor(pixels, colorsCount, gamma1);
+            //Array.Copy(pixels, gosaPixels, pixels.Length);
 
             int p;//座標を配列のインデックスに変換した値用
             double gosa;//誤差(変換前 - 変換後)
@@ -659,9 +616,16 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
                 {
                     //注目ピクセルのインデックス
                     p = y * stride + x;
-                    //テーブルを使って色変換
-                    byte gv = (byte)Math.Round(gosaPixels[p], MidpointRounding.AwayFromZero);
-                    pixels[p] = table[gv];
+                    byte bb;
+                    double nv = gosaPixels[p];
+                    if (nv <= 0) bb = 0;
+                    else if (nv >= 255) bb = 255;
+                    else
+                    {
+                        int neko = (int)(nv / stepRange);
+                        bb = (byte)Math.Round((stepColor * neko), MidpointRounding.AwayFromZero);
+                    }
+                    pixels[p] = bb;
 
 
                     //誤差拡散
@@ -682,6 +646,63 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
 
+        //        private byte[] MakeColors(int count)
+        //        {
+        //            //4色のときの4色の値は？
+        //            //1階調あたりの値は85、これは255/(4色-1)で
+        //            //255/3＝85
+        //            //0 85 170 255
+
+        //            //変換範囲は？
+        //            //1範囲あたりの値は63.75、これは255／色数で
+        //            //255/4=63.75            
+        //            //if       63.75未満＝0
+        //            //else if 127.5未満＝85
+        //            //else if 191.25未満＝170
+        //            //else    それ以外＝255
+
+        //            // if v<=0 0
+        //            // else if v<=255 255
+        //            // else
+
+        //            //1範囲当たりの値で割って小数点切り捨て、これに1階調あたりの値を掛け算
+
+        //            //100
+        //            60 / 63.75 = 0.94117647
+        //            100 / 63.75 = 1.5686275
+        //300 / 63.75 = 4.7058824
+        //                1000 / 63.75 = 15.686275
+        //                255 / 63.75 = 4
+        //                254 / 63.75 = 3.9843137
+        //        }
+        private double[] InvertGammaColor(byte[] pixels, int colorsCount, double gamma)
+        {
+            double[] localGammas = MakeLocalGamma(colorsCount, gamma);
+
+            double[] vs = new double[pixels.Length];
+            double step = 1.0 / colorsCount;//0.25
+            double stepColor = 1.0 / (colorsCount - 1);//0.3333
+            int splitCount = colorsCount - 1;
+            
+            double[] begins = new double[localGammas.Length];
+            for (int i = 0; i < localGammas.Length; i++)
+            {
+                begins[i] = stepColor * i;
+            }
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                byte pv = pixels[i];
+                if (pv == 1) { var inu = 0; }
+                double v = pv / 255.0;
+                int vv = (int)(v / stepColor);
+                var correct = Math.Pow(v, localGammas[vv]);
+                var neko = (begins[vv] + (Math.Pow((v - begins[vv]) * splitCount, localGammas[vv]) / splitCount)) * 255.0;                
+                vs[i] = neko;
+                
+
+            }
+            return vs;
+        }
         private double[] MakeLocalGamma(int colorsCount, double gamma)
         {
             //int count = colorsCount;
@@ -923,7 +944,7 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
         {
             if (MyBitmapSource == null) return;
 
-            
+
         }
 
         private void Button10_Click(object sender, RoutedEventArgs e)
