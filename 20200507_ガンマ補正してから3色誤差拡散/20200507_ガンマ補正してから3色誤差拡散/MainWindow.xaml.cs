@@ -36,8 +36,7 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
             this.Drop += MainWindow_Drop;
             MyGrid.MouseLeftButtonDown += (s, e) => Panel.SetZIndex(MyImageOrigin, 1);
             MyGrid.MouseLeftButtonUp += (s, e) => Panel.SetZIndex(MyImageOrigin, -1);
-            double gamma = 2.2;
-            var neko = MakeTableTest(4, gamma);
+
             MyInitialize();
 
             //            デバッグビルドでのみ特定のコードがコンパイルされるようにする - .NET Tips(VB.NET, C#...)
@@ -70,7 +69,7 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
         private void MyInitialize()
         {
             //アプリに埋め込んだ画像を読み込んで、Gray8に変換して読み込む
-            string path = "_20200502_2値に誤差拡散でガンマ補正.grayScale.bmp";
+            string path = "_20200507_ガンマ補正してから3色誤差拡散.grayScale.bmp";
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
             using (var stream = assembly.GetManifestResourceStream(path))
             {
@@ -109,56 +108,7 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
         }
 
 
-        /// <summary>
-        /// ガンマ補正なし2値化、FloydSteinbergで誤差拡散、PixelFormat.Gray8グレースケール画像専用
-        /// </summary>
-        /// <param name="source">元画像のピクセルの輝度値</param>
-        /// <returns></returns>
-        private BitmapSource D1_Color2(BitmapSource source)
-        {
-            //画素値の配列作成
-            int width = source.PixelWidth;
-            int height = source.PixelHeight;
-            int stride = width;
-            byte[] pixels = new byte[height * stride];//変換先画像用
-            source.CopyPixels(pixels, stride, 0);
-            double[] gosaPixels = new double[height * stride];//誤差計算用
-            Array.Copy(pixels, gosaPixels, height * stride);
-            int p;//座標を配列のインデックスに変換した値用
-            double gosa;//誤差(変換前 - 変換後)
 
-            //  * 7
-            //3 5 1
-            //￣16￣
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    //注目ピクセルのインデックス
-                    p = y * stride + x;
-                    //しきい値127.5未満なら0にする、それ以外は255にする
-                    pixels[p] = (gosaPixels[p] < 127.5) ? (byte)0 : (byte)255;
-                    //誤差拡散
-                    gosa = (gosaPixels[p] - pixels[p]) / 16.0;
-                    if (x != width - 1)
-                        //右
-                        gosaPixels[p + 1] += gosa * 7;
-                    if (y < height - 1)
-                    {
-                        p += stride;
-                        //下
-                        gosaPixels[p] += gosa * 5;
-                        if (x != 0)
-                            //左下
-                            gosaPixels[p - 1] += gosa * 3;
-                        if (x != width - 1)
-                            //右下
-                            gosaPixels[p + 1] += gosa * 1;
-                    }
-                }
-            }
-            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
-        }
 
         //ガンマ補正2色
         /// <summary>
@@ -178,65 +128,15 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
             return vs;
         }
 
-        private BitmapSource D2_Color2Gamma(BitmapSource source)
+        /// <summary>
+        /// ガンマ補正なしで0 127 255の3色に減色、FloydSteinbergで誤差拡散、PixelFormat.Gray8グレースケール画像専用
+        /// 0～84を0に変換、85～170を127、それ以外を255に変換
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        private BitmapSource D1_Color3(BitmapSource source)
         {
-            int width = source.PixelWidth;
-            int height = source.PixelHeight;
-            int stride = width;
-            byte[] pixels = new byte[height * stride];
-            source.CopyPixels(pixels, stride, 0);
-
-            //2.2で逆ガンマ補正した値の配列、誤差拡散計算用
-            double[] gosaPixels = InvertGamma2Color(pixels, 2.2);
-
-            int p;//座標を配列のインデックスに変換した値用
-            double gosa;//誤差(変換前 - 変換後)
-
-            //  * 7
-            //3 5 1
-            //￣16￣
-
-            //double型で計算
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    //注目ピクセルのインデックス
-                    p = y * stride + x;
-                    //しきい値は127.5、未満なら0にする、それ以外は255にする
-                    pixels[p] = (gosaPixels[p] < 127.5) ? (byte)0 : (byte)255;
-                    //誤差拡散
-                    gosa = (gosaPixels[p] - pixels[p]) / 16.0;
-                    if (x != width - 1)
-                        //右
-                        gosaPixels[p + 1] += gosa * 7;
-                    if (y < height - 1)
-                    {
-                        p += stride;
-                        //下
-                        gosaPixels[p] += gosa * 5;
-                        if (x != 0)
-                            //左下
-                            gosaPixels[p - 1] += gosa * 3;
-                        if (x != width - 1)
-                            //右下
-                            gosaPixels[p + 1] += gosa * 1;
-                    }
-                }
-            }
-            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
-        }
-
-
-
-
-
-        //ここから3色(黒、灰、白)
-        //0,127,255の3色に変換
-
-        //ガンマ補正なし
-        private BitmapSource D3_Color3(BitmapSource source)
-        {
+            //画素値の配列作成
             int width = source.PixelWidth;
             int height = source.PixelHeight;
             int stride = width;
@@ -263,15 +163,15 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
                     //誤差拡散
                     gosa = (gosaPixels[p] - pixels[p]) / 16.0;
                     if (x != width - 1)
-                        gosaPixels[p + 1] += gosa * 7;
+                        gosaPixels[p + 1] += gosa * 7;//右
                     if (y < height - 1)
                     {
                         p += stride;
-                        gosaPixels[p] += gosa * 5;
+                        gosaPixels[p] += gosa * 5;//下
                         if (x != 0)
-                            gosaPixels[p - 1] += gosa * 3;
+                            gosaPixels[p - 1] += gosa * 3;//左下
                         if (x != width - 1)
-                            gosaPixels[p + 1] += gosa * 1;
+                            gosaPixels[p + 1] += gosa * 1;//右下
                     }
                 }
             }
@@ -279,7 +179,12 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
         }
 
         //0.0～1.0までを一括2.2でガンマ補正してから変換
-        private BitmapSource D4_Color3Gamma(BitmapSource source)
+        /// <summary>
+        /// 全体をガンマ値2.2で補正してから減色、誤差拡散
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        private BitmapSource D2_Color3Gamma(BitmapSource source)
         {
             int width = source.PixelWidth;
             int height = source.PixelHeight;
@@ -327,8 +232,8 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
 
 
 
-        //0.0～0.5と0.5～1.0を別々にガンマ補正、ガンマ値は両方とも2.2
-        private BitmapSource D5_Color3EachGamma(BitmapSource source)
+        //0.0～0.5と0.5～1.0に2分して別々にガンマ補正、ガンマ値は両方とも2.2
+        private BitmapSource D3_Color3EachGamma(BitmapSource source)
         {
             int width = source.PixelWidth;
             int height = source.PixelHeight;
@@ -375,7 +280,7 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
         }
         //
         /// <summary>
-        /// 3色用ガンマ補正、0～0.5までと0.5～1.0までをそれぞれで補正する
+        /// 3色用ガンマ補正用、0～0.5までと0.5～1.0までを、それぞれ2.2で補正した配列を返す
         /// </summary>
         /// <param name="pixels"></param>
         /// <param name="gamma"></param>
@@ -395,32 +300,40 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
                 {
                     vs[i] = ((0.5 + Math.Pow((d - 0.5) * 2, gamma) / 2.0) * 255);
                 }
-                //四捨五入なし
             }
             return vs;
         }
 
 
+        //E:\オレ\エクセル\画像処理.xlsm_ガンマ補正_$E$71
 
         //0.0～0.5と0.5～1.0を別々にガンマ補正、ガンマ値は
         //0.0～0.5は2.2
-        //0.5～1.0は計算
-        private BitmapSource D6_Color3EachGamma(BitmapSource source)
+        //0.5～1.0は計算して1.3243119で補正
+        private BitmapSource D4_Color3EachGamma2(BitmapSource source)
         {
             int width = source.PixelWidth;
             int height = source.PixelHeight;
             int stride = width;
             byte[] pixels = new byte[height * stride];//もとの値Pixels
             source.CopyPixels(pixels, stride, 0);
-
+            //0～0.5区間で使うガンマ値は初期の2.2
             double gamma1 = 2.2;
-            //0.5～1.0までに使うガンマ値を計算
-            //
-            //開始値+((入力値 - 開始値) * 分割数) ^ 
+
+            //0.5～1.0区間で使うガンマ値を計算
+            //開始値は0.5これを初期γで補正する
+
+            //補正後 = 0.72974005
+            // = 開始値 ^ (1 / 初期γ)
+            // = 0.5 ^ (1 / 2.2)
+            // = 0.72974005
             //0.5のガンマ補正後の値 = 0.7297401
             double correct = Math.Pow(0.5, 1.0 / gamma1);
-            //0.5～1.0までに使うガンマ値を計算
-            //-(2.2-1.0)*0.7297401+2.2=1.3243119
+
+            //0.5～1.0区間で使うガンマ値を、0.5の補正後値を使って計算すると
+            // = (-ガンマ値全体距離 * 補正後) + 初期γ
+            // = -(2.2 - 1.0) * 0.72974005) + 2.2
+            // = 1.3243119
             double gamma2 = -(gamma1 - 1.0) * correct + gamma1;
 
             //逆ガンマ補正した値の配列、誤差拡散計算用
@@ -471,330 +384,26 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
         private double[] InvertEachGamma3Color(byte[] pixels, double gamma1, double gamma2)
         {
             double[] vs = new double[pixels.Length];
-
+            //0～255を0～1に変換して補正してから、また0～255に戻す
             for (int i = 0; i < pixels.Length; i++)
             {
                 double d = pixels[i] / 255.0;
                 if (d <= 0.5)
                 {
-                    vs[i] = (Math.Pow(d * 2, gamma1) / 2.0 * 255);
+                    vs[i] = Math.Pow(d * 2, gamma1) / 2.0 * 255;
                 }
                 else
                 {
-                    vs[i] = ((0.5 + Math.Pow((d - 0.5) * 2, gamma2) / 2.0) * 255);
+                    //0.5～1.0区間は
+                    // = 開始値 + ((入力値 - 開始値) * 分割数) ^ ガンマ値 / 分割数
+                    // = 0.5 + ((入力値 - 0.5) * 2) ^ ガンマ値 / 2
+                    vs[i] = (0.5 + (Math.Pow((d - 0.5) * 2, gamma2) / 2.0)) * 255;
                 }
-                //四捨五入なし
             }
             return vs;
         }
 
 
-
-        //ここから4色(黒、灰、白)
-        //0, 63, 191, 255の4色に変換、それぞれのガンマ補正の範囲は
-        //0~63, 64~127,128~191, 191~255
-        //0.0～0.33..、0.33～0.66、0.66～1.0を別々にガンマ補正、ガンマ値は
-        //0.0～0.33は2.2
-        //0.33～0.66、0.66～1.0は計算
-        private BitmapSource D10_Color4EachGammaByte(BitmapSource source)
-        {
-            int width = source.PixelWidth;
-            int height = source.PixelHeight;
-            int stride = width;
-            byte[] pixels = new byte[height * stride];//もとの値Pixels
-            source.CopyPixels(pixels, stride, 0);
-            double gamma = 2.2;
-
-
-            double[] gosaPixels = InvertGamma4Color(pixels, 4, gamma);//誤差計算用
-
-            int p;//座標を配列のインデックスに変換した値用
-            double gosa;//誤差(変換前 - 変換後)
-
-            //  * 7
-            //3 5 1
-            //￣16￣
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    //注目ピクセルのインデックス
-                    p = y * stride + x;
-                    //4色に変換
-                    if (gosaPixels[p] < 64) pixels[p] = 0;
-                    else if (gosaPixels[p] < 128) pixels[p] = 85;
-                    else if (gosaPixels[p] < 192) pixels[p] = 170;
-                    else pixels[p] = 255;
-
-                    //誤差拡散
-                    gosa = (gosaPixels[p] - pixels[p]) / 16.0;
-                    if (x != width - 1)
-                        //右
-                        gosaPixels[p + 1] += gosa * 7;
-                    if (y < height - 1)
-                    {
-                        p += stride;
-                        //下
-                        gosaPixels[p] += gosa * 5;
-                        if (x != 0)
-                            //左下
-                            gosaPixels[p - 1] += gosa * 3;
-                        if (x != width - 1)
-                            //右下
-                            gosaPixels[p + 1] += gosa * 1;
-                    }
-                }
-            }
-            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
-        }
-
-
-        private double[] InvertGamma4Color(byte[] pixels, int colors, double gamma)
-        {
-            double[] vs = new double[pixels.Length];
-            double part = 1 / 3.0;
-            int splitCount = colors - 1;//分割数
-            //ガンマ補正値
-            double correctionValue補正後γ1 = Math.Pow(part * 1.0, 1.0 / gamma);
-            double correctionValue補正後γ2 = Math.Pow(part * 2.0, 1.0 / gamma);
-            double localγ1 = ((1.0 - gamma) * correctionValue補正後γ1) + gamma;
-            double localγ2 = ((1.0 - gamma) * correctionValue補正後γ2) + gamma;
-            double begin開始値1 = part * 1.0;
-            double begin開始値2 = part * 2.0;
-
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                double d = pixels[i] / 255.0;
-                if (d <= part * 1)
-                {
-                    vs[i] = (byte)(Math.Pow(d * splitCount, gamma) / splitCount * 255.0);
-                }
-                else if (d <= part * 2)
-                {
-                    vs[i] = (byte)((begin開始値1 + Math.Pow((d - begin開始値1) * splitCount, localγ1) / splitCount) * 255.0);
-                }
-                else
-                {
-                    vs[i] = (byte)((begin開始値2 + Math.Pow((d - begin開始値2) * splitCount, localγ2) / splitCount) * 255.0);
-                }
-                //四捨五入なし
-            }
-            return vs;
-        }
-
-
-
-
-        //多色対応
-        private BitmapSource D7_ColorEachGamma(BitmapSource source, int colorsCount)
-        {
-            int width = source.PixelWidth;
-            int height = source.PixelHeight;
-            int stride = width;
-            byte[] pixels = new byte[height * stride];//もとの値Pixels
-            source.CopyPixels(pixels, stride, 0);
-
-            double gamma1 = 2.2;
-
-            //色
-            double stepColor = 255.0 / (colorsCount - 1);//1階調あたり
-            double stepRange = 255.0 / colorsCount;//1範囲あたり
-
-            //逆ガンマ補正した値の配列、誤差拡散計算用
-            double[] gosaPixels = InvertGammaColor(pixels, colorsCount, gamma1);
-            //Array.Copy(pixels, gosaPixels, pixels.Length);
-
-            int p;//座標を配列のインデックスに変換した値用
-            double gosa;//誤差(変換前 - 変換後)
-
-            //  * 7
-            //3 5 1
-            //￣16￣
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    //注目ピクセルのインデックス
-                    p = y * stride + x;
-                    byte bb;
-                    double nv = gosaPixels[p];
-                    if (nv <= 0) bb = 0;
-                    else if (nv >= 255) bb = 255;
-                    else
-                    {
-                        int neko = (int)(nv / stepRange);
-                        bb = (byte)Math.Round((stepColor * neko), MidpointRounding.AwayFromZero);
-                    }
-                    pixels[p] = bb;
-
-
-                    //誤差拡散
-                    gosa = (gosaPixels[p] - pixels[p]) / 16.0;
-                    if (x != width - 1)
-                        gosaPixels[p + 1] += gosa * 7;
-                    if (y < height - 1)
-                    {
-                        p += stride;
-                        gosaPixels[p] += gosa * 5;
-                        if (x != 0)
-                            gosaPixels[p - 1] += gosa * 3;
-                        if (x != width - 1)
-                            gosaPixels[p + 1] += gosa * 1;
-                    }
-                }
-            }
-            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
-        }
-
-        //        private byte[] MakeColors(int count)
-        //        {
-        //            //4色のときの4色の値は？
-        //            //1階調あたりの値は85、これは255/(4色-1)で
-        //            //255/3＝85
-        //            //0 85 170 255
-
-        //            //変換範囲は？
-        //            //1範囲あたりの値は63.75、これは255／色数で
-        //            //255/4=63.75            
-        //            //if       63.75未満＝0
-        //            //else if 127.5未満＝85
-        //            //else if 191.25未満＝170
-        //            //else    それ以外＝255
-
-        //            // if v<=0 0
-        //            // else if v<=255 255
-        //            // else
-
-        //            //1範囲当たりの値で割って小数点切り捨て、これに1階調あたりの値を掛け算
-
-        //            //100
-        //            60 / 63.75 = 0.94117647
-        //            100 / 63.75 = 1.5686275
-        //300 / 63.75 = 4.7058824
-        //                1000 / 63.75 = 15.686275
-        //                255 / 63.75 = 4
-        //                254 / 63.75 = 3.9843137
-        //        }
-        private double[] InvertGammaColor(byte[] pixels, int colorsCount, double gamma)
-        {
-            double[] localGammas = MakeLocalGamma(colorsCount, gamma);
-
-            double[] vs = new double[pixels.Length];
-            double step = 1.0 / colorsCount;//0.25
-            double stepColor = 1.0 / (colorsCount - 1);//0.3333
-            int splitCount = colorsCount - 1;
-            
-            double[] begins = new double[localGammas.Length];
-            for (int i = 0; i < localGammas.Length; i++)
-            {
-                begins[i] = stepColor * i;
-            }
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                byte pv = pixels[i];
-                if (pv == 1) { var inu = 0; }
-                double v = pv / 255.0;
-                int vv = (int)(v / stepColor);
-                var correct = Math.Pow(v, localGammas[vv]);
-                var neko = (begins[vv] + (Math.Pow((v - begins[vv]) * splitCount, localGammas[vv]) / splitCount)) * 255.0;                
-                vs[i] = neko;
-                
-
-            }
-            return vs;
-        }
-        private double[] MakeLocalGamma(int colorsCount, double gamma)
-        {
-            //int count = colorsCount;
-            int count = colorsCount - 1;
-            double part = 1.0 / count;
-            double[] vs = new double[colorsCount];
-            //double[] vs = new double[count];
-            vs[0] = gamma;
-
-            double begin;//開始値
-            double gCorrect;//補正後γ
-            double gLength = gamma - 1.0;//γ全体距離
-            for (int i = 1; i < count + 1; i++)
-            {
-                begin = part * i;
-                gCorrect = Math.Pow(begin, 1.0 / gamma);
-                var gNew = (-gLength * gCorrect) + gamma;
-                vs[i] = gNew;
-            }
-            return vs;
-        }
-        //
-        /// <summary>
-        /// 0～255の値の変換テーブル作成、グレースケール画像用
-        /// </summary>
-        /// <param name="colorCount">色数</param>
-        /// <param name="gamma">2.2が基準</param>
-        /// <returns></returns>
-        private Dictionary<byte, byte> MakeTable(int colorCount, double gamma)
-        {
-            //0～255を0～1に変換した配列
-            double[] vv = Enumerable.Range(0, 256).Select(x => x / 255.0).ToArray();
-            //分割数
-            int splitCount = colorCount - 1;
-            //変換テーブル
-            Dictionary<byte, byte> table = new Dictionary<byte, byte>();
-            //1分割あたりの範囲
-            double part = 1.0 / splitCount;
-            //それぞれの範囲のガンマ値取得
-            double[] localGamma = MakeLocalGamma(colorCount, gamma);
-
-            for (int i = 0; i < 256; i++)
-            {
-                int neko = (int)(vv[i] / part);
-                double begin = part * neko;
-                double correctValue = begin + (Math.Pow((vv[i] - begin) * splitCount, localGamma[neko]) / splitCount);
-
-                table.Add((byte)i, (byte)Math.Round(correctValue * 255.0, MidpointRounding.AwayFromZero));
-            }
-            return table;
-        }
-
-        private Dictionary<byte, byte> MakeTableTest(int colorsCount, double gamma)
-        {
-            double[] vvv = Enumerable.Range(0, 256).Select(x => x / 255.0).ToArray();
-            int splitCount = colorsCount - 1;
-
-            Dictionary<byte, byte> kv = new Dictionary<byte, byte>();
-            double part = 1.0 / splitCount;
-            double[] localGamma = MakeLocalGamma(colorsCount, gamma);
-            byte[] cv = new byte[256];
-            int[] color = new int[colorsCount];
-            double colorRange = 255.0 / colorsCount;
-            for (int i = 1; i < localGamma.Length; i++)
-            {
-                color[i] = (int)(i * colorRange);//四捨五入のほうがいい？
-            }
-
-            int[] v = new int[256];
-            double[] inu = new double[256];
-            double[] uma = new double[256];
-            for (int i = 0; i < 256; i++)
-            {
-                int neko = (int)(vvv[i] / part);
-                v[i] = neko;
-
-                double begin = part * neko;
-                double ho = begin + (Math.Pow((vvv[i] - begin) * splitCount, localGamma[neko]) / splitCount);
-                ho *= 255.0;
-                inu[i] = ho;
-                uma[i] = Math.Round(ho, MidpointRounding.AwayFromZero);
-                kv.Add((byte)i, (byte)Math.Round(ho, MidpointRounding.AwayFromZero));
-            }
-
-
-            for (int i = 0; i < localGamma.Length; i++)
-            {
-
-            }
-
-            return kv;
-        }
 
 
 
@@ -885,73 +494,30 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
             if (MyBitmapSource == null) return;
-            Button1.Content = nameof(D1_Color2);
-            MyImage.Source = D1_Color2(MyBitmapSource);
+            Button1.Content = nameof(D1_Color3);
+            MyImage.Source = D1_Color3(MyBitmapSource);
         }
 
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
             if (MyBitmapSource == null) return;
-            Button2.Content = nameof(D2_Color2Gamma);
-            MyImage.Source = D2_Color2Gamma(MyBitmapSource);
+            Button2.Content = nameof(D2_Color3Gamma);
+            MyImage.Source = D2_Color3Gamma(MyBitmapSource);
         }
 
         private void Button3_Click(object sender, RoutedEventArgs e)
         {
             if (MyBitmapSource == null) return;
-            Button3.Content = nameof(D3_Color3);
-            MyImage.Source = D3_Color3(MyBitmapSource);
+            Button3.Content = nameof(D3_Color3EachGamma);
+            MyImage.Source = D3_Color3EachGamma(MyBitmapSource);
         }
 
         private void Button4_Click(object sender, RoutedEventArgs e)
         {
             if (MyBitmapSource == null) return;
-            Button4.Content = nameof(D4_Color3Gamma);
-            MyImage.Source = D4_Color3Gamma(MyBitmapSource);
+            Button4.Content = nameof(D4_Color3EachGamma2);
+            MyImage.Source = D4_Color3EachGamma2(MyBitmapSource);
         }
 
-        private void Button5_Click(object sender, RoutedEventArgs e)
-        {
-            if (MyBitmapSource == null) return;
-            Button5.Content = nameof(D5_Color3EachGamma);
-            MyImage.Source = D5_Color3EachGamma(MyBitmapSource);
-        }
-
-        private void Button6_Click(object sender, RoutedEventArgs e)
-        {
-            if (MyBitmapSource == null) return;
-            Button6.Content = nameof(D6_Color3EachGamma);
-            MyImage.Source = D6_Color3EachGamma(MyBitmapSource);
-        }
-
-        private void Button7_Click(object sender, RoutedEventArgs e)
-        {
-            if (MyBitmapSource == null) return;
-            int colorsCount = 3;
-            Button7.Content = nameof(D7_ColorEachGamma) + colorsCount + "Colors";
-            MyImage.Source = D7_ColorEachGamma(MyBitmapSource, colorsCount);
-        }
-
-        private void Button8_Click(object sender, RoutedEventArgs e)
-        {
-            if (MyBitmapSource == null) return;
-            int colorsCount = 4;
-            Button8.Content = nameof(D7_ColorEachGamma) + colorsCount + "Colors";
-            MyImage.Source = D7_ColorEachGamma(MyBitmapSource, colorsCount);
-        }
-
-        private void Button9_Click(object sender, RoutedEventArgs e)
-        {
-            if (MyBitmapSource == null) return;
-
-
-        }
-
-        private void Button10_Click(object sender, RoutedEventArgs e)
-        {
-            if (MyBitmapSource == null) return;
-            Button10.Content = nameof(D10_Color4EachGammaByte);
-            MyImage.Source = D10_Color4EachGammaByte(MyBitmapSource);
-        }
     }
 }
