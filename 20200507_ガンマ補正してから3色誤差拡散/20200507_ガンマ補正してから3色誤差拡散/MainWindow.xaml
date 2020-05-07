@@ -1,0 +1,41 @@
+﻿<Window x:Class="_20200507_ガンマ補正してから3色誤差拡散.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:_20200507_ガンマ補正してから3色誤差拡散"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="400" Width="614">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition/>
+      <ColumnDefinition Width="200"/>
+    </Grid.ColumnDefinitions>
+    <Grid>
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <Grid x:Name="MyGrid">
+          <Image x:Name="MyImageOrigin" Stretch="None" UseLayoutRounding="True"/>
+          <Image x:Name="MyImage" Stretch="None" UseLayoutRounding="True"/>
+        </Grid>
+      </ScrollViewer>
+    </Grid>
+
+    <StackPanel Grid.Column="1" Margin="8">
+      <Button x:Name="ButtonCopy" Content="Copy" Click="ButtonCopy_Click"/>
+      <Button x:Name="ButtonPaste" Content="Paste" Click="ButtonPaste_Click"/>
+
+      <Border Background="MediumAquamarine" Height="1" Margin="10"/>
+
+      <Button x:Name="Button1" Content="button1" Click="Button1_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button2" Content="button1" Click="Button2_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button3" Content="button1" Click="Button3_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button4" Content="button1" Click="Button4_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button5" Content="button1" Click="Button5_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button6" Content="button1" Click="Button6_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button7" Content="button1" Click="Button7_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button8" Content="button1" Click="Button8_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button9" Content="button1" Click="Button9_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button10" Content="button1" Click="Button10_Click" HorizontalContentAlignment="Left"/>
+    </StackPanel>
+  </Grid>
+</Window>
