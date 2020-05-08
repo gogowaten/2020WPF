@@ -1,18 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.DirectoryServices.ActiveDirectory;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 //Libcacaスタディ-5.グレイスケールディザリング
 //http://caca.zoy.org/study/part5.html
@@ -110,23 +101,6 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
 
 
 
-        //ガンマ補正2色
-        /// <summary>
-        /// もとの値を逆側にガンマ補正して返す、double型
-        /// </summary>
-        /// <param name="pixels">もとの値の配列</param>
-        /// <param name="gamma">ガンマ値</param>
-        /// <returns></returns>
-        private double[] InvertGamma2Color(byte[] pixels, double gamma)
-        {
-            double[] vs = new double[pixels.Length];
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                double d = pixels[i] / 255.0;
-                vs[i] = Math.Pow(d, gamma) * 255.0;
-            }
-            return vs;
-        }
 
         /// <summary>
         /// ガンマ補正なしで0 127 255の3色に減色、FloydSteinbergで誤差拡散、PixelFormat.Gray8グレースケール画像専用
@@ -176,6 +150,24 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
                 }
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
+        }
+
+
+        /// <summary>
+        /// もとの値を逆側にガンマ補正して返す、double型
+        /// </summary>
+        /// <param name="pixels">もとの値の配列</param>
+        /// <param name="gamma">ガンマ値</param>
+        /// <returns></returns>
+        private double[] InvertGamma2Color(byte[] pixels, double gamma)
+        {
+            double[] vs = new double[pixels.Length];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                double d = pixels[i] / 255.0;
+                vs[i] = Math.Pow(d, gamma) * 255.0;
+            }
+            return vs;
         }
 
         //0.0～1.0までを一括2.2でガンマ補正してから変換
@@ -232,6 +224,31 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
 
 
 
+        /// <summary>
+        /// 3色用ガンマ補正用、0～0.5までと0.5～1.0までを、それぞれ2.2で補正した配列を返す
+        /// </summary>
+        /// <param name="pixels"></param>
+        /// <param name="gamma"></param>
+        /// <returns></returns>
+        private double[] InvertGamma3Color(byte[] pixels, double gamma)
+        {
+            double[] vs = new double[pixels.Length];
+
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                double d = pixels[i] / 255.0;
+                if (d <= 0.5)
+                {
+                    vs[i] = (Math.Pow(d * 2, gamma) / 2.0 * 255);
+                }
+                else
+                {
+                    vs[i] = ((0.5 + Math.Pow((d - 0.5) * 2, gamma) / 2.0) * 255);
+                }
+            }
+            return vs;
+        }
+
         //0.0～0.5と0.5～1.0に2分して別々にガンマ補正、ガンマ値は両方とも2.2
         private BitmapSource D3_Color3EachGamma(BitmapSource source)
         {
@@ -278,34 +295,37 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
             }
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
-        //
+
+        //E:\オレ\エクセル\画像処理.xlsm_ガンマ補正_$E$71
+
         /// <summary>
-        /// 3色用ガンマ補正用、0～0.5までと0.5～1.0までを、それぞれ2.2で補正した配列を返す
+        /// 3色用ガンマ補正、0～0.5までと0.5～1.0までを指定したガンマ値で補正する
         /// </summary>
         /// <param name="pixels"></param>
-        /// <param name="gamma"></param>
+        /// <param name="gamma1">0.0～0.5までのガンマ値</param>
+        /// <param name="gamma2">0.5～1.0までのガンマ値</param>
         /// <returns></returns>
-        private double[] InvertGamma3Color(byte[] pixels, double gamma)
+        private double[] InvertEachGamma3Color(byte[] pixels, double gamma1, double gamma2)
         {
             double[] vs = new double[pixels.Length];
-
+            //0～255を0～1に変換して補正してから、また0～255に戻す
             for (int i = 0; i < pixels.Length; i++)
             {
                 double d = pixels[i] / 255.0;
                 if (d <= 0.5)
                 {
-                    vs[i] = (Math.Pow(d * 2, gamma) / 2.0 * 255);
+                    vs[i] = Math.Pow(d * 2, gamma1) / 2.0 * 255;
                 }
                 else
                 {
-                    vs[i] = ((0.5 + Math.Pow((d - 0.5) * 2, gamma) / 2.0) * 255);
+                    //0.5～1.0区間は
+                    // = 開始値 + ((入力値 - 開始値) * 分割数) ^ ガンマ値 / 分割数
+                    // = 0.5 + ((入力値 - 0.5) * 2) ^ ガンマ値 / 2
+                    vs[i] = (0.5 + (Math.Pow((d - 0.5) * 2, gamma2) / 2.0)) * 255;
                 }
             }
             return vs;
         }
-
-
-        //E:\オレ\エクセル\画像処理.xlsm_ガンマ補正_$E$71
 
         //0.0～0.5と0.5～1.0を別々にガンマ補正、ガンマ値は
         //0.0～0.5は2.2
@@ -374,36 +394,104 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
             return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
 
-        /// <summary>
-        /// 3色用ガンマ補正、0～0.5までと0.5～1.0までを指定したガンマ値で補正する
-        /// </summary>
-        /// <param name="pixels"></param>
-        /// <param name="gamma1">0.0～0.5までのガンマ値</param>
-        /// <param name="gamma2">0.5～1.0までのガンマ値</param>
-        /// <returns></returns>
-        private double[] InvertEachGamma3Color(byte[] pixels, double gamma1, double gamma2)
+
+        private BitmapSource D5_Color3EachGamma2蛇行走査(BitmapSource source)
         {
-            double[] vs = new double[pixels.Length];
-            //0～255を0～1に変換して補正してから、また0～255に戻す
-            for (int i = 0; i < pixels.Length; i++)
+            int width = source.PixelWidth;
+            int height = source.PixelHeight;
+            int stride = width;
+            byte[] pixels = new byte[height * stride];//もとの値Pixels
+            source.CopyPixels(pixels, stride, 0);
+            //0～0.5区間で使うガンマ値は初期の2.2
+            double gamma1 = 2.2;
+
+            //0.5～1.0区間で使うガンマ値を計算
+            //開始値は0.5これを初期γで補正する
+
+            //補正後 = 0.72974005
+            // = 開始値 ^ (1 / 初期γ)
+            // = 0.5 ^ (1 / 2.2)
+            // = 0.72974005
+            //0.5のガンマ補正後の値 = 0.7297401
+            //double correct = Math.Pow(0.5, gamma1);
+            double correct = Math.Pow(0.5, 1.0 / gamma1);
+
+            //0.5～1.0区間で使うガンマ値を、0.5の補正後値を使って計算すると
+            // = (-ガンマ値全体距離 * 補正後) + 初期γ
+            // = -(2.2 - 1.0) * 0.72974005) + 2.2
+            // = 1.3243119
+            double gamma2 = -(gamma1 - 1.0) * correct + gamma1;
+
+            //逆ガンマ補正した値の配列、誤差拡散計算用
+            double[] gosaPixels = InvertEachGamma3Color(pixels, gamma1, gamma2);
+
+            int p;//座標を配列のインデックスに変換した値用
+            double gosa;//誤差(変換前 - 変換後)
+
+            
+            for (int y = 0; y < height; y++)
             {
-                double d = pixels[i] / 255.0;
-                if (d <= 0.5)
+                if (y % 2 == 0)
                 {
-                    vs[i] = Math.Pow(d * 2, gamma1) / 2.0 * 255;
+                    //  * 7
+                    //3 5 1
+                    //￣16￣
+                    for (int x = 0; x < width; x++)
+                    {
+                        //注目ピクセルのインデックス
+                        p = y * stride + x;
+                        //3色に変換
+                        if (gosaPixels[p] < 85) pixels[p] = 0;
+                        else if (gosaPixels[p] < 171) pixels[p] = 127;
+                        else pixels[p] = 255;
+
+                        //誤差拡散
+                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
+                        if (x != width - 1)
+                            gosaPixels[p + 1] += gosa * 7;
+                        if (y < height - 1)
+                        {
+                            p += stride;
+                            gosaPixels[p] += gosa * 5;
+                            if (x != 0)
+                                gosaPixels[p - 1] += gosa * 3;
+                            if (x != width - 1)
+                                gosaPixels[p + 1] += gosa * 1;
+                        }
+                    }
                 }
                 else
                 {
-                    //0.5～1.0区間は
-                    // = 開始値 + ((入力値 - 開始値) * 分割数) ^ ガンマ値 / 分割数
-                    // = 0.5 + ((入力値 - 0.5) * 2) ^ ガンマ値 / 2
-                    vs[i] = (0.5 + (Math.Pow((d - 0.5) * 2, gamma2) / 2.0)) * 255;
+                    //7 *
+                    //1 5 3
+                    //￣16￣
+                    for (int x = width-1; x >= 0; x--)
+                    {
+                        //注目ピクセルのインデックス
+                        p = y * stride + x;
+                        //3色に変換
+                        if (gosaPixels[p] < 85) pixels[p] = 0;
+                        else if (gosaPixels[p] < 171) pixels[p] = 127;
+                        else pixels[p] = 255;
+
+                        //誤差拡散
+                        gosa = (gosaPixels[p] - pixels[p]) / 16.0;
+                        if (x != 0)
+                            gosaPixels[p - 1] += gosa * 7;
+                        if (y < height - 1)
+                        {
+                            p += stride;
+                            gosaPixels[p] += gosa * 5;
+                            if (x != 0)
+                                gosaPixels[p - 1] += gosa * 1;
+                            if (x != width - 1)
+                                gosaPixels[p + 1] += gosa * 3;
+                        }
+                    }
                 }
             }
-            return vs;
+            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
         }
-
-
 
 
 
@@ -519,5 +607,11 @@ namespace _20200507_ガンマ補正してから3色誤差拡散
             MyImage.Source = D4_Color3EachGamma2(MyBitmapSource);
         }
 
+        private void Button5_Click(object sender, RoutedEventArgs e)
+        {
+            if (MyBitmapSource == null) return;
+            Button5.Content = nameof(D5_Color3EachGamma2蛇行走査);
+            MyImage.Source = D5_Color3EachGamma2蛇行走査(MyBitmapSource);
+        }
     }
 }
