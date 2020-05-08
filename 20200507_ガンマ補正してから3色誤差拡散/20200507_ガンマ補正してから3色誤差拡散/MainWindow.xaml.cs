@@ -8,6 +8,10 @@ using System.Windows.Media.Imaging;
 //Libcacaスタディ-5.グレイスケールディザリング
 //http://caca.zoy.org/study/part5.html
 
+    //E:\オレ\エクセル\画像処理.xlsm_ガンマ補正_$A$49
+//    ガンマ補正してから黒灰白の3色に減色＋ディザリングしてみた、グレースケール画像 - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/05/08/211834
+
 
 namespace _20200507_ガンマ補正してから3色誤差拡散
 {
