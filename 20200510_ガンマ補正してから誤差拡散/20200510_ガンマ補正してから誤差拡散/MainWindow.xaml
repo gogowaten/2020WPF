@@ -42,6 +42,10 @@
       <Button x:Name="Button3" Content="button3" Click="Button3_Click" HorizontalContentAlignment="Left"/>
       <Button x:Name="Button4" Content="button4" Click="Button4_Click" HorizontalContentAlignment="Left"/>
       <Button x:Name="Button5" Content="button5" Click="Button5_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button6" Content="button6" Click="Button6_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button7" Content="button7" Click="Button7_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button8" Content="button8" Click="Button8_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button9" Content="button9" Click="Button9_Click" HorizontalContentAlignment="Left"/>
     </StackPanel>
   </Grid>
 </Window>
