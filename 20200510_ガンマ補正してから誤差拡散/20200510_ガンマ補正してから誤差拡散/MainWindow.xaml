@@ -31,7 +31,7 @@
                    TextAlignment="Center" VerticalAlignment="Center" FontSize="20"
                    MouseWheel="TextBlock_MouseWheel"/>
         <ScrollBar x:Name="ScrollBarCount" Value="3" SmallChange="1" LargeChange="10"
-                   Minimum="2" Maximum="255" MouseWheel="ScrollBarCount_MouseWheel" RenderTransformOrigin="0.5,0.5">
+                   Minimum="2" Maximum="256" MouseWheel="ScrollBarCount_MouseWheel" RenderTransformOrigin="0.5,0.5">
           <ScrollBar.RenderTransform>
             <RotateTransform Angle="180"/>
           </ScrollBar.RenderTransform>
@@ -46,6 +46,9 @@
       <Button x:Name="Button7" Content="button7" Click="Button7_Click" HorizontalContentAlignment="Left"/>
       <Button x:Name="Button8" Content="button8" Click="Button8_Click" HorizontalContentAlignment="Left"/>
       <Button x:Name="Button9" Content="button9" Click="Button9_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button10" Content="button10" Click="Button10_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button11" Content="button11" Click="Button11_Click" HorizontalContentAlignment="Left"/>
+      <Button x:Name="Button12" Content="button12" Click="Button12_Click" HorizontalContentAlignment="Left"/>
     </StackPanel>
   </Grid>
 </Window>
