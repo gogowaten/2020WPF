@@ -34,11 +34,11 @@ namespace _20200518_255or256
 
 
             byte[] vs = Enumerable.Range(0, 256).Select(x => (byte)x).ToArray();
-            MyTest(256, vs);
-            MyTest2(256, vs);
+            var v1 = MyTest(256, vs);
+            var v2 = MyTest2(256, vs);
             double[] vv = Enumerable.Range(0, 256).Select(x => x + 0.1).ToArray();
-            MyTest3(256, vv);
-            MyTest4(256, vv);
+            var v3 = MyTest3(256, vv);
+            var v4 = MyTest4(256, vv);
 
 
 
@@ -51,53 +51,53 @@ namespace _20200518_255or256
 
         }
 
-        private void MyTest(int colorCount, byte[] pixels)
+        private byte[] MyTest(int colorCount, byte[] pixels)
         {
             double step = 255.0 / colorCount;
             byte[] result = new byte[pixels.Length];
             for (int i = 0; i < pixels.Length; i++)
             {
-                double v = pixels[i];
-                int index = (int)(v / step);
+                int index = (int)(pixels[i] / step);
                 int ir = (int)(index * step);
                 result[i] = (byte)ir;
             }
+            return result;
         }
-        private void MyTest2(int colorCount, byte[] pixels)
+        private byte[] MyTest2(int colorCount, byte[] pixels)
         {
             double step = 256.0 / colorCount;
             byte[] result = new byte[pixels.Length];
             for (int i = 0; i < pixels.Length; i++)
             {
-                double v = pixels[i];
-                int index = (int)(v / step);
+                int index = (int)(pixels[i] / step);
                 int ir = (int)(index * step);
                 result[i] = (byte)ir;
             }
+            return result;
         }
-        private void MyTest3(int colorCount, double[] pixels)
+        private byte[] MyTest3(int colorCount, double[] pixels)
         {
             double step = 255.0 / colorCount;
             byte[] result = new byte[pixels.Length];
             for (int i = 0; i < pixels.Length; i++)
             {
-                double v = pixels[i];
-                int index = (int)(v / step);
+                int index = (int)(pixels[i] / step);
                 int ir = (int)(index * step);
                 result[i] = (byte)ir;
             }
+            return result;
         }
-        private void MyTest4(int colorCount, double[] pixels)
+        private byte[] MyTest4(int colorCount, double[] pixels)
         {
             double step = 256.0 / colorCount;
             byte[] result = new byte[pixels.Length];
             for (int i = 0; i < pixels.Length; i++)
             {
-                double v = pixels[i];
-                int index = (int)(v / step);
+                int index = (int)(pixels[i] / step);
                 int ir = (int)(index * step);
                 result[i] = (byte)ir;
             }
+            return result;
         }
 
 
@@ -168,12 +168,22 @@ namespace _20200518_255or256
             }
             return table;
         }
-
+        private byte[] MakePalette255(int colorsCount)
+        {
+            byte[] palette = new byte[colorsCount];
+            double stepColor = 255.0 / (colorsCount - 1);
+            for (int i = 0; i < colorsCount; i++)
+            {
+                double c = stepColor * i;
+                palette[i] = (byte)Math.Round(c, MidpointRounding.AwayFromZero);
+            }
+            return palette;
+        }
 
         private BitmapSource D1(BitmapSource source, int colorsCount)
         {
-            var convertTable = MakeColorTable(colorsCount);
-            double stepColor = 255.0 / colorsCount;//
+            double stepRange = 256.0 / colorsCount;//区範囲
+            var palette = MakePalette255(colorsCount);
 
             //画素値の配列作成
             int width = source.PixelWidth;
@@ -190,7 +200,10 @@ namespace _20200518_255or256
                 {
                     p = y * stride + x;
                     //変換
-                    byte v = (byte)(pixels[p] / stepColor);
+                    var v = pixels[p] / stepRange;
+                    int index = (int)v;//小数点以下切り捨て
+                    var vv = palette[index];
+                    pixels[p] = vv;
 
                 }
             }
