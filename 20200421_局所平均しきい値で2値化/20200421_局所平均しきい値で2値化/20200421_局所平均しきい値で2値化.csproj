@@ -6,6 +6,7 @@
     <RootNamespace>_20200421_局所平均しきい値で2値化</RootNamespace>
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x64</Platforms>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
 </Project>

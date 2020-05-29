@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
-
+using System.Windows.Media.Animation;
 
 namespace _20200421_局所平均しきい値で2値化
 {
@@ -706,6 +706,7 @@ namespace _20200421_局所平均しきい値で2値化
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button1.Content = nameof(LocalArea5x5Threshold);
             var sw = new Stopwatch();
             sw.Start();
@@ -715,6 +716,7 @@ namespace _20200421_局所平均しきい値で2値化
         }
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button2.Content = nameof(LocalThreshold);
             var sw = new Stopwatch();
             sw.Start();
@@ -725,6 +727,7 @@ namespace _20200421_局所平均しきい値で2値化
 
         private void Button3_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button3.Content = nameof(LocalThresholdMulti);
             var sw = new Stopwatch();
             sw.Start();
@@ -736,6 +739,7 @@ namespace _20200421_局所平均しきい値で2値化
 
         private void Button4_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button4.Content = nameof(LocalThreshold差分計算中央部だけ);
             var sw = new Stopwatch();
             sw.Start();
@@ -746,6 +750,7 @@ namespace _20200421_局所平均しきい値で2値化
 
         private void Button5_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button5.Content = nameof(LocalThreshold差分計算);
             var sw = new Stopwatch();
             sw.Start();
@@ -756,6 +761,7 @@ namespace _20200421_局所平均しきい値で2値化
 
         private void Button6_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button6.Content = nameof(LocalThreshold差分計算Multi);
             var sw = new Stopwatch();
             sw.Start();
@@ -766,6 +772,7 @@ namespace _20200421_局所平均しきい値で2値化
 
         private void Button7_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button7.Content = nameof(LocalThreshold差分計算Multi改);
             var sw = new Stopwatch();
             sw.Start();
