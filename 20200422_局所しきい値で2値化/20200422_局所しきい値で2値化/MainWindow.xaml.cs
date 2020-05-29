@@ -38,8 +38,10 @@ namespace _20200422_局所しきい値で2値化
             MyGrid.MouseLeftButtonDown += (s, e) => Panel.SetZIndex(MyImageOrigin, 1);
             MyGrid.MouseLeftButtonUp += (s, e) => Panel.SetZIndex(MyImageOrigin, -1);
 
-
+#if DEBUG
             MyInitialize();
+#endif
+
 
 
         }
@@ -1509,6 +1511,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button1.Content = nameof(Phansalkar);
             var sw = new Stopwatch();
             sw.Start();
@@ -1518,6 +1521,7 @@ namespace _20200422_局所しきい値で2値化
         }
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button2.Content = nameof(LocalAverage);
             var sw = new Stopwatch();
             sw.Start();
@@ -1528,6 +1532,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button3_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button3.Content = nameof(Niblack);
             var sw = new Stopwatch();
             sw.Start();
@@ -1539,6 +1544,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button4_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button4.Content = nameof(Sauvola);
             var sw = new Stopwatch();
             sw.Start();
@@ -1549,6 +1555,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button5_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button5.Content = nameof(Bernsen);
             var sw = new Stopwatch();
             sw.Start();
@@ -1559,6 +1566,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button6_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button6.Content = nameof(MidGray);
             var sw = new Stopwatch();
             sw.Start();
@@ -1569,6 +1577,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button7_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button7.Content = nameof(Contrast);
             var sw = new Stopwatch();
             sw.Start();
@@ -1579,6 +1588,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button8_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button8.Content = nameof(Median);
             var sw = new Stopwatch();
             sw.Start();
@@ -1590,6 +1600,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button9_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             int near = (int)ScrollBarLocalArea.Value;
             long keisanryou = (near * 2 + 1) * (near * 2 + 1) * MyBitmapSource.PixelWidth * MyBitmapSource.PixelHeight;
             if (keisanryou > 50_000_000)
@@ -1609,6 +1620,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button10_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button10.Content = nameof(Bernsen2);
             var sw = new Stopwatch();
             sw.Start();
@@ -1620,6 +1632,7 @@ namespace _20200422_局所しきい値で2値化
 
         private void Button11_Click(object sender, RoutedEventArgs e)
         {
+            if (MyImage.Source == null) return;
             Button11.Content = nameof(LimitedAverage);
             var sw = new Stopwatch();
             sw.Start();
