@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,24 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-//Indexed1 2色
-//Indexed2 4色
-//Indexed4 16色
-//Indexed8 256色
-//IndexedはGray8からの変換でも、色数を超えるとカラー色がパレットに入る
-//また、元の色数が17色以上だとIndexed8でも色がおかしくなる
-//しかし、パレットを指定すればこれを回避できる
-
-//Gray
-//Gray2 4色のグレースケール (0 85 170 255)
-//Gray4 16色のグレースケール (0 17 34 51 68 85 102 119 136 153 170 187 204 221 238 255)
-//Gray8 256色のグレースケール(普通のグレースケール)
-//Indexedとは違って色は固定されているみたい
-//Indexedと同じで誤差拡散処理される
-//
-
-
-namespace _20200606_pixelformatsとファイルサイズ
+namespace _20200606_16ColorsGray
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -124,20 +106,39 @@ namespace _20200606_pixelformatsとファイルサイズ
         }
 
 
-        #region 減色
-        //private Dictionary<int, byte> MakeTable(int colorsCount)
-        //{
-        //    var table = new Dictionary<int, byte>();
-        //    double stepColor = 1.0 / (colorsCount - 1);
+        //普通の減色
+        private BitmapSource To16GrayColors(BitmapSource source, int colorsCount = 16)
+        {
+            //palette作成
+            byte[] palette = MakePalette255(colorsCount);
 
-        //    for (int i = 0; i < colorsCount; i++)
-        //    {
-        //        table.Add(i, (byte)((stepColor * i * 255) + 0.5));//四捨五入
-        //        //table.Add(i, (byte)Math.Round(stepColor * i * 255, MidpointRounding.AwayFromZero));
-        //    }
-        //    table.Add(colorsCount, 255);
-        //    return table;
-        //}
+            double step = 256.0 / colorsCount;
+
+            //画素値の配列作成
+            int width = source.PixelWidth;
+            int height = source.PixelHeight;
+            int stride = width;
+            byte[] pixels = new byte[height * stride];//もとの値Pixels
+            source.CopyPixels(pixels, stride, 0);
+
+            int p;//座標を配列のインデックスに変換した値用
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    p = y * stride + x;
+                    //変換
+                    var index = (int)(pixels[p] / step);//小数点以下切り捨て
+                    pixels[p] = palette[index];
+                }
+            }
+            return BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, pixels, stride);
+        }
+
+        #region 減色、誤差拡散
+        //誤差拡散
+
         private byte[] MakePalette255(int colorsCount)
         {
             byte[] palette = new byte[colorsCount + 1];
@@ -551,11 +552,11 @@ namespace _20200606_pixelformatsとファイルサイズ
 
         private void SaveImageWithFormatNameAndTime(BitmapSource source, string filePath)
         {
-            filePath += DateTime.Now.ToString("yyyMMdd_HHmmss") + "_" + source.Format.ToString();
+            string addFileName = DateTime.Now.ToString("yyyMMdd_HHmmss") + "_" + source.Format.ToString();
             var saveFileDialog = new Microsoft.Win32.SaveFileDialog();
             saveFileDialog.Filter = "*.png|*.png|*.bmp|*.bmp|*.tiff|*.tiff";
             saveFileDialog.AddExtension = true;
-            saveFileDialog.FileName = System.IO.Path.GetFileNameWithoutExtension(filePath) + "_";
+            saveFileDialog.FileName = System.IO.Path.GetFileNameWithoutExtension(filePath) + "_" + addFileName;
             saveFileDialog.InitialDirectory = System.IO.Path.GetDirectoryName(filePath);
             if (saveFileDialog.ShowDialog() == true)
             {
@@ -737,6 +738,12 @@ namespace _20200606_pixelformatsとファイルサイズ
             MyImage.Source = D12(MyBitmapSource, (int)ScrollBarCount.Value);
         }
 
+        private void Button6_Click(object sender, RoutedEventArgs e)
+        {
+            if (MyBitmapSource == null) return;
+            Button6.Content = nameof(To16GrayColors);
+            MyImage.Source = To16GrayColors(MyBitmapSource);
+        }
 
 
 
@@ -803,5 +810,6 @@ namespace _20200606_pixelformatsとファイルサイズ
             var bmp = new FormatConvertedBitmap((BitmapSource)MyImage.Source, PixelFormats.Gray4, null, 0);
             SaveImageWithFormatNameAndTime(bmp, MyFilePath);
         }
+
     }
 }
