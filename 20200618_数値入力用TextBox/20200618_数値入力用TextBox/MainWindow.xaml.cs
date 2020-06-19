@@ -15,7 +15,9 @@ using System.Windows.Input;
 //          正規表現を使って文字列を置換するには？［C#／VB］：.NET TIPS - ＠IT
 //https://www.atmarkit.co.jp/ait/articles/1702/08/news023.html
 
-
+//ブログ記事
+//WPFで数字とハイフンとピリオドだけ入力できるテキストボックス、-0.0に意味はある？ - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/06/19/152006
 
 namespace _20200618_数値入力用TextBox
 {
