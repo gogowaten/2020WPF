@@ -28,8 +28,8 @@ namespace _20200618_数値入力用TextBox
         {
             InitializeComponent();
 
-//            IEEE 754における負のゼロ - Wikipedia
-//https://ja.wikipedia.org/wiki/IEEE_754%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E8%B2%A0%E3%81%AE%E3%82%BC%E3%83%AD
+            //            IEEE 754における負のゼロ - Wikipedia
+            //https://ja.wikipedia.org/wiki/IEEE_754%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E8%B2%A0%E3%81%AE%E3%82%BC%E3%83%AD
 
             //0と-0は同じ？
             var str = "-0.0000";
@@ -49,7 +49,7 @@ namespace _20200618_数値入力用TextBox
         {
             var textbox = (TextBox)sender;
             string str = textbox.Text;//文字列
-            var inputStr = e.Text;//入力された文字
+            var inputStr = e.Text;//入力された文字            
 
             //正規表現で入力文字の判定、数字とピリオド、ハイフンならtrue
             bool neko = new System.Text.RegularExpressions.Regex("[0-9.-]").IsMatch(inputStr);
@@ -102,6 +102,12 @@ namespace _20200618_数値入力用TextBox
             {
                 e.Handled = true;
             }
+        }
+
+        //スペースキーが押されたときは、それを無効にする
+        private void MyTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space) e.Handled = true;
         }
     }
 }

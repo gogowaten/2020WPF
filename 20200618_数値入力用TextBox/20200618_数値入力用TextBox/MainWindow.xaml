@@ -12,6 +12,7 @@
       <StackPanel Width="200">
         <TextBox x:Name="MyTextBox" TextAlignment="Center" Margin="5"
                  InputMethod.IsInputMethodSuspended="True"
+                 PreviewKeyDown="MyTextBox_PreviewKeyDown"
                  PreviewTextInput="MyTextBox_PreviewTextInput"
                  LostFocus="MyTextBox_LostFocus"
                  CommandManager.PreviewExecuted="MyTextBox_PreviewExecuted"/>
