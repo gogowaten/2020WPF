@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="200" d:DesignWidth="400">
   <Grid>
-    <StackPanel Background="Red">
+    <StackPanel Background="Pink">
       <TextBox x:Name="MyTextBox" Text="{Binding Path=MyText, Mode=TwoWay,
         UpdateSourceTrigger=PropertyChanged,
         RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:UserControl1}}"/>

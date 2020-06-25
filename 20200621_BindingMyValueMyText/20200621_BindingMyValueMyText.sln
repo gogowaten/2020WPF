@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20200621_BindingMyValueMyText", "20200621_BindingMyValueMyText\20200621_BindingMyValueMyText.csproj", "{F43CBF2C-C4A0-4354-8DE7-E39C183367DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "20200621_BindingMyValueMyText", "20200621_BindingMyValueMyText\20200621_BindingMyValueMyText.csproj", "{F43CBF2C-C4A0-4354-8DE7-E39C183367DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "別プロジェクト", "別プロジェクト\別プロジェクト.csproj", "{A97012B5-D9E5-4949-8E55-E5B90B0AA72E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{F43CBF2C-C4A0-4354-8DE7-E39C183367DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F43CBF2C-C4A0-4354-8DE7-E39C183367DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F43CBF2C-C4A0-4354-8DE7-E39C183367DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A97012B5-D9E5-4949-8E55-E5B90B0AA72E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A97012B5-D9E5-4949-8E55-E5B90B0AA72E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A97012B5-D9E5-4949-8E55-E5B90B0AA72E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A97012B5-D9E5-4949-8E55-E5B90B0AA72E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

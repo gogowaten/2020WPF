@@ -25,16 +25,17 @@ namespace _20200621_BindingMyValueMyText
 
         }
 
-        //外からは参照されたくないので
-        //protectedな依存関係プロパティ
-        protected string MyText
+        //別プロジェクト(外)からは参照されたくないので
+        //protected internalな依存関係プロパティにしてみた
+        protected internal string MyText
         {
             get { return (string)GetValue(MyTextProperty); }
             set { SetValue(MyTextProperty, value); }
         }
-        protected static readonly DependencyProperty MyTextProperty =
+        protected internal static readonly DependencyProperty MyTextProperty =
                     DependencyProperty.Register(nameof(MyText), typeof(string), typeof(UserControl1),
                         new PropertyMetadata("myTextBox", MyTextProperyChanged));
+
         private static void MyTextProperyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var uc = d as UserControl1;
