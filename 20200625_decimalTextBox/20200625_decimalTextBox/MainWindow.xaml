@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20200625_decimalTextBox"
         mc:Ignorable="d"
-        Title="MainWindow" Height="300" Width="400">
+        Title="MainWindow" Height="400" Width="400">
   <Grid>
     <Viewbox>
       <StackPanel Width="200">
@@ -29,13 +29,17 @@
         <Slider Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:MainWindow}, 
           Path=MyValue, Mode=TwoWay}"
                 Minimum="-100" Maximum="2000"/>
+        <Button Content="" Click="Button_Click"/>
         <Button Content="0.000" Click="Button_Click"/>
         <Button Content="C" Click="Button_Click"/>
         <Button Content="#,0" Click="Button_Click"/>
+        <Button Content="N" Click="Button_Click"/>
+        <Button Content="P" Click="Button_Click"/>
         <Button Content="だいたい0個" Click="Button_Click"/>
         <Button Content="だいたい0個;だいたい-0個;だいたい0個" Click="Button_Click"/>
-        <Button Content="風速0.0m;風速-0.0m;風速0.0m" Click="Button_Click"/>
-        <Button Content="d4" Click="Button_Click"/>
+        <Button Content="気温0.0度;気温-0.0度;気温0.0度" Click="Button_Click"/>
+        <Button Content="D4" Click="Button_Click"/>
+        <Button Content="E4" Click="Button_Click"/>
       </StackPanel>
     </Viewbox>
   </Grid>

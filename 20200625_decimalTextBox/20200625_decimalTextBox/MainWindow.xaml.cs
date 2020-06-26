@@ -1,55 +1,51 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 //依存関係プロパティ
 
 //目的
 //テキストボックスのTextプロパティに数値型の依存関係プロパティをBindingしておいて
 //テキストボックスに入力中(UpdateSourceTrigger=PropertyChanged)にも更新したい
-//書式の設定もしたい。入力中は書式を外して、ロストフォーカス時に書式を適用
+//要はテキストボックスと数値型依存関係プロパティが連動していればいい
+//追加で、書式の設定もしたい。入力中は書式を外して、ロストフォーカス時に書式を適用
 
 //問題
-//-0.2と入力する場合に順番にキーを打つと、「-0」の時点で強制的に「0」にされてしまう
+//-0.2と入力する場合。順番にキーを打つと、「-0」の時点で強制的に「0」にされてしまう
 //また、0.2の場合も「0.」まで打つと強制的に「0」にされてしまう
 //このような問題はUpdateSourceTrigger=PropertyChangedじゃなければ起きない
 
+//結果
+//最初に考えていたのは
+//テキストボックスのTextプロパティ ←Binding→ 数値型依存関係プロパティ
+//こうだったけど
+//テキストボックスのTextプロパティ ←Binding→ 文字列型依存関係プロパティ ←連携→ 数値型依存関係プロパティ
+//こう、あいだに文字列型依存関係プロパティを挟んだ
+//これで目的達成できた
+
 //String型とdecimal型の依存関係プロパティを用意、MyTextとMyValue
-//それぞれにPropertyChangedCallbackを用意
-//MyTextのCallbackでは、decimal.TryParseで数値に変換できたときだけMyValueを変更する
-//MyValueのCallbackでは、ToStringで文字列に変換してMyTextに当てる
+//それぞれに値変更時のコールバック、PropertyChangedCallbackを用意
+//MyTextのCallback
+//      decimal.TryParseで数値に変換できたら、それをMyValueに入れる
+//MyValueのCallback
+//      ToStringで文字列に変換してMyTextに入れる
+//これは無限ループしそうだけど、なぜかならない
 
-//テキストボックスのTextプロパティとMyTextをBinding
-
+//                                          
 //
-//無限ループしそうだけど、そうはならない
 namespace _20200625_decimalTextBox
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
-    {
-        //private string MyStringFormat = "C";
+    {   
         public MainWindow()
         {
             InitializeComponent();
 
         }
 
-
-
+        #region 依存関係プロパティ
+        //数値型依存関係プロパティ、今回はdecimal型にした
         public decimal MyValue
         {
             get { return (decimal)GetValue(MyValueProperty); }
@@ -74,7 +70,7 @@ namespace _20200625_decimalTextBox
             }
         }
 
-
+        //文字列型依存関係プロパティ
         public string MyText
         {
             get { return (string)GetValue(MyTextProperty); }
@@ -89,16 +85,14 @@ namespace _20200625_decimalTextBox
         {
             var mw = d as MainWindow;
             var s = (string)e.NewValue;
-            if (s == "-0" || s == "-0.") { return; }
+            if (s == "-0" || s == "-0.") return;
             if (decimal.TryParse(s, out decimal m))
             {
                 mw.MyValue = m;
             }
         }
 
-
-
-
+        //書式指定用の文字列型依存関係プロパティ
         public string MyStringFormat
         {
             get { return (string)GetValue(MyStringFormatProperty); }
@@ -107,7 +101,7 @@ namespace _20200625_decimalTextBox
 
         public static readonly DependencyProperty MyStringFormatProperty =
             DependencyProperty.Register(nameof(MyStringFormat), typeof(string), typeof(MainWindow),
-                new PropertyMetadata("", OnMyStrinfFormatChanged,CoerceMyStrinfFormatValue));
+                new PropertyMetadata("", OnMyStrinfFormatChanged, CoerceMyStrinfFormatValue));
 
         private static void OnMyStrinfFormatChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -127,13 +121,16 @@ namespace _20200625_decimalTextBox
             }
             catch (Exception)
             {
-                //書き換え
+                //エラーなら元の書式に書き換え
                 s = mw.MyStringFormat;
             }
             return s;
         }
+        #endregion 依存関係プロパティ
 
 
+        #region textboxのイベント時の動作
+        //フォーカス時に文字列全部を選択
         private void MyTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
             var tb = sender as TextBox;
@@ -141,12 +138,14 @@ namespace _20200625_decimalTextBox
             tb.SelectAll();
         }
 
+        //ロストフォーカス時に書式適用
         private void MyTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
             var tb = sender as TextBox;
             tb.Text = MyValue.ToString(MyStringFormat);
         }
 
+        //左クリック時にも文字列全部を選択
         private void MyTextBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var tb = sender as TextBox;
@@ -156,14 +155,16 @@ namespace _20200625_decimalTextBox
                 e.Handled = true;
             }
         }
+        #endregion textboxのイベント時の動作
+
 
         //        書式を指定して数値を文字列に変換する - .NET Tips(VB.NET, C#...)
         //https://dobon.net/vb/dotnet/string/inttostring.html
-
+        //書式変更確認用ボタンクリック時の動作
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             var tb = sender as Button;
-            MyStringFormat = tb.Content.ToString();// "0.000";
+            MyStringFormat = tb.Content.ToString();
         }
 
 
