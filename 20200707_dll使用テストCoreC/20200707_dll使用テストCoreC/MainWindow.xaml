@@ -6,13 +6,30 @@
         xmlns:local="clr-namespace:_20200707_dll使用テストCoreC"
         xmlns:uc="clr-namespace:ControlLibraryCore20200620;assembly=ControlLibraryCore20200620"
         mc:Ignorable="d"
-        Title="MainWindow" Height="200" Width="400">
-    <Grid>
+        Title="MainWindow" Height="300" Width="400">
+    <Grid Background="MistyRose">
     <StackPanel>
-      <uc:NumericUpDown MyValue="-123.456" MyStringFormat="0000.0000"/>
-      <uc:NumericUpDown MyValue="-123.456" MyStringFormat="c"/>
-      <uc:NumericUpDown MyValue="-123.456" MyStringFormat="気温0.0"/>
-      <uc:NumericUpDown MyValue="-123.456" MyStringFormat="気温0.0;気温-0.0"/>
+      <StackPanel.Resources>
+        <Style TargetType="uc:NumericUpDown">
+          <Setter Property="Margin" Value="8"/>
+        </Style>
+      </StackPanel.Resources>
+      <uc:NumericUpDown MyValue="-123.456"/>
+      <uc:NumericUpDown MyValue="-123.456" MyStringFormat="気温0.0"
+                        BorderBrush="Transparent"/>
+      <uc:NumericUpDown MyValue="-123.456" MyStringFormat="c"
+                        MyButtonMarkColor="Red" MyTextAlignment="Center"
+                        Foreground="Red" BorderBrush="Red"/>
+      <uc:NumericUpDown MyValue="-123.456" MyStringFormat="c"
+                        MyButtonMarkColor="Red" MyTextAlignment="Center"
+                        Foreground="Red" Background="Transparent" BorderBrush="Red"/>
+      <uc:NumericUpDown MyValue="-123.456" MyStringFormat="c"
+                        MyButtonMarkColor="White" MyTextAlignment="Center"
+                        Foreground="White" Background="Red" BorderBrush="Red"/>
+      <uc:NumericUpDown MyValue="-123.456" MyStringFormat="気温0.0;気温-0.0"
+                        Foreground="White" Background="Red"
+                        BorderBrush="White" MyButtonMarkColor="White"/>
+      
     </StackPanel>
   </Grid>
 </Window>
