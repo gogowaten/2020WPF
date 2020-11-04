@@ -6,7 +6,10 @@
         xmlns:local="clr-namespace:_20201103再開テスト"
         xmlns:myuc="clr-namespace:ControlLibraryCore20200620;assembly=ControlLibraryCore20200620"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="400">
+        Title="MainWindow" Height="350" Width="450"
+        Top="{Binding Path=WindowTop, Mode=TwoWay}"
+        Left="{Binding Path=WindowLeft, Mode=TwoWay}"        
+        >
   <Window.Resources>
     <Style TargetType="RadioButton">
       <Setter Property="Margin" Value="8,2"/>
@@ -21,21 +24,21 @@
       <Setter Property="Margin" Value="8,2,0,2"/>
     </Style>
   </Window.Resources>
+  
   <Grid>
     <TabControl x:Name="MyTabControl" SelectedIndex="0">
-      <TabItem Header="音">
-        <GroupBox>
+      <TabItem Header="基本">
+        <GroupBox Header="クリップボード">
           <StackPanel>
-            <RadioButton x:Name="RadioBtnSoundNone" Content="無音"/>
-            <RadioButton x:Name="RadioBtnSoundDefault" Content="規定" IsChecked="True"/>
-            <RadioButton x:Name="RadioBtnSoundDir" Content="指定"/>
-            <TextBox x:Name="TextBoxSoundDir" Text="file path"/>
-            <Button x:Name="ButtonSoundDir" Content="音声ファイルを選択"/>
-            <Button x:Name="ButtonSoundPlay" Content="視聴"/>
-          </StackPanel>
+            <RadioButton Content="監視"/>
+            <RadioButton Content="停止"/>
+            <Button x:Name="ButtonStartOrStop" Content="開始"/>
+            <CheckBox Content="エクセルでのコピーは無視する" Margin="8,2"/>
+          </StackPanel>          
         </GroupBox>
       </TabItem>
-      <TabItem Header="保存">
+      
+      <TabItem Header="保存" Height="20">
         <StackPanel>
           <GroupBox Header="形式">
             <StackPanel Orientation="Horizontal">
@@ -43,24 +46,27 @@
               <RadioButton x:Name="RadioButtonImageFormatBmp" Content="bmp"/>
               <RadioButton x:Name="RadioButtonImageFormatJpeg" Content="jpeg"/>
               <GroupBox Header="Jpeg" IsEnabled="{Binding ElementName=RadioButtonImageFormatJpeg, Path=IsChecked}">
-                <myuc:NumericUpDown x:Name="NumericUpDown" MyValue="96" MySmallChange="1" MyLargeChange="10"
+                <myuc:NumericUpDown x:Name="NumericUpDownJpegQuality" MyValue="{Binding Path=JpegQuality}" MySmallChange="1" MyLargeChange="10"
                                     MyMinValue="1" MyMaxValue="100" MyStringFormat="品質 = 0"/>
               </GroupBox>
             </StackPanel>
           </GroupBox>
           <GroupBox Header="場所">
             <StackPanel>
-              <ComboBox Name="ComboBoxSaveDir" Margin="8,2"/>
+              <!--<ComboBox Name="ComboBoxSaveDir" Margin="8,2" ItemsSource="{Binding}"/>-->
+              <ComboBox Name="ComboBoxSaveDir" Margin="8,2" ItemsSource="{Binding Path=DirList}"/>
               <StackPanel Orientation="Horizontal">
                 <Button x:Name="ButtonSaveAddDir" Content="リストに追加"/>
                 <Button x:Name="ButtonSaveDeleteDir" Content="リストから削除"/>
                 <Button x:Name="ButtonSaveOpenDir" Content="開く"/>
+                <Button x:Name="ButtenTest" Content="test" Click="ButtenTest_Click"/>
+                <Button x:Name="ButtenTest2" Content="test2" Click="ButtenTest2_Click"/>
               </StackPanel>
             </StackPanel>
           </GroupBox>
-         
         </StackPanel>
       </TabItem>
+      
       <TabItem Header="ファイル名" Height="20" VerticalAlignment="Bottom">
         <StackPanel>
           <GroupBox Header="ファイル名">
@@ -93,12 +99,24 @@
                   <TextBlock x:Name="TextBoxFileNameText" Text="fileName"/>
                 </StackPanel>
               </GroupBox>
-              <Label Content="予想ファイル名"/>              
+              <Label Content="予想ファイル名"/>
               <TextBlock x:Name="TextBlockFileNameExpection" Text="neko_01"/>
             </StackPanel>
           </GroupBox>
         </StackPanel>
       </TabItem>
+
+      <TabItem Header="音">
+        <StackPanel>
+          <RadioButton x:Name="RadioBtnSoundNone" Content="無音"/>
+          <RadioButton x:Name="RadioBtnSoundDefault" Content="規定" IsChecked="True"/>
+          <RadioButton x:Name="RadioBtnSoundDir" Content="指定"/>
+          <TextBox x:Name="TextBoxSoundDir" Text="file path"/>
+          <Button x:Name="ButtonSoundDir" Content="音声ファイルを選択"/>
+          <Button x:Name="ButtonSoundPlay" Content="視聴"/>
+        </StackPanel>
+      </TabItem>
+      
       <TabItem Header="その他">
         <StackPanel>
           <CheckBox x:Name="CheckBoxExcel" Content="エクセルでのコピーは無視する" IsChecked="True"/>
