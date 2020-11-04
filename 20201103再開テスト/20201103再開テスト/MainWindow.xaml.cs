@@ -108,6 +108,14 @@ namespace _20201103再開テスト
                 return false;
             }
         }
+
+        private void ButtonStartOrStop_Click(object sender, RoutedEventArgs e)
+        {
+            ButtonStartOrStop.Content = "停止する";
+            RadioInOperation.IsChecked = true;
+            RadioInOperation.IsEnabled = true;
+            RadioInOperationNot.IsEnabled = false;
+        }
     }
 
 

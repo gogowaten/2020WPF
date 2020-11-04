@@ -24,20 +24,24 @@
       <Setter Property="Margin" Value="8,2,0,2"/>
     </Style>
   </Window.Resources>
-  
+
   <Grid>
     <TabControl x:Name="MyTabControl" SelectedIndex="0">
       <TabItem Header="基本">
-        <GroupBox Header="クリップボード">
+        <GroupBox Header="クリップボード監視">
           <StackPanel>
-            <RadioButton Content="監視"/>
-            <RadioButton Content="停止"/>
-            <Button x:Name="ButtonStartOrStop" Content="開始"/>
+            <Button x:Name="ButtonStartOrStop" Content="開始" Click="ButtonStartOrStop_Click"/>
+            <GroupBox Header="状態">
+              <StackPanel>
+                <RadioButton x:Name="RadioInOperation" Content="監視中"/>
+                <RadioButton x:Name="RadioInOperationNot" Content="停止中" IsChecked="True"/>
+              </StackPanel>
+            </GroupBox>
             <CheckBox Content="エクセルでのコピーは無視する" Margin="8,2"/>
-          </StackPanel>          
+          </StackPanel>
         </GroupBox>
       </TabItem>
-      
+
       <TabItem Header="保存" Height="20">
         <StackPanel>
           <GroupBox Header="形式">
@@ -66,7 +70,7 @@
           </GroupBox>
         </StackPanel>
       </TabItem>
-      
+
       <TabItem Header="ファイル名" Height="20" VerticalAlignment="Bottom">
         <StackPanel>
           <GroupBox Header="ファイル名">
@@ -116,15 +120,7 @@
           <Button x:Name="ButtonSoundPlay" Content="視聴"/>
         </StackPanel>
       </TabItem>
-      
-      <TabItem Header="その他">
-        <StackPanel>
-          <CheckBox x:Name="CheckBoxExcel" Content="エクセルでのコピーは無視する" IsChecked="True"/>
 
-          <Label Content="ファイル名"/>
-
-        </StackPanel>
-      </TabItem>
     </TabControl>
   </Grid>
 </Window>
