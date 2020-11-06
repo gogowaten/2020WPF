@@ -1,0 +1,18 @@
+﻿<Window x:Class="_20201106_API.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:_20201106_API"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+    <StackPanel>
+      <Button x:Name="ButtonBeep" Content="beep" Click="ButtonBeep_Click"/>
+      <Button x:Name="ButtonMouseNumber" Content="mouseNunber" Click="ButtonMouseNumber_Click"/>
+      <Button x:Name="ButtonForegroudWindow" Content="GetForegroundWindow" Click="ButtonForegroudWindow_Click"/>
+      <Button x:Name="ButtonActiveWindowName" Content="アクティブウィンドウ名取得" Click="ButtonActiveWindowName_Click"/>
+      <Button x:Name="ButtonKeyCtrlTest" Content="Ctrlキー監視開始" Click="ButtonKeyCtrlTest_Click"/>
+    </StackPanel>
+    </Grid>
+</Window>
