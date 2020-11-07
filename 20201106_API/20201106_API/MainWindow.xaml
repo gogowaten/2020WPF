@@ -12,7 +12,14 @@
       <Button x:Name="ButtonMouseNumber" Content="mouseNunber" Click="ButtonMouseNumber_Click"/>
       <Button x:Name="ButtonForegroudWindow" Content="GetForegroundWindow" Click="ButtonForegroudWindow_Click"/>
       <Button x:Name="ButtonActiveWindowName" Content="アクティブウィンドウ名取得" Click="ButtonActiveWindowName_Click"/>
-      <Button x:Name="ButtonKeyCtrlTest" Content="Ctrlキー監視開始" Click="ButtonKeyCtrlTest_Click"/>
+      <Button x:Name="ButtonKeyCtrlTest" Content="printscreenキー監視開始" Click="ButtonKeyCtrlTest_Click"/>
+      <Button x:Name="ButtonClientRect" Content="ClientRect" Click="ButtonClientRect_Click"/>
+      <Button x:Name="ButtonWindowRect" Content="WindowRect" Click="ButtonWindowRect_Click"/>
+      <Button x:Name="ButtonClientToScreen" Content="ClientToScreen" Click="ButtonClientToScreen_Click"/>
+      <Button x:Name="ButtonDC" Content="DC" Click="ButtonDC_Click"/>
+      <Button x:Name="ButtonDraw" Content="Draw" Click="ButtonDraw_Click"/>
+      <Button x:Name="ButtonBitmapSource" Content="GetBitmapSource" Click="ButtonBitmapSource_Click"/>
+      <Image x:Name="MyImage" Stretch="None" UseLayoutRounding="True"/>
     </StackPanel>
     </Grid>
 </Window>
