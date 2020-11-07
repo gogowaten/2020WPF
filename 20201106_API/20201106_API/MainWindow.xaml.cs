@@ -17,6 +17,9 @@ using System.Threading;
 using System.Diagnostics;
 using System.Windows.Interop;
 
+
+//DCはデバイスコンテキスト
+
 //Win32 APIやDLL関数を呼び出すには？：.NET TIPS - ＠IT
 //https://www.atmarkit.co.jp/ait/articles/0305/09/news004.html
 //C#-.net 備忘録
@@ -218,8 +221,8 @@ namespace _20201106_API
         #endregion
 
         #region 画面上でのウィンドウの上下左右位置取得
-//        GetWindowRect function(winuser.h) - Win32 apps | Microsoft Docs
-//https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect
+        //        GetWindowRect function(winuser.h) - Win32 apps | Microsoft Docs
+        //https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect
 
         [DllImport("user32.dll")]
         private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
@@ -233,8 +236,8 @@ namespace _20201106_API
         #endregion
 
         #region 画面上でのクライアント領域の左上座標取得
-//        ClientToScreen function(winuser.h) - Win32 apps | Microsoft Docs
-//https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-clienttoscreen
+        //        ClientToScreen function(winuser.h) - Win32 apps | Microsoft Docs
+        //https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-clienttoscreen
 
         private struct POINT
         {
@@ -246,7 +249,7 @@ namespace _20201106_API
         private void ButtonClientToScreen_Click(object sender, RoutedEventArgs e)
         {
             ClientToScreen(GetForegroundWindow(), out POINT point);
-            
+
         }
         #endregion
 
@@ -263,7 +266,7 @@ namespace _20201106_API
 
 
         [DllImport("gdi32.dll")]
-        private static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, int rop);
+        private static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
         private const int SRCCOPY = 0x00cc0020;
         [DllImport("user32.dll")]
         private static extern int ReleaseDC(IntPtr hwnd, IntPtr hDC);
@@ -275,7 +278,7 @@ namespace _20201106_API
             var appDC = GetDC(app);
             //ClientToScreen(appDC, out POINT pOINT);
             //GetClientRect(appDC, out RECT rECT);
-            BitBlt(appDC, 0, 0, 200 ,200, desktopDC, 0, 0, SRCCOPY);
+            BitBlt(appDC, 0, 0, 200, 200, desktopDC, 0, 0, SRCCOPY);
             //BitBlt(appDC, pOINT.X, pOINT.Y, rECT.Right - rECT.Left, rECT.Bottom - rECT.Top, desktopDC, 0, 0, SRCCOPY);
             ReleaseDC(app, appDC);
             ReleaseDC(IntPtr.Zero, desktopDC);
@@ -293,9 +296,13 @@ namespace _20201106_API
         [DllImport("gdi32.dll")]
         private static extern IntPtr DeleteObject(IntPtr hObject);
 
+        //        c# - Capturing a window with WPF - Stack Overflow
+        //https://stackoverflow.com/questions/1736287/capturing-a-window-with-wpf
+        //ここのをコピペ改変
+        //画面全体の左上の200ｘ100のbitmapsourceを作成
         private static BitmapSource Capture(Rect area)
         {
-            IntPtr screenDC = GetDC(IntPtr.Zero);
+            IntPtr screenDC = GetDC(IntPtr.Zero);//プライマリディスプレイのDC
             IntPtr memDC = CreateCompatibleDC(screenDC);
             IntPtr hBitmap = CreateCompatibleBitmap(screenDC, (int)SystemParameters.VirtualScreenWidth, (int)SystemParameters.VirtualScreenHeight);
             SelectObject(memDC, hBitmap);
@@ -311,6 +318,237 @@ namespace _20201106_API
         {
             var bmp = Capture(new Rect(0, 0, 200, 100));
             MyImage.Source = bmp;
+        }
+
+
+        private static BitmapSource Capture2(Rect area)
+        {
+            IntPtr screenDC = GetDC(GetForegroundWindow());
+            IntPtr memDC = CreateCompatibleDC(screenDC);
+            //IntPtr hBitmap = CreateCompatibleBitmap(screenDC, (int)SystemParameters.VirtualScreenWidth, (int)SystemParameters.VirtualScreenHeight);
+            GetClientRect(GetForegroundWindow(), out RECT rECT);
+            int w = rECT.Right - rECT.Left;
+            int h = rECT.Bottom - rECT.Top;
+            IntPtr hBitmap = CreateCompatibleBitmap(screenDC, w, h);
+
+            SelectObject(memDC, hBitmap);
+            //BitBlt(memDC, 0, 0, (int)area.Width, (int)area.Height, screenDC, (int)area.X, (int)area.Y, SRCCOPY);
+            BitBlt(memDC, 0, 0, w, h, screenDC, 0, 0, SRCCOPY);
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            FormatConvertedBitmap format = new FormatConvertedBitmap(source, PixelFormats.Bgr24, null, 0);
+
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, screenDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+            return source;//alphaが0になってしまう？半透明に不具合
+            //return format;//ピクセルフォーマットをBgr24に変更したもの、概ね正常だけどchromeは真っ黒になる、エクセルもタイトルバーが真っ黒
+        }
+
+        private void ButtonBitmapSource2_Click(object sender, RoutedEventArgs e)
+        {
+            MyImage.Source = Capture2(new Rect(0, 0, 400, 100));
+        }
+
+
+        private void ActiveWindowCapture()
+        {
+            //タイマー設定
+            var timer = new System.Windows.Threading.DispatcherTimer();
+            timer.Tick += Timer_Tick1;
+            timer.Interval = new TimeSpan(0, 0, 0, 0, 10);//0.01秒間隔
+            timer.Start();
+        }
+
+        private void Timer_Tick1(object sender, EventArgs e)
+        {
+            //プリントスクリーンキーで判定
+            //現在押されていた場合
+            if (((GetAsyncKeyState(0x2c) & 0x8000) >> 15) == 1)
+            {
+                MyImage.Source = Capture2(new Rect(0, 0, 300, 100));
+            }
+            //前回から押された形跡があった場合
+            //if ((GetAsyncKeyState(0x2c) & 1) == 1) { Beep(1500, 10); }
+        }
+        private void ButtonBitmapSource3_Click(object sender, RoutedEventArgs e)
+        {
+            ActiveWindowCapture();
+        }
+
+        //できた、アルファの問題解消
+        //画面全体をキャプチャして、そこから目的の領域を切り抜く方法
+        //メニューの項目を表示した状態もキャプチャできた
+        private static BitmapSource Capture3()
+        {
+            IntPtr screenDC = GetDC(IntPtr.Zero);//画面全体のDC
+            IntPtr memDC = CreateCompatibleDC(screenDC);//目的のウィンドウ用DC
+            //SystemParameters.VirtualScreenWidthはマルチモニタ環境で使うと意味がある
+            //IntPtr hBitmap = CreateCompatibleBitmap(screenDC, (int)SystemParameters.VirtualScreenWidth, (int)SystemParameters.VirtualScreenHeight);
+            GetClientRect(GetForegroundWindow(), out RECT rECT);//アクティブウィンドウのクライアント領域Rect取得
+            int w = rECT.Right - rECT.Left;//実際はtopとleftは必ず0なので、rightとbottomだけでいい
+            int h = rECT.Bottom - rECT.Top;
+            IntPtr hBitmap = CreateCompatibleBitmap(screenDC, w, h);
+            ClientToScreen(GetForegroundWindow(), out POINT pointWnd);//クライアント領域の左上座標
+
+            SelectObject(memDC, hBitmap);
+
+            BitBlt(memDC, 0, 0, w, h, screenDC, pointWnd.X, pointWnd.Y, SRCCOPY);
+            //カーソルの描画
+            IntPtr cursor = GetCursor();
+            GetCursorPos(out POINT cursorPoint);
+            int mpX = cursorPoint.X - pointWnd.X;
+            int mpY = cursorPoint.Y - pointWnd.Y;
+            //カーソルの形状が見た目通りにならないことがある
+            //DrawIcon(memDC, mpX, mpY, cursor);
+        //DrawIconEx(memDC, mpX, mpY, cursor, 0, 0, 0, IntPtr.Zero, DI_DEFAULTSIZE);
+        //DrawIconEx(memDC, mpX, mpY, cursor, 0, 0, 0, IntPtr.Zero, DI_NORMAL);//NORMAL以外は表示されなかったり枠がついたりする
+        //VB現在のマウスポインタの種類を取得したいのですが、いくら調べても方法が... - Yahoo!知恵袋
+        //https://detail.chiebukuro.yahoo.co.jp/qa/question_detail/q1180420296
+
+            GetIconInfo(cursor, out ICONINFO iCONINFO);
+            BitmapSource ibmp = Imaging.CreateBitmapSourceFromHIcon(iCONINFO.hbmColor, new Int32Rect(), BitmapSizeOptions.FromEmptyOptions());
+
+            CURSORINFO curInfo = new CURSORINFO();
+            curInfo.cbSize = Marshal.SizeOf(typeof(CURSORINFO));
+            GetCursorInfo(out curInfo);            
+            DrawIcon(memDC, mpX, mpY, curInfo.hCursor);//かなり良くなったけど、I型アイコンのとき真っ白になる
+            //DrawIconEx(memDC, mpX, mpY, curInfo.hCursor, 0, 0, 0, IntPtr.Zero, DI_NORMAL);//これでも変わらず
+
+//            c# - C#-マウスカーソルイメージのキャプチャ
+//https://python5.com/q/ukmbkppc
+//これがわかれば解決できそう
+
+
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            DeleteObject(iCONINFO.hbmColor);
+            DeleteObject(iCONINFO.hbmMask);
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, screenDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+            DeleteObject(cursor);
+            return source;
+        }
+        private void ActiveWindowCapture2()
+        {
+            //タイマー設定
+            var timer = new System.Windows.Threading.DispatcherTimer();
+            timer.Tick += Timer_Tick2;
+            timer.Interval = new TimeSpan(0, 0, 0, 0, 10);//0.01秒間隔
+            timer.Start();
+        }
+
+        private void Timer_Tick2(object sender, EventArgs e)
+        {
+            //プリントスクリーンキーで判定
+            //現在押されていた場合
+            if (((GetAsyncKeyState(0x2c) & 0x8000) >> 15) == 1)
+            {
+                MyImage.Source = Capture3();
+            }
+            //前回から押された形跡があった場合
+            //if ((GetAsyncKeyState(0x2c) & 1) == 1) { Beep(1500, 10); }
+        }
+
+        private void ButtonBitmapSource4_Click(object sender, RoutedEventArgs e)
+        {
+            ActiveWindowCapture2();
+        }
+
+
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetCursor();
+        [DllImport("user32.dll")]
+        private static extern IntPtr DrawIcon(IntPtr hDC, int x, int y, IntPtr hIcon);
+        [DllImport("user32.dll")]
+        private static extern bool GetCursorPos(out POINT lpPoint);
+        [DllImport("user32.dll")]
+        private static extern IntPtr DrawIconEx(IntPtr hDC, int x, int y, IntPtr hIcon, int cxWidth, int cyWidth, int istepIfAniCur, IntPtr hbrFlickerFreeDraw, int diFlags);
+        private const int DI_DEFAULTSIZE = 0x0008;//cxWidth cyWidthが0に指定されている場合に規定サイズで描画する
+        private const int DI_NORMAL = 0x0003;//通常はこれを指定する
+        private const int DI_IMAGE = 0x0002;//
+        private const int DI_MASK = 0x0001;//
+        private const int DI_COMPAT = 0x0004;//
+        private const int DI_NOMIRROR = 0x0010;//
+        [DllImport("user32.dll")]
+        private static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO pIconInfo);
+        struct ICONINFO
+        {
+            public bool fIcon;
+            public int xHotspot;
+            public int yHotspot;
+            public IntPtr hbmMask;
+            public IntPtr hbmColor;
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool GetCursorInfo(out CURSORINFO pci);
+        [StructLayout(LayoutKind.Sequential)]
+        struct CURSORINFO
+        {
+            public int cbSize;
+            public int flags;
+            public IntPtr hCursor;
+            public POINT ptScreenPos;
+        }
+
+
+        private static BitmapSource Capture4()
+        {
+            BitmapSource bmp = Clipboard.GetImage();
+
+            IntPtr screenDC = GetDC(IntPtr.Zero);//画面全体のDC
+            IntPtr memDC = CreateCompatibleDC(screenDC);//目的のウィンドウ用DC
+            //SystemParameters.VirtualScreenWidthはマルチモニタ環境で使うと意味がある
+            //IntPtr hBitmap = CreateCompatibleBitmap(screenDC, (int)SystemParameters.VirtualScreenWidth, (int)SystemParameters.VirtualScreenHeight);
+            GetClientRect(GetForegroundWindow(), out RECT rECT);//アクティブウィンドウのクライアント領域Rect取得
+            int w = rECT.Right - rECT.Left;//実際はtopとleftは必ず0なので、rightとbottomだけでいい
+            int h = rECT.Bottom - rECT.Top;
+            IntPtr hBitmap = CreateCompatibleBitmap(screenDC, w, h);
+            ClientToScreen(GetForegroundWindow(), out POINT pointWnd);//クライアント領域の左上座標
+
+            SelectObject(memDC, hBitmap);
+            BitBlt(memDC, 0, 0, w, h, screenDC, pointWnd.X, pointWnd.Y, SRCCOPY);
+            ////カーソルの描画、形状が変化してしまう            
+            //IntPtr cursor = GetCursor();
+            //GetCursorPos(out POINT cursorPoint);
+            //int mpX = cursorPoint.X - pointWnd.X;
+            //int mpY = cursorPoint.Y - pointWnd.Y;
+            //DrawIcon(memDC, mpX, mpY, cursor);
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, screenDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+            return source;
+        }
+        private void ActiveWindowCapture3()
+        {
+            //タイマー設定
+            var timer = new System.Windows.Threading.DispatcherTimer();
+            timer.Tick += Timer_Tick3;
+            timer.Interval = new TimeSpan(0, 0, 0, 0, 10);//0.01秒間隔
+            timer.Start();
+        }
+
+        private void Timer_Tick3(object sender, EventArgs e)
+        {
+            //プリントスクリーンキーで判定
+            //現在押されていた場合
+            if (((GetAsyncKeyState(0x2c) & 0x8000) >> 15) == 1)
+            {
+                if (Clipboard.ContainsImage() == false) return;
+                var bmp = Clipboard.GetImage();
+                bmp = new FormatConvertedBitmap(bmp, PixelFormats.Bgr24, null, 0);
+                MyImage.Source = bmp;
+            }
+            //前回から押された形跡があった場合
+            //if ((GetAsyncKeyState(0x2c) & 1) == 1) { Beep(1500, 10); }
+        }
+        private void ButtonCursor_Click(object sender, RoutedEventArgs e)
+        {
+            ActiveWindowCapture3();
+
         }
     }
 }

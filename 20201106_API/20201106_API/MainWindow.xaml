@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201106_API"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="400">
     <Grid>
     <StackPanel>
       <Button x:Name="ButtonBeep" Content="beep" Click="ButtonBeep_Click"/>
@@ -19,6 +19,11 @@
       <Button x:Name="ButtonDC" Content="DC" Click="ButtonDC_Click"/>
       <Button x:Name="ButtonDraw" Content="Draw" Click="ButtonDraw_Click"/>
       <Button x:Name="ButtonBitmapSource" Content="GetBitmapSource" Click="ButtonBitmapSource_Click"/>
+      <Button x:Name="ButtonBitmapSource2" Content="GetBitmapSource2" Click="ButtonBitmapSource2_Click"/>
+      <Button x:Name="ButtonBitmapSource3" Content="GetBitmapSource3" Click="ButtonBitmapSource3_Click"/>
+      <Button x:Name="ButtonBitmapSource4" Content="GetBitmapSource4" Click="ButtonBitmapSource4_Click"/>
+      <Button x:Name="ButtonCursor" Content="Cursor" Click="ButtonCursor_Click"/>
+      
       <Image x:Name="MyImage" Stretch="None" UseLayoutRounding="True"/>
     </StackPanel>
     </Grid>
