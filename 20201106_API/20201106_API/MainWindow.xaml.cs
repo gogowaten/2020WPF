@@ -16,6 +16,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Diagnostics;
 using System.Windows.Interop;
+using System.Windows.Media.Media3D;
 
 
 //DCはデバイスコンテキスト
@@ -44,6 +45,8 @@ namespace _20201106_API
 
     public partial class MainWindow : Window
     {
+        private System.Windows.Threading.DispatcherTimer MyTimer;
+
         [DllImport("kernel32.dll")]
         extern static bool Beep(uint dwFreq, uint dwDuration);
 
@@ -54,7 +57,8 @@ namespace _20201106_API
         {
             InitializeComponent();
 
-
+            MyTimer = new System.Windows.Threading.DispatcherTimer();
+            MyTimer.Interval = new TimeSpan(0, 0, 0, 0, 1);
 
 
             short s = -32768;//1000_0000_0000_0000
@@ -153,6 +157,9 @@ namespace _20201106_API
         //引数で渡す指定したいキーの値一覧表はここ
         //        Virtual-Key Codes(Winuser.h) - Win32 apps | Microsoft Docs
         //https://docs.microsoft.com/ja-jp/windows/win32/inputdev/virtual-key-codes
+        //        KT Software - 仮想キーコード一覧
+        //http://kts.sakaiweb.com/virtualkeycodes.html
+
         [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
 
@@ -268,6 +275,7 @@ namespace _20201106_API
         [DllImport("gdi32.dll")]
         private static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
         private const int SRCCOPY = 0x00cc0020;
+        private const int SRCINVERT = 0x00660046;
         [DllImport("user32.dll")]
         private static extern int ReleaseDC(IntPtr hwnd, IntPtr hDC);
         //画面の左上200x200をアプリに表示
@@ -380,43 +388,74 @@ namespace _20201106_API
         //メニューの項目を表示した状態もキャプチャできた
         private static BitmapSource Capture3()
         {
-            IntPtr screenDC = GetDC(IntPtr.Zero);//画面全体のDC
-            IntPtr memDC = CreateCompatibleDC(screenDC);//目的のウィンドウ用DC
             //SystemParameters.VirtualScreenWidthはマルチモニタ環境で使うと意味がある
             //IntPtr hBitmap = CreateCompatibleBitmap(screenDC, (int)SystemParameters.VirtualScreenWidth, (int)SystemParameters.VirtualScreenHeight);
-            GetClientRect(GetForegroundWindow(), out RECT rECT);//アクティブウィンドウのクライアント領域Rect取得
-            int w = rECT.Right - rECT.Left;//実際はtopとleftは必ず0なので、rightとbottomだけでいい
-            int h = rECT.Bottom - rECT.Top;
-            IntPtr hBitmap = CreateCompatibleBitmap(screenDC, w, h);
-            ClientToScreen(GetForegroundWindow(), out POINT pointWnd);//クライアント領域の左上座標
+            GetClientRect(GetForegroundWindow(), out RECT clientRect);//アクティブウィンドウのクライアント領域Rect取得
+            int clientWidth = clientRect.Right - clientRect.Left;//実際はtopとleftは必ず0なので、rightとbottomだけでいい
+            int clientHeight = clientRect.Bottom - clientRect.Top;
+            ClientToScreen(GetForegroundWindow(), out POINT ClientLocate);//クライアント領域の左上座標
 
+            IntPtr screenDC = GetDC(IntPtr.Zero);//画面全体のDC
+            IntPtr memDC = CreateCompatibleDC(screenDC);//目的のウィンドウ用DC
+            IntPtr hBitmap = CreateCompatibleBitmap(screenDC, clientWidth, clientHeight);
             SelectObject(memDC, hBitmap);
 
-            BitBlt(memDC, 0, 0, w, h, screenDC, pointWnd.X, pointWnd.Y, SRCCOPY);
+            BitBlt(memDC, 0, 0, clientWidth, clientHeight, screenDC, ClientLocate.X, ClientLocate.Y, SRCCOPY);
+
             //カーソルの描画
+            GetCursorPos(out POINT cursorScreenPoint);//画面上でのカーソル位置
+            int cursorClientX = cursorScreenPoint.X - ClientLocate.X;
+            int cursorClientY = cursorScreenPoint.Y - ClientLocate.Y;
+
             IntPtr cursor = GetCursor();
-            GetCursorPos(out POINT cursorPoint);
-            int mpX = cursorPoint.X - pointWnd.X;
-            int mpY = cursorPoint.Y - pointWnd.Y;
             //カーソルの形状が見た目通りにならないことがある
-            //DrawIcon(memDC, mpX, mpY, cursor);
-        //DrawIconEx(memDC, mpX, mpY, cursor, 0, 0, 0, IntPtr.Zero, DI_DEFAULTSIZE);
-        //DrawIconEx(memDC, mpX, mpY, cursor, 0, 0, 0, IntPtr.Zero, DI_NORMAL);//NORMAL以外は表示されなかったり枠がついたりする
-        //VB現在のマウスポインタの種類を取得したいのですが、いくら調べても方法が... - Yahoo!知恵袋
-        //https://detail.chiebukuro.yahoo.co.jp/qa/question_detail/q1180420296
+            //DrawIcon(memDC, mpX, cursorClientY, cursor);
+            //DrawIconEx(memDC, mpX, cursorClientY, cursor, 0, 0, 0, IntPtr.Zero, DI_DEFAULTSIZE);
+            //DrawIconEx(memDC, mpX, cursorClientY, cursor, 0, 0, 0, IntPtr.Zero, DI_NORMAL);//NORMAL以外は表示されなかったり枠がついたりする
+            //VB現在のマウスポインタの種類を取得したいのですが、いくら調べても方法が... - Yahoo!知恵袋
+            //https://detail.chiebukuro.yahoo.co.jp/qa/question_detail/q1180420296
 
             GetIconInfo(cursor, out ICONINFO iCONINFO);
-            BitmapSource ibmp = Imaging.CreateBitmapSourceFromHIcon(iCONINFO.hbmColor, new Int32Rect(), BitmapSizeOptions.FromEmptyOptions());
+            //BitmapSource ibmp = Imaging.CreateBitmapSourceFromHIcon(iCONINFO.hbmColor, new Int32Rect(), BitmapSizeOptions.FromEmptyOptions());//カーソルハンドルが無効エラー
+            var icolor = Imaging.CreateBitmapSourceFromHBitmap(iCONINFO.hbmColor, IntPtr.Zero, new Int32Rect(), BitmapSizeOptions.FromEmptyOptions());
+            var imask = Imaging.CreateBitmapSourceFromHBitmap(iCONINFO.hbmMask, IntPtr.Zero, new Int32Rect(), BitmapSizeOptions.FromEmptyOptions());
 
             CURSORINFO curInfo = new CURSORINFO();
             curInfo.cbSize = Marshal.SizeOf(typeof(CURSORINFO));
-            GetCursorInfo(out curInfo);            
-            DrawIcon(memDC, mpX, mpY, curInfo.hCursor);//かなり良くなったけど、I型アイコンのとき真っ白になる
-            //DrawIconEx(memDC, mpX, mpY, curInfo.hCursor, 0, 0, 0, IntPtr.Zero, DI_NORMAL);//これでも変わらず
+            GetCursorInfo(out curInfo);
+            //DrawIcon(memDC, mpX, cursorClientY, curInfo.hCursor);//かなり良くなったけど、I型アイコンのとき真っ白になる
+            //DrawIconEx(memDC, mpX, cursorClientY, curInfo.hCursor, 0, 0, 0, IntPtr.Zero, DI_NORMAL);//これでも変わらず
 
-//            c# - C#-マウスカーソルイメージのキャプチャ
-//https://python5.com/q/ukmbkppc
-//これがわかれば解決できそう
+            //            c# - C#-マウスカーソルイメージのキャプチャ
+            //https://python5.com/q/ukmbkppc
+            //これがわかれば解決できそう
+            //カーソルインフォ → コピーアイコン → アイコンインフォのビットマップマスク画像でI型アイコンの元？の画像取得できた
+            IntPtr hicon = CopyIcon(curInfo.hCursor);
+            GetIconInfo(hicon, out ICONINFO icInfo);
+            BitmapSource imask2 = Imaging.CreateBitmapSourceFromHBitmap(icInfo.hbmMask, IntPtr.Zero, new Int32Rect(), BitmapSizeOptions.FromEmptyOptions());
+            //var icolor2 = Imaging.CreateBitmapSourceFromHBitmap(icInfo.hbmColor, IntPtr.Zero, new Int32Rect(), BitmapSizeOptions.FromEmptyOptions());
+            IntPtr maskHdc = CreateCompatibleDC(screenDC);
+            //SelectObject(memDC, hBitmap);
+            //IntPtr iconDC = GetDC(icInfo.hbmMask);
+            IntPtr iconDC = GetDC(hicon);
+            //BitBlt(memDC, 0, 0, clientWidth, clientHeight, maskHdc, 0, 32, SRCCOPY);
+            //BitBlt(memDC, 0, 0, clientWidth, clientHeight, maskHdc, 0, 0, SRCINVERT);
+            //BitBlt(memDC, 0, 0, 32, 32, maskHdc, 0, 32, SRCCOPY);
+            //BitBlt(memDC, 0, 0, 32, 32, maskHdc, 0, 0, SRCINVERT);
+            //BitBlt(memDC, 0, 0, clientWidth, clientHeight, iconDC, 0, 32, SRCCOPY);
+            BitBlt(memDC, clientWidth, clientHeight, 32, 32, iconDC, 0, 32, SRCCOPY);
+
+            //DrawIconEx(memDC, cursorClientX, cursorClientY, hicon, 0, 0, 0, IntPtr.Zero, DI_NORMAL);//カーソル位置に白四角
+            //DrawIconEx(memDC, 0, 0, hicon, 0, 0, 0, hicon, DI_NORMAL);//左上に白四角
+            //DrawIconEx(memDC, cursorClientX, cursorClientY, hicon, 32, 32, 0, IntPtr.Zero, DI_NORMAL);//カーソル位置に白四角
+            //DrawIconEx(memDC, 0, 0, icInfo.hbmMask, 32, 32, 0, hicon, DI_NORMAL);
+
+            //DrawIconEx(memDC, cursorClientX, cursorClientY, hicon, 0, 0, 0, IntPtr.Zero, DI_COMPAT);//描画なし
+            //DrawIconEx(memDC, cursorClientX, cursorClientY, hicon, 0, 0, 0, IntPtr.Zero, DI_MASK);//カーソル位置に白四角
+            //DrawIconEx(memDC, cursorClientX, cursorClientY, hicon, 0, 0, 0, IntPtr.Zero, DI_IMAGE);//カーソル位置に白四角
+
+
+
 
 
             BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
@@ -426,6 +465,10 @@ namespace _20201106_API
             ReleaseDC(IntPtr.Zero, screenDC);
             ReleaseDC(IntPtr.Zero, memDC);
             DeleteObject(cursor);
+            DestroyIcon(hicon);
+            ReleaseDC(IntPtr.Zero, maskHdc);
+            ReleaseDC(IntPtr.Zero, iconDC);
+
             return source;
         }
         private void ActiveWindowCapture2()
@@ -465,11 +508,11 @@ namespace _20201106_API
         [DllImport("user32.dll")]
         private static extern IntPtr DrawIconEx(IntPtr hDC, int x, int y, IntPtr hIcon, int cxWidth, int cyWidth, int istepIfAniCur, IntPtr hbrFlickerFreeDraw, int diFlags);
         private const int DI_DEFAULTSIZE = 0x0008;//cxWidth cyWidthが0に指定されている場合に規定サイズで描画する
-        private const int DI_NORMAL = 0x0003;//通常はこれを指定する
-        private const int DI_IMAGE = 0x0002;//
-        private const int DI_MASK = 0x0001;//
-        private const int DI_COMPAT = 0x0004;//
-        private const int DI_NOMIRROR = 0x0010;//
+        private const int DI_NORMAL = 0x0003;//通常はこれを指定する、IMAGEとMASKの組み合わせ
+        private const int DI_IMAGE = 0x0002;//画像を使用して描画
+        private const int DI_MASK = 0x0001;//マスクを使用して描画
+        private const int DI_COMPAT = 0x0004;//このフラグは無視の意味
+        private const int DI_NOMIRROR = 0x0010;//ミラーリングされていないアイコンとし描画される
         [DllImport("user32.dll")]
         private static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO pIconInfo);
         struct ICONINFO
@@ -491,6 +534,10 @@ namespace _20201106_API
             public IntPtr hCursor;
             public POINT ptScreenPos;
         }
+        [DllImport("user32.dll")]
+        private static extern IntPtr CopyIcon(IntPtr hIcon);
+        [DllImport("user32.dll")]
+        private static extern bool DestroyIcon(IntPtr hIcon);//CopyIcon使ったあとに使う
 
 
         private static BitmapSource Capture4()
@@ -550,5 +597,286 @@ namespace _20201106_API
             ActiveWindowCapture3();
 
         }
+
+
+        //マウスカーソルのマスク画像取得
+        private BitmapSource GetIconMaskBitmap()
+        {
+            //カーソルインフォ → コピーアイコン → アイコンインフォのビットマップマスク画像でI型アイコンの元？の画像取得できた
+            CURSORINFO curInfo = new CURSORINFO();
+            curInfo.cbSize = Marshal.SizeOf(typeof(CURSORINFO));
+            GetCursorInfo(out curInfo);
+            IntPtr hicon = CopyIcon(curInfo.hCursor);
+            GetIconInfo(hicon, out ICONINFO icInfo);
+            BitmapSource imask2 = Imaging.CreateBitmapSourceFromHBitmap(icInfo.hbmMask, IntPtr.Zero, new Int32Rect(), BitmapSizeOptions.FromEmptyOptions());
+
+            DestroyIcon(hicon);
+
+            return imask2;
+        }
+
+        private void ButtonIconMaskBmp_Click(object sender, RoutedEventArgs e)
+        {
+            MyImage.Source = GetIconMaskBitmap();
+        }
+
+        //マウスカーソルのマスク画像取得、タイマー版
+        private void ButtonIconMaskBmp2_Click(object sender, RoutedEventArgs e)
+        {
+            MyTimer.Start();
+            MyTimer.Tick += MyTimer_Tick;
+        }
+
+        private void MyTimer_Tick(object sender, EventArgs e)
+        {
+            //プリントスクリーンキーで判定
+            //現在押されていた場合
+            if (((GetAsyncKeyState(0x2c) & 0x8000) >> 15) == 1)
+            {
+                MyImage.Source = GetIconMaskBitmap();
+            }
+            //前回から押された形跡があった場合
+            //if ((GetAsyncKeyState(0x2c) & 1) == 1) { Beep(1500, 10); }
+        }
+
+
+        //Bgra32とスケーリングしている場合は？ホットスポット？
+
+        private BitmapSource MixBitmap(BitmapSource source, BitmapSource cursor, POINT cursorLocate, int xOffset, int yOffset)
+        {
+            BitmapSource resultBmp = null;
+            int sideLenght = cursor.PixelWidth;//32、横一辺の長さ
+            int maskHeight = cursor.PixelHeight;//64、縦は横の2倍のはず
+            if (sideLenght * 2 != maskHeight) return resultBmp;//2倍じゃなければnullを返して終了
+
+            //マスク画像を上下半分に切り出して画素値を配列化、マスク画像は白と黒の2色の1bpp画像のはず
+            //ピクセルフォーマットをbgra32に変換して計算しやすくする
+            BitmapSource maskBmp1 = new CroppedBitmap(cursor, new Int32Rect(0, 0, sideLenght, sideLenght));
+            FormatConvertedBitmap m1 = new FormatConvertedBitmap(maskBmp1, PixelFormats.Bgra32, null, 0);
+            //var m11 = new FormatConvertedBitmap(maskBmp1, PixelFormats.Bgr24, null, 0);
+            int maskStride = (m1.PixelWidth * 32 + 7) / 8;
+            byte[] mask1Pixels = new byte[m1.PixelHeight * maskStride];
+            m1.CopyPixels(mask1Pixels, maskStride, 0);
+
+            BitmapSource maskBmp2 = new CroppedBitmap(cursor, new Int32Rect(0, sideLenght, sideLenght, sideLenght));
+            var m2 = new FormatConvertedBitmap(maskBmp2, PixelFormats.Bgra32, null, 0);
+            byte[] mask2Pixels = new byte[m2.PixelHeight * maskStride];
+            m2.CopyPixels(mask2Pixels, maskStride, 0);
+
+            int w = source.PixelWidth;
+            int h = source.PixelHeight;
+            int bpp = source.Format.BitsPerPixel;//1ビクセルあたりのbit数、bgra32は4になるはず
+            int stride = (w * bpp + 7) / 8;
+            byte[] pixels = new byte[h * stride];
+            source.CopyPixels(pixels, stride, 0);
+
+            int beginX = cursorLocate.X - xOffset;
+            int beginY = cursorLocate.Y - yOffset;
+            int endX = beginX + sideLenght;
+            int endY = beginY + sideLenght;
+            if (endX > w) endX = w;
+            if (endY > h) endY = h;
+
+            int yCount = 0;
+            int xCount = 0;
+            int nekocount = 0;
+            for (int y = beginY; y < endY; y++)
+            {
+                for (int x = beginX; x < endX; x++)
+                {
+                    var p = y * stride + x * 4;
+                    var pp = yCount * maskStride + xCount * 4;
+                    //pixels[p] = 0;
+                    //pixels[p+1] = 0;
+                    //pixels[p+2] = 0;
+
+
+                    //マスク1が黒なら画像も黒にする
+                    if (mask1Pixels[pp] == 0)
+                    {
+                        pixels[p] = 0;
+                        pixels[p + 1] = 0;
+                        pixels[p + 2] = 0;
+                    }
+
+                    //マスク2が白なら色反転
+                    if (mask2Pixels[pp] == 255)
+                    {
+                        pixels[p] = (byte)(255 - pixels[p]);
+                        pixels[p + 1] = (byte)(255 - pixels[p + 1]);
+                        pixels[p + 2] = (byte)(255 - pixels[p + 2]);
+                        nekocount++;
+                    }
+                    xCount++;
+                }
+                yCount++;
+                xCount = 0;
+            }
+
+            return BitmapSource.Create(w, h, source.DpiX, source.DpiY, source.Format, source.Palette, pixels, stride);
+
+        }
+
+        private void Buttonクライアント領域取得_Click(object sender, RoutedEventArgs e)
+        {
+            MyTimer.Tick += MyTimer_Tick1;
+            MyTimer.Start();
+        }
+
+        private void MyTimer_Tick1(object sender, EventArgs e)
+        {
+            //プリントスクリーンキーで判定
+            //現在押されていた場合
+            if (((GetAsyncKeyState(0x2c) & 0x8000) >> 15) == 1)
+            {
+                MyImage.Source = CaptureClientWithoutCursor();
+            }
+            //前回から押された形跡があった場合
+            //if ((GetAsyncKeyState(0x2c) & 1) == 1) { Beep(1500, 10); }
+        }
+        private BitmapSource CaptureClientWithoutCursor()
+        {
+            IntPtr actWindDC = GetDC(GetForegroundWindow());//アクティブウィンドウのDC取得
+            IntPtr memDC = CreateCompatibleDC(actWindDC);//画像コピー先のDC作成
+
+            //アクティブウィンドウのクライアント領域
+            GetClientRect(GetForegroundWindow(), out RECT clientRect);//Rect取得
+            int w = clientRect.Right - clientRect.Left;//横幅
+            int h = clientRect.Bottom - clientRect.Top;//縦
+
+            IntPtr hBitmap = CreateCompatibleBitmap(actWindDC, w, h);//コピー先のbitmap作成
+            SelectObject(memDC, hBitmap);//よくわからん、コピー先のDCのオブジェクトにbitmapを指定している？
+            //コピー実行
+            BitBlt(memDC, 0, 0, w, h, actWindDC, 0, 0, SRCCOPY);
+            //BitBlt(コピー先DC、left、top、横、縦、コピー元、left、top、コピー方法)
+
+            //コピー先のbitmapからbitmapsource作成
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+            //後片付け
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, actWindDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+
+            return source;//alphaが0になってしまう？半透明に不具合あり
+
+            //alphaを255にするためにBgr24に変換してみたけどchromeが真っ黒になる
+            //FormatConvertedBitmap format = new FormatConvertedBitmap(source, PixelFormats.Bgr24, null, 0);
+            //return format;//
+        }
+
+        private BitmapSource CaptureClientWithoutCursorFromDesktop()
+        {
+            //SystemParameters.VirtualScreenWidthはマルチモニタ環境で使うと意味がある
+            //IntPtr hBitmap = CreateCompatibleBitmap(screenDC, (int)SystemParameters.VirtualScreenWidth, (int)SystemParameters.VirtualScreenHeight);
+
+            //アクティブウィンドウのクライアント領域
+            IntPtr actWindow = GetForegroundWindow();
+            GetClientRect(actWindow, out RECT clientRect);//Rect取得
+            int clientWidth = clientRect.Right - clientRect.Left;//横幅、実際はtopとleftは必ず0なので、rightとbottomだけでいい
+            int clientHeight = clientRect.Bottom - clientRect.Top;//縦
+            ClientToScreen(actWindow, out POINT ClientLocate);//画面全体の中での左上座標
+
+            IntPtr screenDC = GetDC(IntPtr.Zero);//画面全体のDC
+            IntPtr memDC = CreateCompatibleDC(screenDC);//画像コピー先DC作成
+            IntPtr hBitmap = CreateCompatibleBitmap(screenDC, clientWidth, clientHeight);//コピー先のbitmap作成
+            SelectObject(memDC, hBitmap);
+            //コピー実行
+            BitBlt(memDC, 0, 0, clientWidth, clientHeight, screenDC, ClientLocate.X, ClientLocate.Y, SRCCOPY);
+            //BitBlt(コピー先DC、left、top、横、縦、コピー元、left、top、コピー方法)
+
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, screenDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+
+            return source;
+        }
+
+        private void Buttonクライアント領域取得2_Click(object sender, RoutedEventArgs e)
+        {
+            MyTimer.Tick += MyTimer_Tick2;
+            MyTimer.Start();
+        }
+
+        private void MyTimer_Tick2(object sender, EventArgs e)
+        {
+            //プリントスクリーンキーで判定
+            //現在押されていた場合
+            if (((GetAsyncKeyState(0x2c) & 0x8000) >> 15) == 1)
+            {
+                MyImage.Source = CaptureClientWithoutCursorFromDesktop();
+            }
+            //前回から押された形跡があった場合
+            //if ((GetAsyncKeyState(0x2c) & 1) == 1) { Beep(1500, 10); }
+        }
+
+        private void Buttonクライアント領域取得カーソル付き_Click(object sender, RoutedEventArgs e)
+        {
+            MyTimer.Tick += MyTimer_Tick3;
+            MyTimer.Start();
+        }
+
+        private void MyTimer_Tick3(object sender, EventArgs e)
+        {
+            //プリントスクリーンキー(0x2C)で判定
+            //右コントロールキー(0xA3)
+            //現在押されていた場合、最上位ビットが1になる            
+            //if (((GetAsyncKeyState(0xA3) & 0x8000) >> 15) == 1)
+            //{
+            //    BitmapSource maskBitmap = GetIconMaskBitmap();
+            //    BitmapSource screenBitmap = CaptureClientWithoutCursorFromDesktop();
+            //    ICONINFO info = GetMyIconInfo2();
+            //    //ICONINFO info = GetMyIconInfo();
+            //    MyImage.Source = MixBitmap(screenBitmap, maskBitmap, GetCursorPositionInClient(), info.xHotspot, info.yHotspot);
+            //    Beep(1500, 10);
+            //}
+
+            //前回から押された形跡があった場合、最下位ビットが1
+            if ((GetAsyncKeyState(0xA3) & 1) == 1)
+            {
+                BitmapSource maskBitmap = GetIconMaskBitmap();
+                BitmapSource screenBitmap = CaptureClientWithoutCursorFromDesktop();
+                ICONINFO info = GetMyIconInfo2();
+                //ICONINFO info = GetMyIconInfo();
+                MyImage.Source = MixBitmap(screenBitmap, maskBitmap, GetCursorPositionInClient(), info.xHotspot, info.yHotspot);
+
+                Beep(1500, 10);
+            }
+        }
+
+        //マウスカーソルの座標取得
+        private POINT GetCursorPositionInClient()
+        {
+            //アクティブウィンドウのクライアント領域の左上座標
+            ClientToScreen(GetForegroundWindow(), out POINT ClientLocate);
+            GetCursorPos(out POINT cursorScreenPoint);//画面上でのカーソル位置
+            POINT p = new POINT();
+            p.X = cursorScreenPoint.X - ClientLocate.X;
+            p.Y = cursorScreenPoint.Y - ClientLocate.Y;
+            return p;
+        }
+
+        //マウスカーソルのホットスポット、ずれる
+        private ICONINFO GetMyIconInfo()
+        {
+            var c = GetCursor();
+            GetIconInfo(c, out ICONINFO info);
+            return info;
+        }
+        //マウスカーソルのホットスポット2、ずれたりずれなかったりする
+        private ICONINFO GetMyIconInfo2()
+        {
+            var cInfo = new CURSORINFO();
+            cInfo.cbSize = Marshal.SizeOf(typeof(CURSORINFO));
+            GetCursorInfo(out cInfo);
+            var icon = CopyIcon(cInfo.hCursor);
+            GetIconInfo(icon, out ICONINFO info);
+            DestroyIcon(icon);
+            return info;
+        }
+
+
     }
 }

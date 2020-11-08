@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201106_API"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="400">
+        Title="MainWindow" Height="900" Width="600">
     <Grid>
-    <StackPanel>
+    <StackPanel Background="LightGray">
       <Button x:Name="ButtonBeep" Content="beep" Click="ButtonBeep_Click"/>
       <Button x:Name="ButtonMouseNumber" Content="mouseNunber" Click="ButtonMouseNumber_Click"/>
       <Button x:Name="ButtonForegroudWindow" Content="GetForegroundWindow" Click="ButtonForegroudWindow_Click"/>
@@ -23,6 +23,11 @@
       <Button x:Name="ButtonBitmapSource3" Content="GetBitmapSource3" Click="ButtonBitmapSource3_Click"/>
       <Button x:Name="ButtonBitmapSource4" Content="GetBitmapSource4" Click="ButtonBitmapSource4_Click"/>
       <Button x:Name="ButtonCursor" Content="Cursor" Click="ButtonCursor_Click"/>
+      <Button x:Name="ButtonIconMaskBmp" Content="IconMaskBmp" Click="ButtonIconMaskBmp_Click"/>
+      <Button x:Name="ButtonIconMaskBmp2" Content="IconMaskBmpプリントスクリーンキー" Click="ButtonIconMaskBmp2_Click"/>
+      <Button x:Name="Buttonクライアント領域取得" Content="クライアント領域取得不具合あり" Click="Buttonクライアント領域取得_Click"/>
+      <Button x:Name="Buttonクライアント領域取得2" Content="クライアント領域取得" Click="Buttonクライアント領域取得2_Click"/>
+      <Button x:Name="Buttonクライアント領域取得カーソル付き" Content="クライアント領域取得カーソル付き" Click="Buttonクライアント領域取得カーソル付き_Click"/>
       
       <Image x:Name="MyImage" Stretch="None" UseLayoutRounding="True"/>
     </StackPanel>
