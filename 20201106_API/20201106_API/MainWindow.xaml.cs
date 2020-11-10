@@ -804,12 +804,16 @@ namespace _20201106_API
         {
             //プリントスクリーンキーで判定
             //現在押されていた場合
-            if (((GetAsyncKeyState(0x2c) & 0x8000) >> 15) == 1)
+            //if (((GetAsyncKeyState(0x2c) & 0x8000) >> 15) == 1)
+            //{
+            //    MyImage.Source = CaptureClientWithoutCursorFromDesktop();
+            //}
+            //前回から押された形跡があった場合
+            if ((GetAsyncKeyState(0x2c) & 1) == 1)
             {
                 MyImage.Source = CaptureClientWithoutCursorFromDesktop();
+                Beep(1500, 10);
             }
-            //前回から押された形跡があった場合
-            //if ((GetAsyncKeyState(0x2c) & 1) == 1) { Beep(1500, 10); }
         }
 
         private void Buttonクライアント領域取得カーソル付き_Click(object sender, RoutedEventArgs e)

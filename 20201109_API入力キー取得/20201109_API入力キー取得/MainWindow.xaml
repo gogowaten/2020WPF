@@ -5,10 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201109_API入力キー取得"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="400">
     <Grid>
     <StackPanel>
-      <TextBlock x:Name="TextBlockRightCtrlKeyState" Text="state"/>
+      <TextBlock x:Name="TextBlockKey1AsyncState" Text="asyncState1"/>
+      <TextBlock x:Name="TextBlockKey2AsyncState" Text="asyncState2"/>
+      <TextBlock x:Name="TextBlockKey1State" Text="state1"/>
+      <TextBlock x:Name="TextBlockKey2State" Text="state2"/>
+      
+      <TextBlock x:Name="TextBlockCount" Text="count"/>
+      <TextBlock x:Name="TextBlockGetKeyState" Text="getkeystate"/>
+      <TextBox x:Name="MyTextBox" Width="200"/>
+      <Button x:Name="MyButtonTest" Content="test" Click="MyButtonTest_Click"/>
+      <ComboBox Name="MyComboBox"/>
     </StackPanel>
     </Grid>
 </Window>
