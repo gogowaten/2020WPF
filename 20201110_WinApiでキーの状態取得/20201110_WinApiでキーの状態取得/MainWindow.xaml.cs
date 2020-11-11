@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+//非アクティブ時にもキーの状態を取得してみたWindowsAPIのGetAsyncKeyState - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/11/11/124304
 
 namespace _20201110_WinApiでキーの状態取得
 {
