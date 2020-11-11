@@ -14,9 +14,9 @@ namespace _20201110_WinApiでキーの状態取得
         //必要なAPIはGetAsyncKeyStateだけなんだけど
         //似たようなGetKeyStateも使ってみた
         [DllImport("user32.dll")]
-        private extern static short GetAsyncKeyState(int vKey);
+        private static extern short GetAsyncKeyState(int vKey);
         [DllImport("user32.dll")]
-        private extern static short GetKeyState(int vKey);
+        private static extern short GetKeyState(int vKey);
 
         //状態を知りたいキーの仮想キーコードを渡す
         //戻り値の型はshortで、これを2進数にして最上位ビットと最下位ビットで判定する
@@ -38,8 +38,6 @@ namespace _20201110_WinApiでキーの状態取得
         //GetKeyState
         //最上位ビットが1のとき、押されている状態
         //最下位ビットはトグル式のキー(CapsLockとか)用で1のとき、トグルオン状態
-        //戻り値はshortのはずなんだけど見た感じだとsbyteっぽい(-128～127)
-        //なので最上位ビットの判定はは8桁目で行った
 
         //違い
         //GetAsyncKeyStateは押された形跡がわかる
@@ -47,7 +45,7 @@ namespace _20201110_WinApiでキーの状態取得
 
         //イマイチ
         //GetAsyncKeyStateはアプリによっては取得できない(無反応？)
-        //タスクマネージャー、エクセル、デスクトップ検索のEverythingなど
+        //タスクマネージャー、デスクトップ検索のEverythingなど
 
         private DispatcherTimer MyTimer;
         private int MyCount;
@@ -99,18 +97,22 @@ namespace _20201110_WinApiでキーの状態取得
 
             //Key1が押された状態で、Key2も押されていたらの判定
             // != 0 この判定の仕方は雑だけど問題なさそう
-            if (key1AsyncState != 0 & (key2AsyncState & 1) == 1)
+            //if (key1AsyncState != 0 & (key2AsyncState & 1) == 1)
+            //{
+            //    //カウントを増やして回数の表示を更新
+            //    MyCount++;
+            //    MyTextBlockCount.Text = MyCount.ToString() + "回";
+            //}
+
+            //↑の雑じゃない判定版、こっちのほうがいい、エクセルでも動いた
+            if (((key1AsyncState & 0x8000) >> 15 == 1) & ((key2AsyncState & 1) == 1))
             {
-                //カウントを増やして回数の表示を更新
                 MyCount++;
                 MyTextBlockCount.Text = MyCount.ToString() + "回";
             }
 
-            //↑の雑じゃない判定版
-            //if (((key1AsyncState & 0x8000) >> 15 == 1) & ((key2AsyncState & 1) == 1)) { }
-
             //GetKeyStateとGetAsyncKeyState版でもできた
-            //if ((key1State & 0x80) >> 7 == 1 & (key2AsyncState & 1)== 1)
+            //if ((key1State & 0x8000) >> 15 == 1 & (key2AsyncState & 1)== 1)
             //{
             //    MyCount++;
             //    MyTextBlockCount.Text = MyCount.ToString() + "回";
@@ -118,7 +120,7 @@ namespace _20201110_WinApiでキーの状態取得
 
             //GetkeyStateだけだとできなかった
             //両キーとも押しっぱなしのときしか判定されない
-            //if ((key1State & 0x80) >> 7 == 1 & (key2State & 0x80) >> 7 == 1)
+            //if ((key1State & 0x8000) >> 15 == 1 & (key2State & 0x80) >> 7 == 1)
             //{
             //    MyCount++;
             //    MyTextBlockCount.Text = MyCount.ToString() + "回";
