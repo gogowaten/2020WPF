@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>_20201111_カーソル下のウィンドウ取得</RootNamespace>
     <UseWPF>true</UseWPF>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
 </Project>

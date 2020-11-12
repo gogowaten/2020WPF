@@ -5,16 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201111_カーソル下のウィンドウ取得"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="120" Width="600">
   <Grid>
     <StackPanel>
-      <TextBlock x:Name="MyTextBlock1" Text="text"/>
-      <TextBlock x:Name="MyTextBlock2" Text="text"/>
-      <TextBlock x:Name="MyTextBlock3" Text="text"/>
-      <Button x:Name="MyButton" Content="button"/>
-      <ScrollViewer UseLayoutRounding="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-        <Image x:Name="MyImage" Stretch="None"/>
-      </ScrollViewer>
+      <TextBlock x:Name="MyTextBlock1" Text="text" Margin="8,2"/>
+      <TextBlock x:Name="MyTextBlock2" Text="text" Margin="8,2"/>
+      <TextBlock x:Name="MyTextBlock3" Text="text" Margin="8,2"/>
     </StackPanel>
   </Grid>
 </Window>

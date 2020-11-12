@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
 
+//マウスカーソルの下にあるウィンドウのRect取得してみた、GetWindowRectとGetClientRect - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/11/12/123533
+
+//1秒毎にマウスカーソルの下にあるウィンドウのRectを取得
 namespace _20201111_カーソル下のウィンドウ取得
 {
     /// <summary>
@@ -84,6 +77,7 @@ namespace _20201111_カーソル下のウィンドウ取得
         {
             InitializeComponent();
 
+            //1秒毎のタイマー
             MyTimer = new DispatcherTimer();
             MyTimer.Interval = new TimeSpan(0, 0, 0, 0, 1000);
             MyTimer.Tick += MyTimer_Tick;
@@ -100,21 +94,22 @@ namespace _20201111_カーソル下のウィンドウ取得
             GetCursorPos(out POINT cursorP);
 
             //マウスカーソルの下にあるウィンドウのハンドル取得
-            //右クリックメニューなどもウィンドウとして取得される
+            //右クリックメニューやボタン、テキストボックスとかのコントロールも取得される
             IntPtr handleWin = WindowFromPoint(cursorP);
+
+            //ウィンドウのRect取得、これは透明や半透明の枠も含むので見た目より大きな値になる
+            //座標は画面全体での位置になる
+            if (GetWindowRect(handleWin, out RECT wRect))
+            {
+                MyTextBlock1.Text = $"WindowRect 左上座標({wRect.left}, {wRect.top}) 右下({wRect.right}, {wRect.bottom})";
+            }
 
             //ウィンドウのクライアント領域(枠の内側領域)のRect取得
             //leftとtopは常に0、なので実質、rightは横幅、bottomは縦幅ってことになる
             if (GetClientRect(handleWin, out RECT cRect))
             {
-                MyTextBlock1.Text = $"ClientRect ({cRect.left}, {cRect.top}) ({cRect.right}, {cRect.bottom})";
+                MyTextBlock2.Text = $"ClientRect ({cRect.left}, {cRect.top}) (横幅：{cRect.right}, 縦幅：{cRect.bottom})";
             };
-            //ウィンドウのRect取得、これは透明や半透明の枠も含むので見た目より大きな値になる
-            //座標は画面全体での位置になる
-            if (GetWindowRect(handleWin, out RECT wRect))
-            {
-                MyTextBlock2.Text = $"WindowRect 左上座標({wRect.left}, {wRect.top}) 右下({wRect.right}, {wRect.bottom})";
-            }
 
             //ウィンドウの名前表示
             var winName = new StringBuilder(65535);
