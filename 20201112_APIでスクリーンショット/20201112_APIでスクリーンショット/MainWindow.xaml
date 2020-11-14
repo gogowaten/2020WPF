@@ -5,10 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201112_APIでスクリーンショット"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="500">
   <Grid Background="DarkGray">
     <Grid.RowDefinitions>
-      <RowDefinition Height="100"/>
+      <RowDefinition Height="150"/>
       <RowDefinition/>
     </Grid.RowDefinitions>
     <StackPanel Grid.Row="0">
@@ -16,10 +16,14 @@
       <TextBlock x:Name="MyTextBlock2" Text="text2"/>
       <TextBlock x:Name="MyTextBlock3" Text="text3"/>
       <TextBlock x:Name="MyTextBlock4" Text="text4"/>
+      <TextBlock x:Name="MyTextBlock5" Text="text5"/>
+      <TextBlock x:Name="MyTextBlock6" Text="text6"/>
+      <Button x:Name="MyButtonStart" Content="start" Click="MyButtonStart_Click"/>
+      <Button x:Name="MyButtonStop" Content="stop" Click="MyButtonStop_Click"/>
       <Button x:Name="MyButton" Content="button" Click="MyButton_Click"/>
       <Button x:Name="MyButton2" Content="button2" Click="MyButton2_Click"/>
     </StackPanel>
-    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True" Background="Violet">
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True" Background="cyan">
       <Image x:Name="MyImage" Stretch="None"/>
     </ScrollViewer>
   </Grid>

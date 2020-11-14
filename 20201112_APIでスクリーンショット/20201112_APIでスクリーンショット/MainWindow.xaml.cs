@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Runtime.InteropServices;
-using System.Windows.Interop;
 using System.Windows.Threading;
 
 
@@ -171,19 +162,37 @@ namespace _20201112_APIでスクリーンショット
             MyTimer.Interval = new TimeSpan(0, 0, 0, 0, 1000);
             MyTimer.Tick += MyTimer_Tick;
             MyTimer.Start();
+
+            this.Closing += (s, e) => { MyTimer.Stop(); };
         }
+
 
         private void MyTimer_Tick(object sender, EventArgs e)
         {
             //MyImage.Source= CaptureForegroundWindow();
             //MyImage.Source = CaptureWindow();
-            MyImage.Source = CaptureWindowUnderCursor();
+            //MyImage.Source = CaptureDWMWindow();
+            //MyImage.Source = CaptureActiveWindow();
+            //MyImage.Source = CaptureActiveClient();
+            //MyImage.Source = CaptureControlUnderCursor();
+            MyImage.Source = CaptureControlClientUnderCursor();
+
         }
 
         private void MyButton_Click(object sender, RoutedEventArgs e)
         {
 
             MyImage.Source = CaptureScreen();
+        }
+
+        private void MyButtonStart_Click(object sender, RoutedEventArgs e)
+        {
+            MyTimer.Start();
+        }
+
+        private void MyButtonStop_Click(object sender, RoutedEventArgs e)
+        {
+            MyTimer.Stop();
         }
 
         //画面全体のスクリーンショット画像取得
@@ -247,21 +256,24 @@ namespace _20201112_APIでスクリーンショット
             GetCursorPos(out POINT sp);
             var handleWin = WindowFromPoint(sp);
             GetClientRect(handleWin, out RECT clientRect);
-            GetWindowRect(handleWin, out RECT wRect);
+            GetWindowRect(handleWin, out RECT windowRect);
             var screenDC = GetDC(IntPtr.Zero);
-            DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT wdmRect, Marshal.SizeOf(typeof(RECT)));
+            DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRect, Marshal.SizeOf(typeof(RECT)));
 
-            var hBitmap = CreateCompatibleBitmap(screenDC, clientRect.right, clientRect.bottom);
+            int width = windowRect.right - windowRect.left;
+            int height = windowRect.bottom - windowRect.top;
+            var hBitmap = CreateCompatibleBitmap(screenDC, width, height);
             var memDC = CreateCompatibleDC(screenDC);
             SelectObject(memDC, hBitmap);
 
-            BitBlt(memDC, 0, 0, clientRect.right, clientRect.bottom, screenDC, wdmRect.left, wdmRect.top, SRCCOPY);
+            BitBlt(memDC, 0, 0, width, height, screenDC, windowRect.left, windowRect.top, SRCCOPY);
             BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
-            MyTextBlock1.Text = $"windowRect {wRect} 横 {wRect.right - wRect.left}、縦 {wRect.bottom - wRect.top}";
-            MyTextBlock2.Text = $"clientRect {clientRect}";
-            MyTextBlock3.Text = $"extendRect {wdmRect} 横 {wdmRect.right - wdmRect.left}、縦 {wdmRect.bottom - wdmRect.top}";
-            MyTextBlock4.Text = $"bitmap 横{source.PixelWidth}、縦{source.PixelHeight}";
+            MyTextBlock1.Text = $"横 {windowRect.right - windowRect.left}、縦 {windowRect.bottom - windowRect.top} GetWindowRect {windowRect}";
+            MyTextBlock2.Text = $"横 {dwmRect.right - dwmRect.left}、縦 {dwmRect.bottom - dwmRect.top} WdmExtendRect {dwmRect}";
+            MyTextBlock3.Text = $"横 {source.PixelWidth}、縦 {source.PixelHeight} bitmap";
+            MyTextBlock4.Text = $"横 {clientRect.right}、縦 {clientRect.bottom} GetClientRect {clientRect}";
+
 
             DeleteObject(hBitmap);
             ReleaseDC(IntPtr.Zero, screenDC);
@@ -271,40 +283,259 @@ namespace _20201112_APIでスクリーンショット
         }
 
         //カーソル下のウィンドウ
-        private BitmapSource CaptureWindowUnderCursor()
+        private BitmapSource CaptureDWMWindow()
         {
             GetCursorPos(out POINT sp);
             var handleWin = WindowFromPoint(sp);
             GetClientRect(handleWin, out RECT clientRect);
-            GetWindowRect(handleWin, out RECT wRect);
-            long hResult = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT wdmExtendedRect, Marshal.SizeOf(typeof(RECT)));
-            long hResult2 = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_BUTTON_BOUNDS, out RECT wdmCaptionRect, Marshal.SizeOf(typeof(RECT)));
+            GetWindowRect(handleWin, out RECT windowRect);
+            GetWindowRect(GetForegroundWindow(), out RECT foreWindowRect);
+
+            long hResult = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRect, Marshal.SizeOf(typeof(RECT)));
+            long hResult2 = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_BUTTON_BOUNDS, out RECT dwmCaptionRect, Marshal.SizeOf(typeof(RECT)));
             //hResultが0なら成功、それ以外は失敗で16進数にして
             //0x8007_0006だった場合はハンドル無効エラーERROR_INVALID_HANDLE
             //if (hResult == 0x8007_0006) { MessageBox.Show("ハンドルが無効でExtendedFrameBoundsが取得できなかった"); };
             //
+            var width = dwmRect.right - dwmRect.left;
+            var height = dwmRect.bottom - dwmRect.top;
+
             var screenDC = GetDC(IntPtr.Zero);
-            var hBitmap = CreateCompatibleBitmap(screenDC, wRect.right - wRect.left, wRect.bottom - wRect.top);
+            var hBitmap = CreateCompatibleBitmap(screenDC, width, height);
             var memDC = CreateCompatibleDC(screenDC);
             SelectObject(memDC, hBitmap);
 
-            var width = wdmExtendedRect.right - wdmExtendedRect.left;
-            var height = wdmExtendedRect.bottom - wdmExtendedRect.top;
 
-            BitBlt(memDC, 0, 0, width,height, screenDC, wdmExtendedRect.left,wdmExtendedRect.top, SRCCOPY);
+            BitBlt(memDC, 0, 0, width, height, screenDC, dwmRect.left, dwmRect.top, SRCCOPY);
             BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
 
-            MyTextBlock1.Text = $"横 {wRect.right - wRect.left}、縦 {wRect.bottom - wRect.top} windowRect {wRect}";
-            MyTextBlock2.Text = $"横 {clientRect.right} 、縦 {clientRect.bottom} clientRect {clientRect}";
-            MyTextBlock3.Text = $"横 {wdmExtendedRect.right - wdmExtendedRect.left}、縦 {wdmExtendedRect.bottom - wdmExtendedRect.top} extendRect {wdmExtendedRect}";
-            MyTextBlock4.Text = $"横 {source.PixelWidth}、縦{source.PixelHeight} bitmap";
-
+            MyTextBlock1.Text = $"横 {windowRect.right - windowRect.left}、縦 {windowRect.bottom - windowRect.top} GetWindowRect {windowRect}";
+            MyTextBlock2.Text = $"横 {dwmRect.right - dwmRect.left}、縦 {dwmRect.bottom - dwmRect.top} WdmExtendRect {dwmRect}";
+            MyTextBlock3.Text = $"横 {source.PixelWidth}、縦 {source.PixelHeight} bitmap";
+            MyTextBlock4.Text = $"横 {clientRect.right}、縦 {clientRect.bottom} GetClientRect {clientRect}";
+            MyTextBlock5.Text = $"横 {foreWindowRect.right - foreWindowRect.left}、縦 {foreWindowRect.bottom - foreWindowRect.top} ForeWindowRect {dwmRect}";
 
 
             DeleteObject(hBitmap);
             ReleaseDC(IntPtr.Zero, screenDC);
             ReleaseDC(IntPtr.Zero, memDC);
+
+            return source;
+        }
+
+        private BitmapSource CaptureActiveWindow()
+        {
+            GetCursorPos(out POINT sp);
+            var handleWin = WindowFromPoint(sp);
+            GetClientRect(handleWin, out RECT clientRect);
+            GetWindowRect(handleWin, out RECT windowRect);
+            var handleForeW = GetForegroundWindow();
+            GetWindowRect(handleForeW, out RECT foreWindowRect);
+
+            long hResult = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRect, Marshal.SizeOf(typeof(RECT)));
+            long hResultEx = DwmGetWindowAttribute(handleForeW, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRectEx, Marshal.SizeOf(typeof(RECT)));
+            long hResult2 = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_BUTTON_BOUNDS, out RECT wdmCaptionRect, Marshal.SizeOf(typeof(RECT)));
+            //hResultが0なら成功、それ以外は失敗で16進数にして
+            //0x8007_0006だった場合はハンドル無効エラーERROR_INVALID_HANDLE
+            //if (hResult == 0x8007_0006) { MessageBox.Show("ハンドルが無効でExtendedFrameBoundsが取得できなかった"); };
+            //
+            int width = dwmRectEx.right - dwmRectEx.left;
+            int height = dwmRectEx.bottom - dwmRectEx.top;
+
+            var screenDC = GetDC(IntPtr.Zero);
+            var hBitmap = CreateCompatibleBitmap(screenDC, width, height);
+            var memDC = CreateCompatibleDC(screenDC);
+            SelectObject(memDC, hBitmap);
+
+            BitBlt(memDC, 0, 0, width, height, screenDC, dwmRectEx.left, dwmRectEx.top, SRCCOPY);
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+
+            MyTextBlock1.Text = $"横 {windowRect.right - windowRect.left}、縦 {windowRect.bottom - windowRect.top} GetWindowRect {windowRect}";
+            MyTextBlock2.Text = $"横 {dwmRect.right - dwmRect.left}、縦 {dwmRect.bottom - dwmRect.top} WdmExtendRect {dwmRect}";
+            MyTextBlock3.Text = $"横 {source.PixelWidth}、縦 {source.PixelHeight} bitmap";
+            MyTextBlock4.Text = $"横 {clientRect.right}、縦 {clientRect.bottom} GetClientRect {clientRect}";
+            MyTextBlock5.Text = $"横 {foreWindowRect.right - foreWindowRect.left}、縦 {foreWindowRect.bottom - foreWindowRect.top} ForeWindowRect {foreWindowRect}";
+            MyTextBlock6.Text = $"横 {dwmRectEx.right - dwmRectEx.left}、縦 {dwmRectEx.bottom - dwmRectEx.top} ForeWindowRectEx {dwmRectEx}";
+
+
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, screenDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+
+            FormatConvertedBitmap cb = new FormatConvertedBitmap(source, PixelFormats.Bgr24, null, 0);
+            return cb;
+        }
+        private BitmapSource CaptureActiveClient()
+        {
+            GetCursorPos(out POINT sp);
+            var handleWin = WindowFromPoint(sp);
+            GetClientRect(handleWin, out RECT clientRect);
+            GetWindowRect(handleWin, out RECT windowRect);
+            var handleForeW = GetForegroundWindow();
+            GetWindowRect(handleForeW, out RECT foreWindowRect);
+            GetClientRect(handleForeW, out RECT foreWindowClientRect);
+
+            long hResult = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRect, Marshal.SizeOf(typeof(RECT)));
+            long hResultEx = DwmGetWindowAttribute(handleForeW, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRectEx, Marshal.SizeOf(typeof(RECT)));
+            //long hResult2 = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_BUTTON_BOUNDS, out RECT wdmCaptionRect, Marshal.SizeOf(typeof(RECT)));
+            //hResultが0なら成功、それ以外は失敗で16進数にして
+            //0x8007_0006だった場合はハンドル無効エラーERROR_INVALID_HANDLE
+            //if (hResult == 0x8007_0006) { MessageBox.Show("ハンドルが無効でExtendedFrameBoundsが取得できなかった"); };
+            //
+            int width = foreWindowClientRect.right;
+            int height = foreWindowClientRect.bottom;
+            ClientToScreen(handleForeW, out POINT clientPoint);
+
+            var screenDC = GetDC(IntPtr.Zero);
+            var hBitmap = CreateCompatibleBitmap(screenDC, width, height);
+            var memDC = CreateCompatibleDC(screenDC);
+            SelectObject(memDC, hBitmap);
+
+            BitBlt(memDC, 0, 0, width, height, screenDC, clientPoint.x, clientPoint.y, SRCCOPY);
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+
+            MyTextBlock1.Text = $"横 {windowRect.right - windowRect.left}、縦 {windowRect.bottom - windowRect.top} GetWindowRect {windowRect}";
+            MyTextBlock2.Text = $"横 {dwmRect.right - dwmRect.left}、縦 {dwmRect.bottom - dwmRect.top} WdmExtendRect {dwmRect}";
+            MyTextBlock3.Text = $"横 {source.PixelWidth}、縦 {source.PixelHeight} bitmap";
+            MyTextBlock4.Text = $"横 {clientRect.right}、縦 {clientRect.bottom} GetClientRect {clientRect}";
+            MyTextBlock5.Text = $"横 {foreWindowRect.right - foreWindowRect.left}、縦 {foreWindowRect.bottom - foreWindowRect.top} ForeWindowRect {foreWindowRect}";
+            MyTextBlock6.Text = $"横 {dwmRectEx.right - dwmRectEx.left}、縦 {dwmRectEx.bottom - dwmRectEx.top} ForeWindowRectEx {dwmRectEx}";
+
+
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, screenDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+
+
+            return source;
+        }
+        
+        //カーソル下のコントロール
+        private BitmapSource CaptureControlUnderCursor()
+        {
+            GetCursorPos(out POINT sp);
+            var handleWin = WindowFromPoint(sp);
+            GetClientRect(handleWin, out RECT clientRect);
+            GetWindowRect(handleWin, out RECT windowRect);
+            var handleForeW = GetForegroundWindow();
+            GetWindowRect(handleForeW, out RECT foreWindowRect);
+            GetClientRect(handleForeW, out RECT foreWindowClientRect);
+
+            long hResult = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRect, Marshal.SizeOf(typeof(RECT)));
+            long hResultEx = DwmGetWindowAttribute(handleForeW, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRectEx, Marshal.SizeOf(typeof(RECT)));
+            //long hResult2 = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_BUTTON_BOUNDS, out RECT wdmCaptionRect, Marshal.SizeOf(typeof(RECT)));
+            //hResultが0なら成功、それ以外は失敗で16進数にして
+            //0x8007_0006だった場合はハンドル無効エラーERROR_INVALID_HANDLE
+            //if (hResult == 0x8007_0006) { MessageBox.Show("ハンドルが無効でExtendedFrameBoundsが取得できなかった"); };
+
+            int width,height;            
+            int offsetX, offsetY;
+            POINT clientPoint;
+            ClientToScreen(handleWin, out clientPoint);
+            if (hResult == 0)
+            {
+                width = dwmRect.right - dwmRect.left;
+                height = dwmRect.bottom - dwmRect.top;
+                offsetX = dwmRect.left;
+                offsetY = dwmRect.top;
+            }
+            else
+            {   
+                width = clientRect.right;
+                height = clientRect.bottom;
+                offsetX = clientPoint.x;
+                offsetY = clientPoint.y;
+            }
+            
+            
+            var screenDC = GetDC(IntPtr.Zero);
+            var hBitmap = CreateCompatibleBitmap(screenDC, width, height);
+            var memDC = CreateCompatibleDC(screenDC);
+            SelectObject(memDC, hBitmap);
+
+            BitBlt(memDC, 0, 0, width, height, screenDC, offsetX, offsetY, SRCCOPY);
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+
+            MyTextBlock1.Text = $"横 {windowRect.right - windowRect.left}、縦 {windowRect.bottom - windowRect.top} GetWindowRect {windowRect}";
+            MyTextBlock2.Text = $"横 {dwmRect.right - dwmRect.left}、縦 {dwmRect.bottom - dwmRect.top} WdmExtendRect {dwmRect}";
+            MyTextBlock3.Text = $"横 {source.PixelWidth}、縦 {source.PixelHeight} bitmap";
+            MyTextBlock4.Text = $"横 {clientRect.right}、縦 {clientRect.bottom} GetClientRect {clientRect}";
+            MyTextBlock5.Text = $"横 {foreWindowRect.right - foreWindowRect.left}、縦 {foreWindowRect.bottom - foreWindowRect.top} ForeWindowRect {foreWindowRect}";
+            MyTextBlock6.Text = $"横 {dwmRectEx.right - dwmRectEx.left}、縦 {dwmRectEx.bottom - dwmRectEx.top} ForeWindowRectEx {dwmRectEx}";
+
+
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, screenDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+
+
+            return source;
+        } 
+        
+        //カーソル下のコントロールのクライアント領域
+        private BitmapSource CaptureControlClientUnderCursor()
+        {
+            GetCursorPos(out POINT sp);
+            var handleWin = WindowFromPoint(sp);
+            GetClientRect(handleWin, out RECT clientRect);
+            GetWindowRect(handleWin, out RECT windowRect);
+            var handleForeW = GetForegroundWindow();
+            GetWindowRect(handleForeW, out RECT foreWindowRect);
+            GetClientRect(handleForeW, out RECT foreWindowClientRect);
+
+            long hResult = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRect, Marshal.SizeOf(typeof(RECT)));
+            long hResultEx = DwmGetWindowAttribute(handleForeW, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRectEx, Marshal.SizeOf(typeof(RECT)));
+            //long hResult2 = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_BUTTON_BOUNDS, out RECT wdmCaptionRect, Marshal.SizeOf(typeof(RECT)));
+            //hResultが0なら成功、それ以外は失敗で16進数にして
+            //0x8007_0006だった場合はハンドル無効エラーERROR_INVALID_HANDLE
+            //if (hResult == 0x8007_0006) { MessageBox.Show("ハンドルが無効でExtendedFrameBoundsが取得できなかった"); };
+
+            int width,height;            
+            int offsetX, offsetY;
+            POINT clientPoint;
+            ClientToScreen(handleWin, out clientPoint);
+            //0は対象がウィンドウだった場合、0以外は対象がウィンドウ以外のコントロールだった場合
+            if (hResult == 0)
+            {
+                width = clientRect.right;
+                height = clientRect.bottom;
+                offsetX = clientPoint.x;
+                offsetY = clientPoint.y;
+            }
+            else
+            {   
+                width = clientRect.right;
+                height = clientRect.bottom;
+                offsetX = clientPoint.x;
+                offsetY = clientPoint.y;
+            }
+            
+            
+            var screenDC = GetDC(IntPtr.Zero);
+            var hBitmap = CreateCompatibleBitmap(screenDC, width, height);
+            var memDC = CreateCompatibleDC(screenDC);
+            SelectObject(memDC, hBitmap);
+
+            BitBlt(memDC, 0, 0, width, height, screenDC, offsetX, offsetY, SRCCOPY);
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+
+            MyTextBlock1.Text = $"横 {windowRect.right - windowRect.left}、縦 {windowRect.bottom - windowRect.top} GetWindowRect {windowRect}";
+            MyTextBlock2.Text = $"横 {dwmRect.right - dwmRect.left}、縦 {dwmRect.bottom - dwmRect.top} WdmExtendRect {dwmRect}";
+            MyTextBlock3.Text = $"横 {source.PixelWidth}、縦 {source.PixelHeight} bitmap";
+            MyTextBlock4.Text = $"横 {clientRect.right}、縦 {clientRect.bottom} GetClientRect {clientRect}";
+            MyTextBlock5.Text = $"横 {foreWindowRect.right - foreWindowRect.left}、縦 {foreWindowRect.bottom - foreWindowRect.top} ForeWindowRect {foreWindowRect}";
+            MyTextBlock6.Text = $"横 {dwmRectEx.right - dwmRectEx.left}、縦 {dwmRectEx.bottom - dwmRectEx.top} ForeWindowRectEx {dwmRectEx}";
+
+
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, screenDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+
 
             return source;
         }
