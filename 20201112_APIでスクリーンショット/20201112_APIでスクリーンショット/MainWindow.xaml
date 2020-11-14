@@ -8,7 +8,7 @@
         Title="MainWindow" Height="450" Width="500">
   <Grid Background="DarkGray">
     <Grid.RowDefinitions>
-      <RowDefinition Height="150"/>
+      <RowDefinition Height="160"/>
       <RowDefinition/>
     </Grid.RowDefinitions>
     <StackPanel Grid.Row="0">
@@ -18,6 +18,7 @@
       <TextBlock x:Name="MyTextBlock4" Text="text4"/>
       <TextBlock x:Name="MyTextBlock5" Text="text5"/>
       <TextBlock x:Name="MyTextBlock6" Text="text6"/>
+      <TextBlock x:Name="MyTextBlock7" Text="text7"/>
       <Button x:Name="MyButtonStart" Content="start" Click="MyButtonStart_Click"/>
       <Button x:Name="MyButtonStop" Content="stop" Click="MyButtonStop_Click"/>
       <Button x:Name="MyButton" Content="button" Click="MyButton_Click"/>

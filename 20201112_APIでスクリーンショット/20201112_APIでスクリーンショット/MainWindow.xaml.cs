@@ -58,6 +58,15 @@ namespace _20201112_APIでスクリーンショット
         [DllImport("user32.dll")]
         private static extern int GetWindowText(IntPtr hWin, StringBuilder lpString, int nMaxCount);
 
+        //パレントウィンドウ取得
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetParent(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetWindow(IntPtr hWnd,uint uCmd);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetAncestor(IntPtr hWnd,uint gaFlags);
+
+
         //マウスカーソルの位置取得
         [DllImport("user32.dll")]
         private static extern bool GetCursorPos(out POINT lpPoint);
@@ -131,6 +140,7 @@ namespace _20201112_APIでスクリーンショット
 
 
 
+
         //ウィンドウ系のAPI
         //Windows（Windowsおよびメッセージ）-Win32アプリ | Microsoft Docs
         // https://docs.microsoft.com/en-us/windows/win32/winmsg/windows
@@ -156,10 +166,10 @@ namespace _20201112_APIでスクリーンショット
             InitializeComponent();
 
             this.Left = 100;
-            this.Top = 100;
+            this.Top = 650;
 
             MyTimer = new DispatcherTimer();
-            MyTimer.Interval = new TimeSpan(0, 0, 0, 0, 1000);
+            MyTimer.Interval = new TimeSpan(0, 0, 0, 0, 2000);
             MyTimer.Tick += MyTimer_Tick;
             MyTimer.Start();
 
@@ -172,13 +182,21 @@ namespace _20201112_APIでスクリーンショット
             //MyImage.Source= CaptureForegroundWindow();
             //MyImage.Source = CaptureWindow();
             //MyImage.Source = CaptureDWMWindow();
-            //MyImage.Source = CaptureActiveWindow();
+            MyImage.Source = CaptureActiveWindow();
             //MyImage.Source = CaptureActiveClient();
             //MyImage.Source = CaptureControlUnderCursor();
-            MyImage.Source = CaptureControlClientUnderCursor();
+            //MyImage.Source = CaptureControlClientUnderCursor();
+            //MyImage.Source = CaptureTestExcel();
 
         }
 
+        //ウィンドウのテキストをストリングに変換、ウィンドウタイトル
+        private string GetWindowString(IntPtr hWnd)
+        {
+            StringBuilder str = new StringBuilder(65535);
+            GetWindowText(hWnd, str, 65535);
+            return str.ToString();
+        }
         private void MyButton_Click(object sender, RoutedEventArgs e)
         {
 
@@ -412,7 +430,7 @@ namespace _20201112_APIでスクリーンショット
 
             return source;
         }
-        
+
         //カーソル下のコントロール
         private BitmapSource CaptureControlUnderCursor()
         {
@@ -431,7 +449,7 @@ namespace _20201112_APIでスクリーンショット
             //0x8007_0006だった場合はハンドル無効エラーERROR_INVALID_HANDLE
             //if (hResult == 0x8007_0006) { MessageBox.Show("ハンドルが無効でExtendedFrameBoundsが取得できなかった"); };
 
-            int width,height;            
+            int width, height;
             int offsetX, offsetY;
             POINT clientPoint;
             ClientToScreen(handleWin, out clientPoint);
@@ -443,14 +461,14 @@ namespace _20201112_APIでスクリーンショット
                 offsetY = dwmRect.top;
             }
             else
-            {   
+            {
                 width = clientRect.right;
                 height = clientRect.bottom;
                 offsetX = clientPoint.x;
                 offsetY = clientPoint.y;
             }
-            
-            
+
+
             var screenDC = GetDC(IntPtr.Zero);
             var hBitmap = CreateCompatibleBitmap(screenDC, width, height);
             var memDC = CreateCompatibleDC(screenDC);
@@ -474,8 +492,8 @@ namespace _20201112_APIでスクリーンショット
 
 
             return source;
-        } 
-        
+        }
+
         //カーソル下のコントロールのクライアント領域
         private BitmapSource CaptureControlClientUnderCursor()
         {
@@ -494,7 +512,7 @@ namespace _20201112_APIでスクリーンショット
             //0x8007_0006だった場合はハンドル無効エラーERROR_INVALID_HANDLE
             //if (hResult == 0x8007_0006) { MessageBox.Show("ハンドルが無効でExtendedFrameBoundsが取得できなかった"); };
 
-            int width,height;            
+            int width, height;
             int offsetX, offsetY;
             POINT clientPoint;
             ClientToScreen(handleWin, out clientPoint);
@@ -507,14 +525,87 @@ namespace _20201112_APIでスクリーンショット
                 offsetY = clientPoint.y;
             }
             else
-            {   
+            {
                 width = clientRect.right;
                 height = clientRect.bottom;
                 offsetX = clientPoint.x;
                 offsetY = clientPoint.y;
             }
+
+
+            var screenDC = GetDC(IntPtr.Zero);
+            var hBitmap = CreateCompatibleBitmap(screenDC, width, height);
+            var memDC = CreateCompatibleDC(screenDC);
+            SelectObject(memDC, hBitmap);
+
+            BitBlt(memDC, 0, 0, width, height, screenDC, offsetX, offsetY, SRCCOPY);
+            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+
+            MyTextBlock1.Text = $"横 {windowRect.right - windowRect.left}、縦 {windowRect.bottom - windowRect.top} GetWindowRect {windowRect}";
+            MyTextBlock2.Text = $"横 {dwmRect.right - dwmRect.left}、縦 {dwmRect.bottom - dwmRect.top} WdmExtendRect {dwmRect}";
+            MyTextBlock3.Text = $"横 {source.PixelWidth}、縦 {source.PixelHeight} bitmap";
+            MyTextBlock4.Text = $"横 {clientRect.right}、縦 {clientRect.bottom} GetClientRect {clientRect}";
+            MyTextBlock5.Text = $"横 {foreWindowRect.right - foreWindowRect.left}、縦 {foreWindowRect.bottom - foreWindowRect.top} ForeWindowRect {foreWindowRect}";
+            MyTextBlock6.Text = $"横 {dwmRectEx.right - dwmRectEx.left}、縦 {dwmRectEx.bottom - dwmRectEx.top} ForeWindowRectEx {dwmRectEx}";
+
+
+            DeleteObject(hBitmap);
+            ReleaseDC(IntPtr.Zero, screenDC);
+            ReleaseDC(IntPtr.Zero, memDC);
+
+
+            return source;
+        }
+
+        private BitmapSource CaptureTestExcel()
+        {
+            GetCursorPos(out POINT sp);
+            var handleWin = WindowFromPoint(sp);
+            GetClientRect(handleWin, out RECT clientRect);
+            GetWindowRect(handleWin, out RECT windowRect);
+            var handleForeW = GetForegroundWindow();
+            GetWindowRect(handleForeW, out RECT foreWindowRect);
+            GetClientRect(handleForeW, out RECT foreWindowClientRect);
+
+            //エクセルで右クリックメニューやリボンを開いたときにエクセル全体のウィンドウを取得する
+            //var parent = GetParent(handleWin);
+            var parent = GetParent(handleForeW);//いまいち
+            var owner = GetWindow(handleForeW, 4);//4以外はいまいち
+            var ancestor = GetAncestor(handleForeW, 3);//これ！！！！！！！！！！！！！！！！！！
+            MyTextBlock7.Text = GetWindowString(ancestor);
             
+
+            long hResult = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRect, Marshal.SizeOf(typeof(RECT)));
+            long hResultEx = DwmGetWindowAttribute(handleForeW, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT dwmRectEx, Marshal.SizeOf(typeof(RECT)));
+            long hResultExAncestor = DwmGetWindowAttribute(ancestor, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT ancestorExRect, Marshal.SizeOf(typeof(RECT)));
             
+            //long hResult2 = DwmGetWindowAttribute(handleWin, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_BUTTON_BOUNDS, out RECT wdmCaptionRect, Marshal.SizeOf(typeof(RECT)));
+            //hResultが0なら成功、それ以外は失敗で16進数にして
+            //0x8007_0006だった場合はハンドル無効エラーERROR_INVALID_HANDLE
+            //if (hResult == 0x8007_0006) { MessageBox.Show("ハンドルが無効でExtendedFrameBoundsが取得できなかった"); };
+
+            int width, height;
+            int offsetX, offsetY;
+            POINT clientPoint;
+            ClientToScreen(handleWin, out clientPoint);
+            //0は対象がウィンドウだった場合、0以外は対象がウィンドウ以外のコントロールだった場合
+            if (hResultExAncestor == 0)
+            {
+                width = ancestorExRect.right - ancestorExRect.left;
+                height = ancestorExRect.bottom - ancestorExRect.top;
+                offsetX = ancestorExRect.left;
+                offsetY = ancestorExRect.top;
+            }
+            else
+            {
+                width = ancestorExRect.right - ancestorExRect.left;
+                height = ancestorExRect.bottom - ancestorExRect.top;
+                offsetX = ancestorExRect.left;
+                offsetY = ancestorExRect.top;
+            }
+
+
             var screenDC = GetDC(IntPtr.Zero);
             var hBitmap = CreateCompatibleBitmap(screenDC, width, height);
             var memDC = CreateCompatibleDC(screenDC);
