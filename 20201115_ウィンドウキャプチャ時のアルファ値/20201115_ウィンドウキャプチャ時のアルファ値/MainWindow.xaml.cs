@@ -8,6 +8,9 @@ using System.Runtime.InteropServices;//Imagingで使っている
 using System.Windows.Interop;//CreateBitmapSourceFromHBitmapで使っている
 using System.Windows.Threading;//DispatcherTimerで使っている
 
+//ウィンドウDCからのキャプチャではアルファ値が変なので、画面全体をキャプチャして切り抜き - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/11/16/005641
+
 namespace _20201115_ウィンドウキャプチャ時のアルファ値
 {
     /// <summary>
