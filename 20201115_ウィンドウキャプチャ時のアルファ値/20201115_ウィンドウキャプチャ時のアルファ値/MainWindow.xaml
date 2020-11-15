@@ -1,0 +1,36 @@
+﻿<Window x:Class="_20201115_ウィンドウキャプチャ時のアルファ値.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:_20201115_ウィンドウキャプチャ時のアルファ値"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+  <Window.Resources>
+    <Style TargetType="TextBlock">
+      <Setter Property="Margin" Value="8,2"/>
+    </Style>
+  </Window.Resources>
+  <Grid Background="lightGray">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="200"/>
+      <RowDefinition/>
+    </Grid.RowDefinitions>
+    <StackPanel Grid.Row="0">
+      <TextBlock x:Name="MyTextBlock1" Text="text1"/>
+      <TextBlock x:Name="MyTextBlock2" Text="text2"/>
+      <TextBlock x:Name="MyTextBlock3" Text="text3"/>
+      <TextBlock x:Name="MyTextBlock4" Text="text4"/>
+      <TextBlock x:Name="MyTextBlock5" Text="text5"/>
+      <TextBlock x:Name="MyTextBlock6" Text="text6"/>
+      <TextBlock x:Name="MyTextBlock7" Text="text7"/>
+      <Button x:Name="MyButtonStart" Content="start" Click="MyButtonStart_Click"/>
+      <Button x:Name="MyButtonStop" Content="stop" Click="MyButtonStop_Click"/>
+      <!--<Button x:Name="MyButton" Content="button" Click="MyButton_Click"/>
+      <Button x:Name="MyButton2" Content="button2" Click="MyButton2_Click"/>-->
+    </StackPanel>
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True" Background="cyan">
+      <Image x:Name="MyImage" Stretch="None"/>
+    </ScrollViewer>
+  </Grid>
+</Window>
