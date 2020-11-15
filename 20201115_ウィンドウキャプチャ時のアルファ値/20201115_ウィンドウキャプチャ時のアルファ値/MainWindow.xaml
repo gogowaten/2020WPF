@@ -5,29 +5,26 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201115_ウィンドウキャプチャ時のアルファ値"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="400" Width="500">
   <Window.Resources>
-    <Style TargetType="TextBlock">
+    <Style TargetType="RadioButton">
       <Setter Property="Margin" Value="8,2"/>
     </Style>
   </Window.Resources>
-  <Grid Background="lightGray">
+  <Grid>
     <Grid.RowDefinitions>
-      <RowDefinition Height="200"/>
+      <RowDefinition Height="80"/>
       <RowDefinition/>
     </Grid.RowDefinitions>
     <StackPanel Grid.Row="0">
-      <TextBlock x:Name="MyTextBlock1" Text="text1"/>
-      <TextBlock x:Name="MyTextBlock2" Text="text2"/>
-      <TextBlock x:Name="MyTextBlock3" Text="text3"/>
-      <TextBlock x:Name="MyTextBlock4" Text="text4"/>
-      <TextBlock x:Name="MyTextBlock5" Text="text5"/>
-      <TextBlock x:Name="MyTextBlock6" Text="text6"/>
-      <TextBlock x:Name="MyTextBlock7" Text="text7"/>
-      <Button x:Name="MyButtonStart" Content="start" Click="MyButtonStart_Click"/>
-      <Button x:Name="MyButtonStop" Content="stop" Click="MyButtonStop_Click"/>
-      <!--<Button x:Name="MyButton" Content="button" Click="MyButton_Click"/>
-      <Button x:Name="MyButton2" Content="button2" Click="MyButton2_Click"/>-->
+      <TextBlock x:Name="MyTextBlock1" Text="text1" Margin="8"/>
+      <GroupBox Header="取得方法">
+        <StackPanel Orientation="Horizontal">
+          <RadioButton x:Name="rbScreen" Content="画面全体から" IsChecked="True"/>
+          <RadioButton x:Name="rbWindow" Content="ウィンドウから"/>
+          <RadioButton x:Name="rbWindowAlpah255" Content="ウィンドウから＋アルファ値255に修正"/>
+        </StackPanel>
+      </GroupBox>
     </StackPanel>
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True" Background="cyan">
       <Image x:Name="MyImage" Stretch="None"/>

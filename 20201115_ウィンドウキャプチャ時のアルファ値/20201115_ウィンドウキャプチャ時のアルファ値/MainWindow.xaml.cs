@@ -1,19 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Runtime.InteropServices;
-
+using System.Runtime.InteropServices;//Imagingで使っている
+using System.Windows.Interop;//CreateBitmapSourceFromHBitmapで使っている
+using System.Windows.Threading;//DispatcherTimerで使っている
 
 namespace _20201115_ウィンドウキャプチャ時のアルファ値
 {
@@ -23,6 +16,10 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
     public partial class MainWindow : Window
     {
         #region WindowsAPI^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        //キーの入力取得
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int vKey);
+
         //Rect取得用
         private struct RECT
         {
@@ -40,14 +37,10 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
         //座標取得用
         private struct POINT
         {
-            public int x;
-            public int y;
+            public int X;
+            public int Y;
         }
 
-
-        //ウィンドウのクライアント領域のRect取得
-        [DllImport("user32.dll")]
-        private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 
         //ウィンドウのRect取得
         [DllImport("user32.dll")]
@@ -57,34 +50,7 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
-        //指定座標にあるウィンドウのハンドル取得
-        [DllImport("user32.dll")]
-        private static extern IntPtr WindowFromPoint(POINT pOINT);
-
-        //ウィンドウ名取得
-        [DllImport("user32.dll")]
-        private static extern int GetWindowText(IntPtr hWin, StringBuilder lpString, int nMaxCount);
-
-        //パレントウィンドウ取得
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetParent(IntPtr hWnd);
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetAncestor(IntPtr hWnd, uint gaFlags);
-        //GetAncestorのフラグ用
-        const uint GA_PARENT = 1;
-        const uint GA_ROOT = 2;
-        const uint GA_ROOTOWNER = 3;//ルートとオーナー
-
-
-        //マウスカーソルの位置取得
-        [DllImport("user32.dll")]
-        private static extern bool GetCursorPos(out POINT lpPoint);
-
-        //クライアント領域の座標を画面全体での座標に変換
-        [DllImport("user32.dll")]
-        private static extern bool ClientToScreen(IntPtr hWnd, out POINT lpPoint);
+     
 
         //DC取得
         //nullを渡すと画面全体のDCを取得、ウィンドウハンドルを渡すとそのウィンドウのクライアント領域DC
@@ -113,32 +79,7 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
         private const int SRCCOPY = 0x00cc0020;
         private const int SRCINVERT = 0x00660046;
 
-        //DWM（Desktop Window Manager）
-        [DllImport("dwmapi.dll")]
-        private static extern long DwmGetWindowAttribute(IntPtr hWnd, DWMWINDOWATTRIBUTE dwAttribute, out RECT rect, int cbAttribute);
-        //
-        //取得したい属性
-        //列挙値の開始は0だとずれていたので1からにした
-        enum DWMWINDOWATTRIBUTE
-        {
-            DWMWA_NCRENDERING_ENABLED = 1,
-            DWMWA_NCRENDERING_POLICY,
-            DWMWA_TRANSITIONS_FORCEDISABLED,
-            DWMWA_ALLOW_NCPAINT,
-            DWMWA_CAPTION_BUTTON_BOUNDS,
-            DWMWA_NONCLIENT_RTL_LAYOUT,
-            DWMWA_FORCE_ICONIC_REPRESENTATION,
-            DWMWA_FLIP3D_POLICY,
-            DWMWA_EXTENDED_FRAME_BOUNDS,//ウィンドウのRect
-            DWMWA_HAS_ICONIC_BITMAP,
-            DWMWA_DISALLOW_PEEK,
-            DWMWA_EXCLUDED_FROM_PEEK,
-            DWMWA_CLOAK,
-            DWMWA_CLOAKED,
-            DWMWA_FREEZE_REPRESENTATION,
-            DWMWA_LAST
-        };
-
+     
 
         [DllImport("user32.dll")]
         private static extern bool DeleteDC(IntPtr hdc);
@@ -156,33 +97,13 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
         //Windows（Windowsおよびメッセージ）-Win32アプリ | Microsoft Docs
         // https://docs.microsoft.com/en-us/windows/win32/winmsg/windows
 
-        //        スクリーン上でのウィンドウクライアント領域の取得 - 捨てられたブログ
-        //https://blog.recyclebin.jp/archives/863
 
-        //        【C#】アクティブウィンドウのウィンドウ名を取得 - プログラミングとかブログ
-        //https://shirakamisauto.hatenablog.com/entry/2016/03/26/110000
-
-        //        C#(.NET)で他のウィンドウのクライアント領域のスクリーンショットを撮る - castaneaiのブログ
-        //https://castaneai.hatenablog.com/entry/2012/03/14/230323
-
-        //ウィンドウハンドルからDC(デバイスコンテキスト)を取得
-        //DCからコピー先のDC作成
-        //
         #endregion ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-        System.Windows.Threading.DispatcherTimer MyTimer;
-        IntPtr hWindowForeground;
-        IntPtr hWindowUnderCursor;
-        IntPtr hWindowForegroundAncestor;
 
-        RECT rectWindowForeground;
-        RECT rectWindowForegroundAncestor;
-        RECT rectWindowUnderCursor;
-
-        RECT rectExWindowForeground;
-        RECT rectExWindowForegroundAncestor;
-        RECT rectExWindowUnderCursor;
+        //タイマー用
+        DispatcherTimer MyTimer;
 
         public MainWindow()
         {
@@ -190,45 +111,100 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
             this.Left = 100;
             this.Top = 650;
 
-            MyTimer = new System.Windows.Threading.DispatcherTimer();
-            MyTimer.Interval = new TimeSpan(0, 0, 0, 0, 1000);
+            //タイマー初期化
+            MyTimer = new DispatcherTimer();
+            MyTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);//0.1秒間隔
             MyTimer.Tick += MyTimer_Tick;
             MyTimer.Start();
 
             this.Closing += (s, e) => { MyTimer.Stop(); };
 
         }
+
         private void MyTimer_Tick(object sender, EventArgs e)
         {
-            hWindowForeground = GetForegroundWindow();
-            GetCursorPos(out POINT cursorP);
-            hWindowUnderCursor = WindowFromPoint(cursorP);
-            hWindowForegroundAncestor = GetAncestor(hWindowForeground, GA_ROOTOWNER);
+            //キー入力取得用
+            //Keyを仮想キーコードに変換
+            int vKey1 = KeyInterop.VirtualKeyFromKey(Key.RightCtrl);
+            int vKey2 = KeyInterop.VirtualKeyFromKey(Key.RightShift);
+            //キーの状態を取得
+            short key1state = GetAsyncKeyState(vKey1);
+            short key2state = GetAsyncKeyState(vKey2);
+            //右Ctrlキー＋右Shiftキーが押されていたら
+            if ((key1state & 0x8000) >> 15 == 1 & ((key2state & 1) == 1))
+            {
+                //一番手前のウィンドウ
+                IntPtr hWindowForeground = GetForegroundWindow();//ハンドル取得
+                RECT rectWindowForeground;
+                GetWindowRect(hWindowForeground, out rectWindowForeground);//Rect取得                
+                MyTextBlock1.Text = $"{rectWindowForeground} 一番手前(アクティブ)ウィンドウRect";
 
-            GetWindowRect(hWindowForeground, out rectWindowForeground);
-            DwmGetWindowAttribute(hWindowForeground, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out rectExWindowForeground, Marshal.SizeOf(typeof(RECT)));
-            GetWindowRect(hWindowForegroundAncestor, out rectWindowForegroundAncestor);
-            DwmGetWindowAttribute(hWindowForegroundAncestor, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out rectExWindowForegroundAncestor, Marshal.SizeOf(typeof(RECT)));
-            GetWindowRect(hWindowUnderCursor, out rectWindowUnderCursor);
-            DwmGetWindowAttribute(hWindowUnderCursor, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out rectExWindowUnderCursor, Marshal.SizeOf(typeof(RECT)));
+                //画面全体の画像からウィンドウRect範囲を切り出す
+                if (rbScreen.IsChecked == true)
+                {
+                    var screenDC = GetDC(IntPtr.Zero);//画面全体のDC、コピー元
+                    var memDC = CreateCompatibleDC(screenDC);//コピー先DC作成
+                    int width = rectWindowForeground.right - rectWindowForeground.left;
+                    int height = rectWindowForeground.bottom - rectWindowForeground.top;
+                    var hBmp = CreateCompatibleBitmap(screenDC, width, height);//コピー先のbitmapオブジェクト作成
+                    SelectObject(memDC, hBmp);//コピー先DCにbitmapオブジェクトを指定
+                    //ビットブロック転送、コピー元からコピー先へ
+                    BitBlt(memDC, 0, 0, width, height, screenDC, rectWindowForeground.left, rectWindowForeground.top, SRCCOPY);
+                    //bitmapオブジェクトからbitmapSource作成
+                    BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hBmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
-            MyTextBlock1.Text = $"{rectWindowForeground} 一番手前ウィンドウ";
-            MyTextBlock2.Text = $"{rectExWindowForeground} 一番手前ウィンドウの外見上";
-            MyTextBlock3.Text = $"{rectWindowForegroundAncestor} 一番手前ウィンドウの祖先";
-            MyTextBlock4.Text = $"{rectExWindowForegroundAncestor} 一番手前ウィンドウの祖先の外見上";
-            MyTextBlock5.Text = $"{rectWindowUnderCursor} カーソル下ウィンドウ";
-            MyTextBlock6.Text = $"{rectExWindowUnderCursor} カーソル下ウィンドウの外見上";
+                    //後片付け
+                    DeleteObject(hBmp);
+                    ReleaseDC(IntPtr.Zero, screenDC);
+                    ReleaseDC(IntPtr.Zero, memDC);
 
+                    //画像表示
+                    MyImage.Source = source;
+                }
+
+                //ウィンドウDCからコピー
+                else if (rbWindow.IsChecked == true)
+                {
+                    var screenDC = GetDC(hWindowForeground);//ウィンドウのDC
+                    var memDC = CreateCompatibleDC(screenDC);
+                    int width = rectWindowForeground.right - rectWindowForeground.left;
+                    int height = rectWindowForeground.bottom - rectWindowForeground.top;
+                    var hBmp = CreateCompatibleBitmap(screenDC, width, height);
+                    SelectObject(memDC, hBmp);
+                    BitBlt(memDC, 0, 0, width, height, screenDC, 0, 0, SRCCOPY);
+                    var source = Imaging.CreateBitmapSourceFromHBitmap(hBmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+                    DeleteObject(hBmp);
+                    ReleaseDC(IntPtr.Zero, screenDC);
+                    ReleaseDC(IntPtr.Zero, memDC);
+
+                    MyImage.Source = source;
+                }
+
+                //ウィンドウDCからコピーしてアルファ値を255にする
+                else if (rbWindowAlpah255.IsChecked == true)
+                {
+                    var screenDC = GetDC(hWindowForeground);//ウィンドウのDC
+                    var memDC = CreateCompatibleDC(screenDC);
+                    int width = rectWindowForeground.right - rectWindowForeground.left;
+                    int height = rectWindowForeground.bottom - rectWindowForeground.top;
+                    var hBmp = CreateCompatibleBitmap(screenDC, width, height);
+                    SelectObject(memDC, hBmp);
+                    BitBlt(memDC, 0, 0, width, height, screenDC, 0, 0, SRCCOPY);
+                    var source = Imaging.CreateBitmapSourceFromHBitmap(hBmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+                    DeleteObject(hBmp);
+                    ReleaseDC(IntPtr.Zero, screenDC);
+                    ReleaseDC(IntPtr.Zero, memDC);
+
+                    //ピクセルフォーマットをBgr24に変換することでアルファ値を255に見立てている
+                    source = new FormatConvertedBitmap(source, PixelFormats.Bgr24, source.Palette, 0);
+                    MyImage.Source = source;
+                }
+
+            }
         }
 
-        private void MyButtonStart_Click(object sender, RoutedEventArgs e)
-        {
-            MyTimer.Start();
-        }
 
-        private void MyButtonStop_Click(object sender, RoutedEventArgs e)
-        {
-            MyTimer.Stop();
-        }
     }
 }
