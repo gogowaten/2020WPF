@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201115_ウィンドウキャプチャ時のアルファ値"
         mc:Ignorable="d"
-        Title="MainWindow" Height="400" Width="500">
+        Title="MainWindow" Height="420" Width="540">
   <Window.Resources>
     <Style TargetType="RadioButton">
       <Setter Property="Margin" Value="8,2"/>
@@ -20,9 +20,9 @@
       <TextBlock x:Name="MyTextBlock1" Text="text1" Margin="8"/>
       <GroupBox Header="取得方法">
         <StackPanel Orientation="Horizontal">
-          <RadioButton x:Name="rbScreen" Content="画面全体から" IsChecked="True"/>
-          <RadioButton x:Name="rbWindow" Content="ウィンドウから"/>
-          <RadioButton x:Name="rbWindowAlpah255" Content="ウィンドウから＋アルファ値255に修正"/>
+          <RadioButton x:Name="rbScreen" Content="画面全体DCから" IsChecked="True"/>
+          <RadioButton x:Name="rbWindow" Content="ウィンドウDCから"/>
+          <RadioButton x:Name="rbWindowAlpah255" Content="ウィンドウDCから＋アルファ値255に修正"/>
         </StackPanel>
       </GroupBox>
     </StackPanel>

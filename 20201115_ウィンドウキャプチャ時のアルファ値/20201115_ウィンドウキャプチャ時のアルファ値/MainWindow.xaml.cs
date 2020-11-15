@@ -31,7 +31,7 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
             public int bottom;
             public override string ToString()
             {
-                return $"横:{right - left:0000}, 縦:{bottom - top:0000}  {left}, {top}, {right}, {bottom}";
+                return $"横:{right - left:0000}, 縦:{bottom - top:0000}  ({left}, {top}, {right}, {bottom})";
             }
         }
         //座標取得用
@@ -98,7 +98,7 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
         // https://docs.microsoft.com/en-us/windows/win32/winmsg/windows
 
 
-        #endregion ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        #endregion Regionのことレギオンって読んでたけど、リージョンだったｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗ
 
 
 
@@ -108,8 +108,6 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
         public MainWindow()
         {
             InitializeComponent();
-            this.Left = 100;
-            this.Top = 650;
 
             //タイマー初期化
             MyTimer = new DispatcherTimer();
@@ -136,7 +134,7 @@ namespace _20201115_ウィンドウキャプチャ時のアルファ値
                 //一番手前のウィンドウ
                 IntPtr hWindowForeground = GetForegroundWindow();//ハンドル取得
                 RECT rectWindowForeground;
-                GetWindowRect(hWindowForeground, out rectWindowForeground);//Rect取得                
+                GetWindowRect(hWindowForeground, out rectWindowForeground);//Rect取得
                 MyTextBlock1.Text = $"{rectWindowForeground} 一番手前(アクティブ)ウィンドウRect";
 
                 //画面全体の画像からウィンドウRect範囲を切り出す
