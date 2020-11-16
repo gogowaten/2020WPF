@@ -16,6 +16,10 @@ using System.Runtime.InteropServices;//Imagingで使っている
 using System.Windows.Interop;//CreateBitmapSourceFromHBitmapで使っている
 using System.Windows.Threading;//DispatcherTimerで使っている
 
+//ウィンドウの見た目通りのRect取得はDwmGetWindowAttribute - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/11/17/004505
+
+
 namespace _20201116_ウィンドウキャプチャ時の見た目とのズレを修正
 {
     /// <summary>
