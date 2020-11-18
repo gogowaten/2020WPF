@@ -1,22 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 using System.Runtime.InteropServices;//Imagingで使っている
 using System.Windows.Interop;//CreateBitmapSourceFromHBitmapで使っている
 using System.Windows.Threading;//DispatcherTimerで使っている
 
+//WinAPIのGetAncestorでリボンメニューを開いた状態のエクセルウィンドウをキャプチャ - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/11/19/005250
 
 namespace _20201117_エクセルのメニューごとキャプチャ
 {
@@ -190,20 +183,22 @@ namespace _20201117_エクセルのメニューごとキャプチャ
         #endregion コピペ呪文ここまで^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         //タイマー用
-        DispatcherTimer MyTimer;
+        private DispatcherTimer MyTimer;
 
-        BitmapSource MyBitmap;
-        IntPtr MyForegroundWindowHandle;
-        RECT MyRectForeground;
-        RECT MyRectParent;
+        private BitmapSource MyBitmap;//全体画面保持用
 
-        RECT[] MyRectRelated;
-        RECT[] MyRectAncestor;
+        //RECT保持用
+        private RECT MyRectForeground;
+        private RECT MyRectParent;
+        private RECT[] MyRectRelated;
+        private RECT[] MyRectAncestor;
 
 
         public MainWindow()
         {
             InitializeComponent();
+
+            Left = 580; Top = 480;
 
             //タイマー初期化
             MyTimer = new DispatcherTimer();
@@ -237,7 +232,7 @@ namespace _20201117_エクセルのメニューごとキャプチャ
             rbRelated.Click += (s, e) => { UpdateImage(); };
         }
 
-        
+
 
         private void MyComboBox2_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -250,31 +245,12 @@ namespace _20201117_エクセルのメニューごとキャプチャ
             rbRelated.IsChecked = true;
             UpdateImage();
         }
-        //private void UpdataRectRelated(GETWINDOW_CMD cmd)
-        //{
-        //    IntPtr hWnd = IntPtr.Zero;
-        //    switch (cmd)
-        //    {
-        //        case GETWINDOW_CMD.GW_CHILD:hWnd = GetWindow(hWnd, cmd);
-        //            break;
-        //        case GETWINDOW_CMD.GW_ENABLEDPOPUP:
-        //            break;
-        //        case GETWINDOW_CMD.GW_HWNDFIRST:
-        //            break;
-        //        case GETWINDOW_CMD.GW_HWNDLAST:
-        //            break;
-        //        case GETWINDOW_CMD.GW_HWNDNEXT:
-        //            break;
-        //        case GETWINDOW_CMD.GW_HWNDPREV:
-        //            break;
-        //        case GETWINDOW_CMD.GW_OWNER:
-        //            break;
-        //        default:
-        //            break;
-        //    }
-        //    DwmGetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out MyRectRelated, Marshal.SizeOf(typeof(RECT)));
-        //}
 
+
+        //右Ctrlキー＋右Shiftキーが押されたら
+        //全体画面取得
+        //各RECT取得
+        //キャプチャ画像更新
         private void MyTimer_Tick(object sender, EventArgs e)
         {
             //キー入力取得用
@@ -288,41 +264,36 @@ namespace _20201117_エクセルのメニューごとキャプチャ
             //右Ctrlキー＋右Shiftキーが押されていたら
             if ((key1state & 0x8000) >> 15 == 1 & ((key2state & 1) == 1))
             {
-                MyBitmap = GetScreen();
+                //画面全体画像取得
+                MyBitmap = ScreenCapture();
                 MyImage.Source = MyBitmap;
 
-                //一番手前のウィンドウのハンドル取得
-                //IntPtr hWindowForeground = GetForegroundWindow();
-                MyForegroundWindowHandle = GetForegroundWindow();
+                //最前面ウィンドウのハンドル取得
+                IntPtr hForeWnd = GetForegroundWindow();
 
-                ////ウィンドウキャプチャ
-                //Capture(hWindowForeground);
 
                 //各ウィンドウのRectを更新
                 //最前面のウィンドウの見た目通りのRect
-                DwmGetWindowAttribute(MyForegroundWindowHandle,
+                DwmGetWindowAttribute(hForeWnd,
                                       DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS,
                                       out MyRectForeground,
                                       Marshal.SizeOf(typeof(RECT)));
-
                 //最前面のウィンドウの関連ウィンドウ取得
-                var neko = MyComboBox.Items;// Enum.GetValues(typeof(GETWINDOW_CMD));
+                var neko = MyComboBox.Items;
                 for (int i = 0; i < neko.Count; i++)
                 {
                     GETWINDOW_CMD cmd = (GETWINDOW_CMD)neko[i];
-                    IntPtr hw = GetWindow(MyForegroundWindowHandle, cmd);
+                    IntPtr hw = GetWindow(hForeWnd, cmd);
                     DwmGetWindowAttribute(hw, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out MyRectRelated[i], Marshal.SizeOf(typeof(RECT)));
                 }
-
                 //最前面のウィンドウの親ウィンドウ
-                IntPtr hWndParent = GetParent(MyForegroundWindowHandle);
+                IntPtr hWndParent = GetParent(hForeWnd);
                 DwmGetWindowAttribute(hWndParent, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out MyRectParent, Marshal.SizeOf(typeof(RECT)));
-
                 //最前面のウィンドウの祖先Rect
                 neko = MyComboBox2.Items;
                 for (int i = 0; i < neko.Count; i++)
                 {
-                    IntPtr hw = GetAncestor(MyForegroundWindowHandle, (GETANCESTOR_FLAGS)neko[i]);
+                    IntPtr hw = GetAncestor(hForeWnd, (GETANCESTOR_FLAGS)neko[i]);
                     DwmGetWindowAttribute(hw, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out MyRectAncestor[i], Marshal.SizeOf(typeof(RECT)));
                 }
 
@@ -331,12 +302,13 @@ namespace _20201117_エクセルのメニューごとキャプチャ
                 MyTextBlock3.Text = $"{MyRectParent} 最前面の親ウィンドウ";
                 MyTextBlock4.Text = $"{MyRectAncestor[MyComboBox2.SelectedIndex]} 最前面の祖先ウィンドウ";
 
+                //表示画像更新
                 UpdateImage();
             }
         }
 
         //仮想画面全体の画像取得
-        private BitmapSource GetScreen()
+        private BitmapSource ScreenCapture()
         {
             var screenDC = GetDC(IntPtr.Zero);//仮想画面全体のDC、コピー元
             var memDC = CreateCompatibleDC(screenDC);//コピー先DC作成
@@ -363,51 +335,77 @@ namespace _20201117_エクセルのメニューごとキャプチャ
             return source;
         }
 
-        private Int32Rect RECTtoInt32Rect(RECT rect)
+        private Int32Rect MakeCropRect(RECT rect)
         {
             return new Int32Rect(rect.left,
                                  rect.top,
                                  rect.right - rect.left,
                                  rect.bottom - rect.top);
         }
+
+        private BitmapSource CaptureWindow()
+        {
+            //画面全体画像取得
+            BitmapSource screenBitmap = ScreenCapture();
+
+            //最前面のウィンドウのハンドル取得
+            IntPtr hForeWnd = GetForegroundWindow();
+
+            //最前面のウィンドウの祖先ウィンドウのハンドル取得
+            IntPtr hAncestorWnd = GetAncestor(hForeWnd, GETANCESTOR_FLAGS.GA_ROOTOWNER);
+
+            //ウィンドウ枠を含む見た目通りのRECTを取得
+            DwmGetWindowAttribute(hAncestorWnd,
+                                  DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS,
+                                  out RECT rectAncestor,
+                                  Marshal.SizeOf(typeof(RECT)));
+
+            //RECTから切り抜き用のRect作成
+            Int32Rect myRect = MakeCropRect(rectAncestor);
+
+            //全体画面画像から切り抜き
+            return new CroppedBitmap(screenBitmap, myRect);
+
+        }
+
         //ウィンドウキャプチャ
-        //画面全体をキャプチャして、そこからウィンドウのRect領域を切り抜いて表示
+        //画面全体画像からウィンドウのRect領域を切り抜いて表示
         private void UpdateImage()
         {
-            //if (MyBitmap == null) return null;
-
             Int32Rect cropRect;
-
+            //RECT選択
             if (rbForeground.IsChecked == true)
             {
-                cropRect = RECTtoInt32Rect(MyRectForeground);
+                cropRect = MakeCropRect(MyRectForeground);
             }
             else if (rbParent.IsChecked == true)
             {
-                cropRect = RECTtoInt32Rect(MyRectParent);
+                cropRect = MakeCropRect(MyRectParent);
             }
             else if (rbRelated.IsChecked == true)
             {
                 RECT rECT = MyRectRelated[MyComboBox.SelectedIndex];
                 MyTextBlock2.Text = $"{rECT} 最前面の関連ウィンドウ";
-                cropRect = RECTtoInt32Rect(rECT);
+                cropRect = MakeCropRect(rECT);
             }
             else if (rbAncestor.IsChecked == true)
             {
                 RECT rECT = MyRectAncestor[MyComboBox2.SelectedIndex];
-                MyTextBlock4.Text= $"{rECT} 最前面の祖先ウィンドウ";
-                cropRect = RECTtoInt32Rect(rECT);
+                MyTextBlock4.Text = $"{rECT} 最前面の祖先ウィンドウ";
+                cropRect = MakeCropRect(rECT);
             }
 
+            //表示画像更新
             if (cropRect.IsEmpty)
             {
                 MyImage.Source = null;
             }
             else
             {
+                //全体画像から切り抜いた画像を表示
                 MyImage.Source = new CroppedBitmap(MyBitmap, cropRect);
             }
-            
+
         }
 
         private void MyButton_Click(object sender, RoutedEventArgs e)
@@ -416,9 +414,13 @@ namespace _20201117_エクセルのメニューごとキャプチャ
             MyTextBlock1.Text = "";
             MyTextBlock2.Text = string.Empty;
             MyTextBlock3.Text = null;
-            MyTextBlock3.Text = string.Empty;
+            MyTextBlock4.Text = string.Empty;
         }
 
-
+        private void MyButtonCopy_Click(object sender, RoutedEventArgs e)
+        {
+            if (MyImage.Source == null) return;
+            Clipboard.SetImage((BitmapSource)MyImage.Source);
+        }
     }
 }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201117_エクセルのメニューごとキャプチャ"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="600">
+        Title="MainWindow" Height="620" Width="600">
   <Window.Resources>
     <Style TargetType="RadioButton">
       <Setter Property="Margin" Value="8,2"/>
@@ -17,11 +17,11 @@
   </Window.Resources>
   <Grid>
     <Grid.RowDefinitions>
-      <RowDefinition Height="160"/>
+      <RowDefinition Height="180"/>
       <RowDefinition/>
     </Grid.RowDefinitions>
     <StackPanel Grid.Row="0">
-      <GroupBox Header="選択">
+      <GroupBox Header="選択" Margin="8,2">
         <StackPanel Orientation="Horizontal">
           <RadioButton x:Name="rbForeground" Content="Foreground" IsChecked="True"/>
           <RadioButton x:Name="rbRelated" Content="Related"/>
@@ -36,7 +36,7 @@
       <StackPanel Orientation="Horizontal">
         <TextBlock Text="Related" Width="80"/>
         <TextBlock x:Name="MyTextBlock2" Text="text"/>
-        <ComboBox Name="MyComboBox" Width="150"/>
+        <ComboBox Name="MyComboBox" Width="160"/>
       </StackPanel>
       <StackPanel Orientation="Horizontal">
         <TextBlock Text="Parent" Width="80"/>
@@ -45,11 +45,14 @@
       <StackPanel Orientation="Horizontal">
         <TextBlock Text="Ancestor" Width="80"/>
         <TextBlock x:Name="MyTextBlock4" Text="text"/>
-        <ComboBox Name="MyComboBox2" Width="150"/>
+        <ComboBox Name="MyComboBox2" Width="160"/>
       </StackPanel>
-      <Button x:Name="MyButton" Content="imageClear" Click="MyButton_Click" Margin="8,4"/>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="MyButton" Content="imageClear" Click="MyButton_Click" Margin="8,4"/>
+        <Button x:Name="MyButtonCopy" Content="クリップボードに画像をコピー" Click="MyButtonCopy_Click" Margin="8,4"/>
+      </StackPanel>
     </StackPanel>
-    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True" Background="Magenta">
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True">
       <Image x:Name="MyImage" Stretch="None"/>
     </ScrollViewer>
   </Grid>
