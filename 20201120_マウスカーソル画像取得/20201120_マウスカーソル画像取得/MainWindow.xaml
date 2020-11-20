@@ -1,0 +1,66 @@
+﻿<Window x:Class="_20201120_マウスカーソル画像取得.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:_20201120_マウスカーソル画像取得"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="380" Width="300">
+  <Grid UseLayoutRounding="True">
+    <Grid.Resources>
+      <Style TargetType="StackPanel">
+        <Setter Property="Margin" Value="8,2,8,10"/>
+        <Setter Property="Background" Value="LightSteelBlue"/>
+        <Setter Property="Orientation" Value="Horizontal"/>
+      </Style>
+      <Style TargetType="Image">
+        <Setter Property="Stretch" Value="None"/>
+      </Style>
+      <Style TargetType="Border">
+        <Setter Property="BorderBrush" Value="SteelBlue"/>
+        <Setter Property="BorderThickness" Value="1"/>
+      </Style>
+    </Grid.Resources>
+
+    
+      <StackPanel Orientation="Vertical">
+        <StackPanel>
+          <Border>
+            <Image x:Name="MyImageCursor"/>
+          </Border>
+          <TextBlock Text="Cursor"/>
+        </StackPanel>
+        <StackPanel>
+          <Border>
+            <Image x:Name="MyImageCursorMask"/>
+          </Border>
+          <TextBlock Text="CursorMask"/>
+        </StackPanel>
+        <StackPanel>
+          <Border>
+            <Image x:Name="MyImageCursorColor"/>
+          </Border>
+          <TextBlock Text="CursorColor"/>
+        </StackPanel>
+        <StackPanel>
+          <Border>
+            <Image x:Name="MyImageCursorInfo"/>
+          </Border>
+          <TextBlock Text="CursorInfo"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <Border>
+            <Image x:Name="MyImageCursorInfoMask"/>
+          </Border>
+          <TextBlock Text="CursorInfoMask"/>
+        </StackPanel>
+        <StackPanel>
+          <Border>
+            <Image x:Name="MyImageCursorInfoColor"/>
+          </Border>
+          <TextBlock Text="CursorInfoColor"/>
+        </StackPanel>
+      </StackPanel>
+    
+  </Grid>
+</Window>
