@@ -6,15 +6,17 @@
         xmlns:local="clr-namespace:_20201119_マウスカーソル描画"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-  <Grid>
+  <Grid Background="LightSteelBlue">
     <Grid.RowDefinitions>
       <RowDefinition Height="100"/>
       <RowDefinition/>
     </Grid.RowDefinitions>
     <GroupBox Header="マウスカーソル描画">
-      <StackPanel Orientation="Horizontal">
+      <StackPanel Orientation="Horizontal" UseLayoutRounding="True">
         <RadioButton x:Name="MyRadioBtnWithCursor" Content="描画する" IsChecked="True"/>
         <RadioButton x:Name="MyRadioBtnWithoutCursor" Content="描画しない"/>
+        <Image x:Name="MyImageCursor" Stretch="None"/>
+        <Image x:Name="MyImageCursorMask" Stretch="None"/>
       </StackPanel>
     </GroupBox>
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True">

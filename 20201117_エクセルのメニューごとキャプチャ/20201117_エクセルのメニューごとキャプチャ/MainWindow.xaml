@@ -27,6 +27,7 @@
           <RadioButton x:Name="rbRelated" Content="Related"/>
           <RadioButton x:Name="rbParent" Content="Parent"/>
           <RadioButton x:Name="rbAncestor" Content="Ancestor"/>
+          <RadioButton x:Name="rbActive" Content="Active"/>
         </StackPanel>
       </GroupBox>
       <StackPanel Orientation="Horizontal">
@@ -48,8 +49,14 @@
         <ComboBox Name="MyComboBox2" Width="160"/>
       </StackPanel>
       <StackPanel Orientation="Horizontal">
+        <TextBlock Text="Active" Width="80"/>
+        <TextBlock x:Name="MyTextBlock5" Text="text"/>        
+      </StackPanel>
+      
+      <StackPanel Orientation="Horizontal">
         <Button x:Name="MyButton" Content="imageClear" Click="MyButton_Click" Margin="8,4"/>
         <Button x:Name="MyButtonCopy" Content="クリップボードに画像をコピー" Click="MyButtonCopy_Click" Margin="8,4"/>
+        <TextBlock x:Name="MyTextBlockWindowText" Text="text"/>
       </StackPanel>
     </StackPanel>
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True">

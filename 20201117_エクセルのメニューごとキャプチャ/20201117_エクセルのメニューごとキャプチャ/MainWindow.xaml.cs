@@ -7,7 +7,7 @@ using System.Windows.Media.Imaging;
 using System.Runtime.InteropServices;//Imagingで使っている
 using System.Windows.Interop;//CreateBitmapSourceFromHBitmapで使っている
 using System.Windows.Threading;//DispatcherTimerで使っている
-
+using System.Text;
 //WinAPIのGetAncestorでリボンメニューを開いた状態のエクセルウィンドウをキャプチャ - 午後わてんのブログ
 //https://gogowaten.hatenablog.com/entry/2020/11/19/005250
 
@@ -44,6 +44,10 @@ namespace _20201117_エクセルのメニューごとキャプチャ
             public int Y;
         }
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetActiveWindow();
+        [DllImport("user32.dll")]
+        private static extern int GetWindowText(IntPtr hWin, StringBuilder lpString, int nMaxCount);
 
         //手前にあるウィンドウのハンドル取得
         [DllImport("user32.dll")]
@@ -192,7 +196,7 @@ namespace _20201117_エクセルのメニューごとキャプチャ
         private RECT MyRectParent;
         private RECT[] MyRectRelated;
         private RECT[] MyRectAncestor;
-
+        private RECT MyRectActive;
 
         public MainWindow()
         {
@@ -230,6 +234,7 @@ namespace _20201117_エクセルのメニューごとキャプチャ
             rbAncestor.Click += (s, e) => { UpdateImage(); };
             rbParent.Click += (s, e) => { UpdateImage(); };
             rbRelated.Click += (s, e) => { UpdateImage(); };
+            rbActive.Click += (s, e) => { UpdateImage(); };
         }
 
 
@@ -268,9 +273,14 @@ namespace _20201117_エクセルのメニューごとキャプチャ
                 MyBitmap = ScreenCapture();
                 MyImage.Source = MyBitmap;
 
+                
+
                 //最前面ウィンドウのハンドル取得
                 IntPtr hForeWnd = GetForegroundWindow();
-
+                //ウィンドウ名表示
+                var windowName = new StringBuilder(65535);
+                int temp = GetWindowText(hForeWnd, windowName, 65535);
+                MyTextBlockWindowText.Text = windowName.ToString();
 
                 //各ウィンドウのRectを更新
                 //最前面のウィンドウの見た目通りのRect
@@ -301,6 +311,12 @@ namespace _20201117_エクセルのメニューごとキャプチャ
                 MyTextBlock2.Text = $"{MyRectRelated[MyComboBox.SelectedIndex]} 最前面の関連ウィンドウ";
                 MyTextBlock3.Text = $"{MyRectParent} 最前面の親ウィンドウ";
                 MyTextBlock4.Text = $"{MyRectAncestor[MyComboBox2.SelectedIndex]} 最前面の祖先ウィンドウ";
+
+
+                //アクティブウィンドウテスト
+                IntPtr aw = GetActiveWindow();
+                DwmGetWindowAttribute(aw, DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS, out MyRectActive, Marshal.SizeOf(typeof(RECT)));
+                MyTextBlock5.Text = $"{MyRectActive} アクティブウィンドウ";
 
                 //表示画像更新
                 UpdateImage();
@@ -394,6 +410,10 @@ namespace _20201117_エクセルのメニューごとキャプチャ
                 MyTextBlock4.Text = $"{rECT} 最前面の祖先ウィンドウ";
                 cropRect = MakeCropRect(rECT);
             }
+            else if (rbActive.IsChecked == true)
+            {
+                cropRect = MakeCropRect(MyRectActive);
+            }
 
             //表示画像更新
             if (cropRect.IsEmpty)
@@ -415,6 +435,7 @@ namespace _20201117_エクセルのメニューごとキャプチャ
             MyTextBlock2.Text = string.Empty;
             MyTextBlock3.Text = null;
             MyTextBlock4.Text = string.Empty;
+            MyTextBlock5.Text = string.Empty;
         }
 
         private void MyButtonCopy_Click(object sender, RoutedEventArgs e)
