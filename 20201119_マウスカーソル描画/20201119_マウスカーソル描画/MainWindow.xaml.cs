@@ -50,6 +50,10 @@ namespace _20201119_マウスカーソル描画
             public int Y;
         }
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetActiveWindow();
+        [DllImport("user32.dll")]
+        private static extern int GetWindowText(IntPtr hWin, StringBuilder lpString, int nMaxCount);
 
         //手前にあるウィンドウのハンドル取得
         [DllImport("user32.dll")]
@@ -86,7 +90,7 @@ namespace _20201119_マウスカーソル描画
             DWMWA_NONCLIENT_RTL_LAYOUT,
             DWMWA_FORCE_ICONIC_REPRESENTATION,
             DWMWA_FLIP3D_POLICY,
-            DWMWA_EXTENDED_FRAME_BOUNDS,//ウィンドウのRect
+            DWMWA_EXTENDED_FRAME_BOUNDS,//見た目通りのウィンドウのRect
             DWMWA_HAS_ICONIC_BITMAP,
             DWMWA_DISALLOW_PEEK,
             DWMWA_EXCLUDED_FROM_PEEK,
@@ -250,7 +254,7 @@ namespace _20201119_マウスカーソル描画
         private DispatcherTimer MyTimer;
 
         private BitmapSource MyBitmap;//全体画面保持用
-        private RECT MyRectAncestor;//ウィンドウのRect
+        private RECT MyRect;//ウィンドウのRect
 
         //マウスカーソル
         private POINT MyCursorPoint;//座標        
@@ -259,7 +263,7 @@ namespace _20201119_マウスカーソル描画
         private BitmapSource MyBitmapCursor;//画像
         private BitmapSource MyBitmapCursorMask;//マスク画像
 
-        private bool IsMask;
+        private bool IsMaskUse;
         public MainWindow()
         {
             InitializeComponent();
@@ -288,23 +292,16 @@ namespace _20201119_マウスカーソル描画
             short key1state = GetAsyncKeyState(vKey1);
             short key2state = GetAsyncKeyState(vKey2);
 
-            //右Ctrlキーが押されたら
-            //if ((key1state & 1) == 1)
+            //右Ctrlキーが押されていたら
+            if ((key1state & 1) == 1)
             //右Ctrlキー＋右Shiftキーが押されていたら
             //if ((key1state & 0x8000) >> 15 == 1 & ((key2state & 1) == 1))
             {
                 //画面全体画像取得
                 MyBitmap = ScreenCapture();
-                //MyImage.Source = MyBitmap;
 
-                //最前面のアプリのウィンドウの見た目上のRECT取得                
-                DwmGetWindowAttribute(
-                    GetAncestor(
-                        GetForegroundWindow(),
-                        GETANCESTOR_FLAGS.GA_ROOTOWNER),
-                    DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS,
-                    out MyRectAncestor,
-                    Marshal.SizeOf(typeof(RECT)));
+                //RECT取得
+                SetRect();
 
                 //カーソル座標取得
                 GetCursorPos(out MyCursorPoint);
@@ -316,6 +313,32 @@ namespace _20201119_マウスカーソル描画
             }
         }
 
+        //RECTを取得して保持
+        private void SetRect()
+        {
+            IntPtr hWnd = GetForegroundWindow();
+            var wText = new StringBuilder(65535);
+            //最前面ウィンドウに名前がついていなかったら
+            if (GetWindowText(hWnd, wText, 65535) == 0)
+            {
+                //ルートオーナーのウィンドウのRECT取得
+                DwmGetWindowAttribute(
+                    GetAncestor(hWnd, GETANCESTOR_FLAGS.GA_ROOTOWNER),
+                    DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS,
+                    out MyRect,
+                    Marshal.SizeOf(typeof(RECT)));
+            }
+            else
+            {
+                //最前面ウィンドウのRECT取得
+                DwmGetWindowAttribute(
+                    hWnd,
+                    DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS,
+                    out MyRect,
+                    Marshal.SizeOf(typeof(RECT)));
+            }
+
+        }
         //仮想画面全体の画像取得
         private BitmapSource ScreenCapture()
         {
@@ -370,13 +393,13 @@ namespace _20201119_マウスカーソル描画
                 BitmapSource source;
                 source = MixBitmap();// MyBitmap, MyBitmapCursorMask, MyCursorPoint, MyCursorHotspotX, MyCursorHotspotY);
 
-                MyImage.Source = CroppedBitmapEx(source, MyRectAncestor);// new CroppedBitmap(source, MakeCropRect(MyRectAncestor));
+                MyImage.Source = CroppedBitmapEx(source, MyRect);// new CroppedBitmap(source, MakeCropRect(MyRectAncestor));
 
 
             }
             else if (MyRadioBtnWithoutCursor.IsChecked == true)
             {
-                MyImage.Source = CroppedBitmapEx(MyBitmap, MyRectAncestor);
+                MyImage.Source = CroppedBitmapEx(MyBitmap, MyRect);
 
             }
         }
@@ -394,13 +417,14 @@ namespace _20201119_マウスカーソル描画
             MyBitmapCursorMask = Imaging.CreateBitmapSourceFromHBitmap(iInfo.hbmMask, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
             //マスク画像のピクセルフォーマットはIndexed1なんだけど、計算しやすいようにBgra32に変換しておく
             MyBitmapCursorMask = new FormatConvertedBitmap(MyBitmapCursorMask, PixelFormats.Bgra32, null, 0);
+            //マスク画像が縦長だった場合はフラグを立てる
             if (MyBitmapCursorMask.PixelHeight == MyBitmapCursorMask.PixelWidth * 2)
             {
-                IsMask = true;
+                IsMaskUse = true;
             }
             else
             {
-                IsMask = false;
+                IsMaskUse = false;
             }
             MyCursorHotspotX = iInfo.xHotspot;
             MyCursorHotspotY = iInfo.yHotspot;
@@ -412,15 +436,18 @@ namespace _20201119_マウスカーソル描画
             //var mp = MyCursorPoint;
         }
 
-        
+
         private BitmapSource MixBitmap()//(BitmapSource source, BitmapSource cursor, POINT cursorLocate, int hotspotX, int hotspotY)
         {
-            BitmapSource resultBmp = null;
-
-            if (IsMask == false)
+            if (IsMaskUse == false)
             {
 
             }
+            else
+            {
+            
+            }
+
             //カーソル画像            
             int cWidth = MyBitmapCursor.PixelWidth;
             int cHeight = MyBitmapCursor.PixelHeight;
@@ -444,16 +471,16 @@ namespace _20201119_マウスカーソル描画
             if (endY > h) endY = h;
 
             int yCount = 0;
-            int xCount = 0;
             for (int y = beginY; y < endY; y++)
             {
+                int xCount = 0;
                 for (int x = beginX; x < endX; x++)
                 {
                     var p = y * stride + x * 4;
                     var pp = yCount * maskStride + xCount * 4;
                     //アルファブレンド
-//                    効果
-//http://www.charatsoft.com/develop/otogema/page/05d3d/effect.html
+                    //                    効果
+                    //http://www.charatsoft.com/develop/otogema/page/05d3d/effect.html
 
                     double alpha = cursorPixels[pp + 3] / 255.0;
                     byte r = pixels[p + 2];
@@ -465,8 +492,7 @@ namespace _20201119_マウスカーソル描画
 
                     xCount++;
                 }
-                yCount++;
-                xCount = 0;
+                yCount++;            
             }
 
             return BitmapSource.Create(w, h, MyBitmap.DpiX, MyBitmap.DpiY, MyBitmap.Format, MyBitmap.Palette, pixels, stride);
