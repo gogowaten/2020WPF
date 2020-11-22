@@ -5,18 +5,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201119_マウスカーソル描画"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="600" ResizeMode="CanResizeWithGrip">
+  <Window.Resources>
+    <Style TargetType="StackPanel">
+      <Setter Property="Margin" Value="8,2"/>
+    </Style>
+  </Window.Resources>
   <Grid Background="LightSteelBlue">
     <Grid.RowDefinitions>
-      <RowDefinition Height="100"/>
+      <RowDefinition Height="140"/>
       <RowDefinition/>
     </Grid.RowDefinitions>
-    <GroupBox Header="マウスカーソル描画">
+    <GroupBox Header="マウスカーソル" Margin="8">
       <StackPanel Orientation="Horizontal" UseLayoutRounding="True">
-        <RadioButton x:Name="MyRadioBtnWithCursor" Content="描画する" IsChecked="True"/>
-        <RadioButton x:Name="MyRadioBtnWithoutCursor" Content="描画しない"/>
-        <Image x:Name="MyImageCursor" Stretch="None"/>
-        <Image x:Name="MyImageCursorMask" Stretch="None"/>
+        <StackPanel VerticalAlignment="Center">
+          <RadioButton x:Name="MyRadioBtnWithCursor" Content="描画する" IsChecked="True" Margin="8,2"/>
+          <RadioButton x:Name="MyRadioBtnWithoutCursor" Content="描画しない" Margin="8,2"/>
+        </StackPanel>
+        <StackPanel>
+          <TextBlock Text="画像"/>
+          <Border BorderBrush="SteelBlue" BorderThickness="1">
+            <Image x:Name="MyImageCursor" Stretch="None"/>
+          </Border>
+        </StackPanel>
+        <StackPanel>
+          <TextBlock Text="マスク画像"/>
+          <Border BorderBrush="SteelBlue" BorderThickness="1">
+            <Image x:Name="MyImageCursorMask" Stretch="None"/>
+          </Border>
+        </StackPanel>
+        <Button x:Name="MyButtonToClipboard" Content="キャプチャ画像をクリップボードにコピー" Click="MyButtonToClipboard_Click"/>
       </StackPanel>
     </GroupBox>
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" UseLayoutRounding="True">

@@ -17,6 +17,10 @@ using System.Runtime.InteropServices;//Imagingで使っている
 using System.Windows.Interop;//CreateBitmapSourceFromHBitmapで使っている
 using System.Windows.Threading;//DispatcherTimerで使っている
 
+
+//画像にマウスカーソル画像を重ねて表示、アルファブレンドとビット演算のANDとXOR - 午後わてんのブログ
+//https://gogowaten.hatenablog.com/entry/2020/11/23/052201
+
 namespace _20201119_マウスカーソル描画
 {
     /// <summary>
@@ -262,22 +266,31 @@ namespace _20201119_マウスカーソル描画
         private int MyCursorHotspotY;//ホットスポット
         private BitmapSource MyBitmapCursor;//画像
         private BitmapSource MyBitmapCursorMask;//マスク画像
+        private bool IsMaskUse;//マスク画像使用の有無判定用
 
-        private bool IsMaskUse;
         public MainWindow()
         {
             InitializeComponent();
 
             //タイマー初期化
             MyTimer = new DispatcherTimer();
-            MyTimer.Interval = new TimeSpan(0, 0, 0, 0, 1000);
+            MyTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);
             MyTimer.Tick += MyTimer_Tick;
             MyTimer.Start();
 
             //アプリ終了時、タイマーストップ
             this.Closing += (s, e) => { MyTimer.Stop(); };
 
+            Loaded += MainWindow_Loaded;
+
         }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            MyRadioBtnWithCursor.Click += (s, e) => { UpdateImage(); };
+            MyRadioBtnWithoutCursor.Click += (s, e) => { UpdateImage(); };
+        }
+
         //右Ctrlキー＋右Shiftキーが押されたら
         //全体画面取得
         //各RECT取得
@@ -286,59 +299,64 @@ namespace _20201119_マウスカーソル描画
         {
             //キー入力取得用
             //Keyを仮想キーコードに変換
+            //int vKey1 = KeyInterop.VirtualKeyFromKey(Key.PrintScreen);
             int vKey1 = KeyInterop.VirtualKeyFromKey(Key.RightCtrl);
             int vKey2 = KeyInterop.VirtualKeyFromKey(Key.RightShift);
             //キーの状態を取得
             short key1state = GetAsyncKeyState(vKey1);
             short key2state = GetAsyncKeyState(vKey2);
 
-            //右Ctrlキーが押されていたら
-            if ((key1state & 1) == 1)
+            //keyが押されていたら
+            if ((key2state & 1) == 1)
             //右Ctrlキー＋右Shiftキーが押されていたら
             //if ((key1state & 0x8000) >> 15 == 1 & ((key2state & 1) == 1))
             {
-                //画面全体画像取得
-                MyBitmap = ScreenCapture();
-
-                //RECT取得
-                SetRect();
 
                 //カーソル座標取得
                 GetCursorPos(out MyCursorPoint);
 
                 //カーソル画像取得
                 SetCursorInfo();
-                UpdateImage();
 
+                //画面全体画像取得
+                MyBitmap = ScreenCapture();
+
+                //RECT取得
+                SetRect();
+
+                UpdateImage();
             }
         }
 
-        //RECTを取得して保持
+        //ウィンドウのRECTを取得して保持
         private void SetRect()
         {
-            IntPtr hWnd = GetForegroundWindow();
-            var wText = new StringBuilder(65535);
-            //最前面ウィンドウに名前がついていなかったら
-            if (GetWindowText(hWnd, wText, 65535) == 0)
-            {
-                //ルートオーナーのウィンドウのRECT取得
-                DwmGetWindowAttribute(
-                    GetAncestor(hWnd, GETANCESTOR_FLAGS.GA_ROOTOWNER),
-                    DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS,
-                    out MyRect,
-                    Marshal.SizeOf(typeof(RECT)));
-            }
-            else
-            {
-                //最前面ウィンドウのRECT取得
-                DwmGetWindowAttribute(
-                    hWnd,
-                    DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS,
-                    out MyRect,
-                    Marshal.SizeOf(typeof(RECT)));
-            }
+            //ウィンドウハンドルの取得
+            //ウィンドウ名がついているもの(GetWindowTextの戻り値が0以外)を走査
+            //最前面ウィンドウから開始、Parentへ10回まで辿っていく
+            //見つからなかった場合は最前面ウィンドウ
 
+            IntPtr hForeWnd = GetForegroundWindow();
+            var wText = new StringBuilder(65535);
+            int count = 0;
+            IntPtr hWnd = hForeWnd;
+            while (GetWindowText(hWnd, wText, 65535) == 0)
+            {
+                hWnd = GetParent(hWnd);
+                count++;
+                if (count > 10)
+                {
+                    hWnd = hForeWnd;
+                    break;
+                }
+            }
+            //見た目通りのRectを取得
+            DwmGetWindowAttribute(hWnd,
+                                  DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS,
+                                  out MyRect,
+                                  Marshal.SizeOf(typeof(RECT)));
         }
+
         //仮想画面全体の画像取得
         private BitmapSource ScreenCapture()
         {
@@ -386,21 +404,20 @@ namespace _20201119_マウスカーソル描画
             Int32Rect iRect = new Int32Rect(left, top, width, height);
             return new CroppedBitmap(source, iRect);
         }
+
         private void UpdateImage()
         {
+            if (MyBitmap == null) return;
+
             if (MyRadioBtnWithCursor.IsChecked == true)
             {
-                BitmapSource source;
-                source = MixBitmap();// MyBitmap, MyBitmapCursorMask, MyCursorPoint, MyCursorHotspotX, MyCursorHotspotY);
-
-                MyImage.Source = CroppedBitmapEx(source, MyRect);// new CroppedBitmap(source, MakeCropRect(MyRectAncestor));
-
-
+                //BitmapSource source;
+                //source = CursorOnScreen();
+                MyImage.Source = CroppedBitmapEx(CursorOnScreen(), MyRect);
             }
             else if (MyRadioBtnWithoutCursor.IsChecked == true)
             {
                 MyImage.Source = CroppedBitmapEx(MyBitmap, MyRect);
-
             }
         }
 
@@ -413,19 +430,29 @@ namespace _20201119_マウスカーソル描画
             cInfo.cbSize = Marshal.SizeOf(cInfo);
             GetCursorInfo(out cInfo);
             GetIconInfo(cInfo.hCursor, out ICONINFO iInfo);
-            MyBitmapCursor = Imaging.CreateBitmapSourceFromHIcon(cInfo.hCursor, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            MyBitmapCursorMask = Imaging.CreateBitmapSourceFromHBitmap(iInfo.hbmMask, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            //カーソル画像
+            MyBitmapCursor =
+                Imaging.CreateBitmapSourceFromHIcon(cInfo.hCursor,
+                                                    Int32Rect.Empty,
+                                                    BitmapSizeOptions.FromEmptyOptions());
+            //カーソルマスク画像
+            MyBitmapCursorMask =
+                Imaging.CreateBitmapSourceFromHBitmap(iInfo.hbmMask,
+                                                      IntPtr.Zero,
+                                                      Int32Rect.Empty,
+                                                      BitmapSizeOptions.FromEmptyOptions());
+            //マスク画像を使うかどうかの判定
+            //2色画像 かつ 高さが幅の2倍ならマスク画像使用
+            IsMaskUse = (MyBitmapCursorMask.Format == PixelFormats.Indexed1) &
+                (MyBitmapCursorMask.PixelHeight == MyBitmapCursorMask.PixelWidth * 2);
+
             //マスク画像のピクセルフォーマットはIndexed1なんだけど、計算しやすいようにBgra32に変換しておく
-            MyBitmapCursorMask = new FormatConvertedBitmap(MyBitmapCursorMask, PixelFormats.Bgra32, null, 0);
-            //マスク画像が縦長だった場合はフラグを立てる
-            if (MyBitmapCursorMask.PixelHeight == MyBitmapCursorMask.PixelWidth * 2)
-            {
-                IsMaskUse = true;
-            }
-            else
-            {
-                IsMaskUse = false;
-            }
+            MyBitmapCursorMask = new FormatConvertedBitmap(MyBitmapCursorMask,
+                                                           PixelFormats.Bgra32,
+                                                           null,
+                                                           0);
+           
+            //ホットスポット保持
             MyCursorHotspotX = iInfo.xHotspot;
             MyCursorHotspotY = iInfo.yHotspot;
 
@@ -433,144 +460,141 @@ namespace _20201119_マウスカーソル描画
             MyImageCursor.Source = MyBitmapCursor;
             MyImageCursorMask.Source = MyBitmapCursorMask;
 
-            //var mp = MyCursorPoint;
+
         }
 
-
-        private BitmapSource MixBitmap()//(BitmapSource source, BitmapSource cursor, POINT cursorLocate, int hotspotX, int hotspotY)
+        //画像の上にカーソル画像を合成
+        private BitmapSource CursorOnScreen()//(BitmapSource source, BitmapSource cursor, POINT cursorLocate, int hotspotX, int hotspotY)
         {
-            if (IsMaskUse == false)
-            {
 
+            int width, height, stride;
+            byte[] pixels;
+
+            //マスクが必要なカーソルの場合
+            if (IsMaskUse == true)
+            {
+                //カーソルマスク画像と合成
+                //マスク画像の2枚は上下に連結された状態なので、上下に分割
+                int maskWidth = MyBitmapCursorMask.PixelWidth;
+                int maskHeight = MyBitmapCursorMask.PixelHeight / 2;
+                //分割
+                var mask1Bitmap = new CroppedBitmap(MyBitmapCursorMask,
+                                              new Int32Rect(0, 0, maskWidth, maskHeight));
+                var mask2Bitmap = new CroppedBitmap(MyBitmapCursorMask,
+                                              new Int32Rect(0, maskHeight, maskWidth, maskHeight));
+                //画素をbyte配列で取得
+                int maskStride = (maskWidth * 32 + 7) / 8;
+                byte[] mask1Pixels = new byte[maskHeight * maskStride];
+                byte[] mask2Pixels = new byte[maskHeight * maskStride];
+                mask1Bitmap.CopyPixels(mask1Pixels, maskStride, 0);
+                mask2Bitmap.CopyPixels(mask2Pixels, maskStride, 0);
+
+                //キャプチャ画像をbyte配列で取得
+                width = MyBitmap.PixelWidth;
+                height = MyBitmap.PixelHeight;
+                stride = (width * 32 + 7) / 8;
+                pixels = new byte[height * stride];
+                MyBitmap.CopyPixels(pixels, stride, 0);
+
+                //処理範囲の開始点と終了点設定、開始点はカーソルのホットスポットでオフセット
+                int beginX = MyCursorPoint.X - MyCursorHotspotX;
+                int beginY = MyCursorPoint.Y - MyCursorHotspotY;
+                int endX = beginX + maskWidth;
+                int endY = beginY + maskHeight;
+                if (endX > width) endX = width;
+                if (endY > height) endY = height;
+
+                //最初にマスク画像上とAND合成、続けてマスク画像下とXOR
+                int yCount = 0;
+                for (int y = beginY; y < endY; y++)
+                {
+                    int xCount = 0;
+                    for (int x = beginX; x < endX; x++)
+                    {
+                        int p = (y * stride) + (x * 4);
+                        int pp = (yCount * maskStride) + (xCount * 4);
+                        //AND
+                        pixels[p] &= mask1Pixels[pp];
+                        pixels[p + 1] &= mask1Pixels[pp + 1];
+                        pixels[p + 2] &= mask1Pixels[pp + 2];
+                        //XOR
+                        pixels[p] ^= mask2Pixels[pp];
+                        pixels[p + 1] ^= mask2Pixels[pp + 1];
+                        pixels[p + 2] ^= mask2Pixels[pp + 2];
+
+                        xCount++;
+                    }
+                    yCount++;
+                }
             }
+
+            //マスクが必要ない場合はアルファブレンドする
             else
             {
-            
-            }
+                //カーソル画像
+                int cWidth = MyBitmapCursor.PixelWidth;
+                int cHeight = MyBitmapCursor.PixelHeight;
+                int maskStride = (cWidth * 32 + 7) / 8;
+                byte[] cursorPixels = new byte[cHeight * maskStride];
+                MyBitmapCursor.CopyPixels(cursorPixels, maskStride, 0);
 
-            //カーソル画像            
-            int cWidth = MyBitmapCursor.PixelWidth;
-            int cHeight = MyBitmapCursor.PixelHeight;
-            int maskStride = (cWidth * 32 + 7) / 8;
-            byte[] cursorPixels = new byte[cHeight * maskStride];
-            MyBitmapCursor.CopyPixels(cursorPixels, maskStride, 0);
+                //キャプチャ画像
+                width = MyBitmap.PixelWidth;
+                height = MyBitmap.PixelHeight;
+                stride = (width * 32 + 7) / 8;
+                pixels = new byte[height * stride];
+                MyBitmap.CopyPixels(pixels, stride, 0);
 
-            //キャプチャ画像
-            int w = MyBitmap.PixelWidth;
-            int h = MyBitmap.PixelHeight;
-            int stride = (w * 32 + 7) / 8;
-            byte[] pixels = new byte[h * stride];
-            MyBitmap.CopyPixels(pixels, stride, 0);
+                //処理範囲の開始点と終了点設定
+                int beginX = MyCursorPoint.X - MyCursorHotspotX;
+                int beginY = MyCursorPoint.Y - MyCursorHotspotY;
+                int endX = beginX + cWidth;
+                int endY = beginY + cHeight;
+                if (endX > width) endX = width;
+                if (endY > height) endY = height;
 
-            //処理範囲の開始点と終了点設定
-            int beginX = MyCursorPoint.X - MyCursorHotspotX;
-            int beginY = MyCursorPoint.Y - MyCursorHotspotY;
-            int endX = beginX + cWidth;
-            int endY = beginY + cHeight;
-            if (endX > w) endX = w;
-            if (endY > h) endY = h;
-
-            int yCount = 0;
-            for (int y = beginY; y < endY; y++)
-            {
-                int xCount = 0;
-                for (int x = beginX; x < endX; x++)
+                int yCount = 0;
+                for (int y = beginY; y < endY; y++)
                 {
-                    var p = y * stride + x * 4;
-                    var pp = yCount * maskStride + xCount * 4;
-                    //アルファブレンド
-                    //                    効果
-                    //http://www.charatsoft.com/develop/otogema/page/05d3d/effect.html
+                    int xCount = 0;
+                    for (int x = beginX; x < endX; x++)
+                    {
+                        int p = (y * stride) + (x * 4);
+                        int pp = (yCount * maskStride) + (xCount * 4);
+                        //アルファブレンド
+                        //                    効果
+                        //http://www.charatsoft.com/develop/otogema/page/05d3d/effect.html
+                        //求める画素値 = もとの画素値 + ((カーソル画素値 - もとの画素値) * (カーソルのアルファ値 / 255))
+                        double alpha = cursorPixels[pp + 3] / 255.0;
+                        byte r = pixels[p + 2];
+                        byte g = pixels[p + 1];
+                        byte b = pixels[p];
+                        pixels[p + 2] = (byte)(r + ((cursorPixels[pp + 2] - r) * alpha));
+                        pixels[p + 1] = (byte)(g + ((cursorPixels[pp + 1] - g) * alpha));
+                        pixels[p] = (byte)(b + ((cursorPixels[pp] - b) * alpha));
 
-                    double alpha = cursorPixels[pp + 3] / 255.0;
-                    byte r = pixels[p + 2];
-                    byte g = pixels[p + 1];
-                    byte b = pixels[p];
-                    pixels[p + 2] = (byte)(r + (cursorPixels[pp + 2] - r) * alpha);
-                    pixels[p + 1] = (byte)(g + (cursorPixels[pp + 1] - g) * alpha);
-                    pixels[p] = (byte)(b + (cursorPixels[pp] - b) * alpha);
-
-                    xCount++;
+                        xCount++;
+                    }
+                    yCount++;
                 }
-                yCount++;            
             }
 
-            return BitmapSource.Create(w, h, MyBitmap.DpiX, MyBitmap.DpiY, MyBitmap.Format, MyBitmap.Palette, pixels, stride);
+            return BitmapSource.Create(width,
+                                       height,
+                                       MyBitmap.DpiX,
+                                       MyBitmap.DpiY,
+                                       MyBitmap.Format,
+                                       MyBitmap.Palette,
+                                       pixels,
+                                       stride);
 
         }
-        private BitmapSource MixBitmap2(BitmapSource source, BitmapSource cursor, POINT cursorLocate, int xOffset, int yOffset)
+
+        private void MyButtonToClipboard_Click(object sender, RoutedEventArgs e)
         {
-            BitmapSource resultBmp = null;
-            int sideLenght = cursor.PixelWidth;//32、横一辺の長さ
-            int maskHeight = cursor.PixelHeight;//64、縦は横の2倍のはず
-            if (sideLenght * 2 != maskHeight) return resultBmp;//2倍じゃなければnullを返して終了
-
-            //マスク画像を上下半分に切り出して画素値を配列化、マスク画像は白と黒の2色の1bpp画像のはず
-            //ピクセルフォーマットをbgra32に変換して計算しやすくする
-            BitmapSource maskBmp1 = new CroppedBitmap(cursor, new Int32Rect(0, 0, sideLenght, sideLenght));
-            FormatConvertedBitmap m1 = new FormatConvertedBitmap(maskBmp1, PixelFormats.Bgra32, null, 0);
-            //var m11 = new FormatConvertedBitmap(maskBmp1, PixelFormats.Bgr24, null, 0);
-            int maskStride = (m1.PixelWidth * 32 + 7) / 8;
-            byte[] mask1Pixels = new byte[m1.PixelHeight * maskStride];
-            m1.CopyPixels(mask1Pixels, maskStride, 0);
-
-            BitmapSource maskBmp2 = new CroppedBitmap(cursor, new Int32Rect(0, sideLenght, sideLenght, sideLenght));
-            var m2 = new FormatConvertedBitmap(maskBmp2, PixelFormats.Bgra32, null, 0);
-            byte[] mask2Pixels = new byte[m2.PixelHeight * maskStride];
-            m2.CopyPixels(mask2Pixels, maskStride, 0);
-
-            int w = source.PixelWidth;
-            int h = source.PixelHeight;
-            int bpp = source.Format.BitsPerPixel;//1ビクセルあたりのbit数、bgra32は4になるはず
-            int stride = (w * bpp + 7) / 8;
-            byte[] pixels = new byte[h * stride];
-            source.CopyPixels(pixels, stride, 0);
-
-            int beginX = cursorLocate.X - xOffset;
-            int beginY = cursorLocate.Y - yOffset;
-            int endX = beginX + sideLenght;
-            int endY = beginY + sideLenght;
-            if (endX > w) endX = w;
-            if (endY > h) endY = h;
-
-            int yCount = 0;
-            int xCount = 0;
-            int nekocount = 0;
-            for (int y = beginY; y < endY; y++)
-            {
-                for (int x = beginX; x < endX; x++)
-                {
-                    var p = y * stride + x * 4;
-                    var pp = yCount * maskStride + xCount * 4;
-                    //pixels[p] = 0;
-                    //pixels[p+1] = 0;
-                    //pixels[p+2] = 0;
-
-
-                    //マスク1が黒なら画像も黒にする
-                    if (mask1Pixels[pp] == 0)
-                    {
-                        pixels[p] = 0;
-                        pixels[p + 1] = 0;
-                        pixels[p + 2] = 0;
-                    }
-
-                    //マスク2が白なら色反転
-                    if (mask2Pixels[pp] == 255)
-                    {
-                        pixels[p] = (byte)(255 - pixels[p]);
-                        pixels[p + 1] = (byte)(255 - pixels[p + 1]);
-                        pixels[p + 2] = (byte)(255 - pixels[p + 2]);
-                        nekocount++;
-                    }
-                    xCount++;
-                }
-                yCount++;
-                xCount = 0;
-            }
-
-            return BitmapSource.Create(w, h, source.DpiX, source.DpiY, source.Format, source.Palette, pixels, stride);
-
+            var image = MyImage.Source;
+            if (image == null) return;
+            Clipboard.SetImage((BitmapSource)image);
         }
     }
 }
