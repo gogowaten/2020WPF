@@ -41,7 +41,7 @@ namespace _20201112_dotNET5Test
             var na = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             if (na == null)
             {
-                MessageBox.Show("null");
+                MessageBox.Show("(　´∀｀)＜ぬるぽ","■━⊂(　・∀・) 彡 ｶﾞｯ☆`Д´)ﾉ");
             }
             else
             {

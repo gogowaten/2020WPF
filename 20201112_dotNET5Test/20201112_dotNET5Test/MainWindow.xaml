@@ -9,7 +9,7 @@
   <Grid>
     <StackPanel>
       <Button Content="assembly location" Click="Button_Click"/>
-      <Button Content="assembly location" Click="Button_Click_1"/>
+      <Button Content="Environment.GetCommandLineArgs" Click="Button_Click_1"/>
     </StackPanel>
   </Grid>
 </Window>

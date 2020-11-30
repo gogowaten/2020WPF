@@ -7,6 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
-    </Grid>
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+      <Image x:Name="MyImage" UseLayoutRounding="True"/>
+    </ScrollViewer>
+  </Grid>
 </Window>
