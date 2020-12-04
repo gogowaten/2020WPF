@@ -28,6 +28,20 @@ namespace _20201112_dotNET5Test
             var v = System.Runtime.Intrinsics.Vector256.Create(5.0);
             var vv = System.Runtime.Intrinsics.X86.Avx.Add(v, v);
 
+            //
+            var ab = Environment.CurrentDirectory;//実行ファイルのあるフォルダパス
+            var aa = Environment.CommandLine;//実行ファイルのフルパス？プロジェクト名.dll
+            var bb = Environment.GetCommandLineArgs();//配列、実行ファイルのフルパス？プロジェクト名.dll
+            var cc = Environment.Is64BitProcess;//true
+            var dd = Environment.ProcessorCount;//8
+            var ee = Environment.Version;//5.0.0、.NETのバージョン
+            var ff = Environment.SystemDirectory;//c win system32
+            var gg = System.AppContext.BaseDirectory;//実行ファイルのあるフォルダパス\
+
+            var hh= System.Diagnostics.FileVersionInfo.GetVersionInfo(Environment.CommandLine).FileVersion;//実行ファイルのバージョン、こっちのほうがいい？
+            var ii = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;//実行ファイルのバージョン
+
+            MessageBox.Show($"{ab}\n{aa}\n{bb}\n{cc}\n{dd}\n{ee}\n{ff}\n{gg}\n{hh}\n{ii}\n");
         }
 //        .NET 5 の確認「単一ファイルの配置と実行可能ファイル」 - rksoftware
 //https://rksoftware.hatenablog.com/entry/2020/11/29/130535?_ga=2.75216402.1273136612.1606628202-572939506.1592007149
