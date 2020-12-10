@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20201210_グローバルホットキー3_1", "20201210_グローバルホットキー3_1\20201210_グローバルホットキー3_1.csproj", "{91513054-C567-47E3-BB75-7DB6C7F8187F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{91513054-C567-47E3-BB75-7DB6C7F8187F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91513054-C567-47E3-BB75-7DB6C7F8187F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91513054-C567-47E3-BB75-7DB6C7F8187F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91513054-C567-47E3-BB75-7DB6C7F8187F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D96ECECC-6DFB-4332-B5C6-37DB0F3B16B8}
+	EndGlobalSection
+EndGlobal
