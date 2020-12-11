@@ -5,15 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201210_グローバルホットキー3_2"
         mc:Ignorable="d"
-        Title="MainWindow" Height="150" Width="200">
+        Title="MainWindow" Height="200" Width="260">
   <Grid>
     <StackPanel>
-      <GroupBox Header="ModKey">
-        <StackPanel Orientation="Horizontal">
-          <CheckBox x:Name="MyChecAlt" Content="Alt"/>
-          <CheckBox x:Name="MyChecCtrl" Content="Ctrl"/>
-          <CheckBox x:Name="MyCheckShift" Content="Shift"/>
-          <CheckBox x:Name="MyCheckWin" Content="Win"/>
+      <GroupBox Header="ModKey修飾キー">
+        <StackPanel Orientation="Horizontal" Margin="2">
+          <CheckBox x:Name="MyChecAlt" Content="Alt" Margin="8"/>
+          <CheckBox x:Name="MyChecCtrl" Content="Ctrl" Margin="8"/>
+          <CheckBox x:Name="MyCheckShift" Content="Shift" Margin="8"/>
+          <CheckBox x:Name="MyCheckWin" Content="Win" Margin="8"/>
         </StackPanel>
       </GroupBox>
       
@@ -25,7 +25,7 @@
                   PreviewKeyDown="MyComboBoxKey_PreviewKeyDown"
                   PreviewKeyUp="MyComboBoxKey_PreviewKeyUp"/>
       </StackPanel>
-      <Button x:Name="MyButton" Content="登録" Click="MyButton_Click"/>
+      <Button x:Name="MyButton" Content="登録" Click="MyButton_Click" Margin="10"/>
     </StackPanel>
   </Grid>
 </Window>

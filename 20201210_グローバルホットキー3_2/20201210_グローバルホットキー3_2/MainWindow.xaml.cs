@@ -58,6 +58,32 @@ namespace _20201210_グローバルホットキー3_2
         }
 
 
+
+        //ホットキー登録
+        private void MyButton_Click(object sender, RoutedEventArgs e)
+        {
+            int modifier = 0;
+            string str = "";
+            if (MyChecAlt.IsChecked == true) { str += $" + Alt"; modifier = (int)ModifierKeys.Alt; }
+            if (MyChecCtrl.IsChecked == true) { str += $" + Ctrl"; modifier += (int)ModifierKeys.Control; }
+            if (MyCheckShift.IsChecked == true) { str += $" + Shift"; modifier += (int)ModifierKeys.Shift; }
+            if (MyCheckWin.IsChecked == true) { str += $" + Win"; modifier += (int)ModifierKeys.Windows; }
+
+            var key = (Key)MyComboBoxKey.SelectedValue;
+            UnregisterHotKey(MyWindowHandle, HOTKEY_ID1);//登録解除
+            if (RegisterHotKey(MyWindowHandle, HOTKEY_ID1, modifier, KeyInterop.VirtualKeyFromKey(key)) == 0)
+            {
+                MessageBox.Show("登録に失敗");
+            }
+            else
+            {
+                str += $" + {key}";
+                str = str.Remove(0, 3);
+                MessageBox.Show($"{str} を登録しました");
+            }
+        }
+
+
         //ホットキーが押されたときの動作
         private void ComponentDispatcher_ThreadPreprocessMessage(ref MSG msg, ref bool handled)
         {
@@ -78,42 +104,15 @@ namespace _20201210_グローバルホットキー3_2
         }
 
 
-
-        //ホットキー登録
-        private void MyButton_Click(object sender, RoutedEventArgs e)
-        {
-            int modifier = 0;
-            string str = "";
-            if (MyChecAlt.IsChecked == true) { str += $" + Alt"; modifier = (int)ModifierKeys.Alt; }
-            if (MyChecCtrl.IsChecked == true) { str += $" + Ctrl"; modifier += (int)ModifierKeys.Control; }
-            if (MyCheckShift.IsChecked == true) { str += $" + Shift"; modifier += (int)ModifierKeys.Shift; }
-            if (MyCheckWin.IsChecked == true) { str += $" + Win"; modifier += (int)ModifierKeys.Windows; }
-
-            var key = (Key)MyComboBoxKey.SelectedValue;
-            UnregisterHotKey(MyWindowHandle, HOTKEY_ID1);
-            if (RegisterHotKey(MyWindowHandle, HOTKEY_ID1, modifier, KeyInterop.VirtualKeyFromKey(key)) == 0)
-            {
-                MessageBox.Show("登録に失敗");
-            }
-            else
-            {
-                str += $" + {key}";
-                str = str.Remove(0, 3);
-                MessageBox.Show($"{str} を登録しました");
-            }
-        }
-
-
         //コンボボックス上でキーを押し下げたとき
         //入力されたキー文字は無視
         private void MyComboBoxKey_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            e.Handled = true;//無視む～し
+            e.Handled = true;//キーイベント無視む～し
         }
 
         //コンボボックス上でキーが上げられたとき
         //修飾キー以外なら、そのキーと同じキーをコンボボックスで選択する
-        //文字は無視
         private void MyComboBoxKey_PreviewKeyUp(object sender, KeyEventArgs e)
         {
             var key = e.Key;
