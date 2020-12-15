@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_20201212_ファイル名"
         mc:Ignorable="d"
-        Title="MainWindow" Height="200" Width="500">
+        Title="MainWindow" Height="240" Width="500">
   <Window.Resources>
     <local:MyConvert x:Key="MyConv"/>
     <!--<local:ImageType x:Key="ImageType"/>-->
@@ -59,6 +59,15 @@
                  FontSize="20"/>
       <TextBlock x:Name="MyTextNow" FontSize="20" Text="Now"/>
       <ComboBox Name="MyComboTest" DisplayMemberPath="Value" SelectedValue="{Binding Path=ImageType}" SelectedValuePath="Key"/>
+      
+      <ComboBox Name="MyComboTest3" SelectedValue="{Binding Path=ImageType}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Converter={StaticResource ImagpeTypeConv}}"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      
     </StackPanel>
   </Grid>
 </Window>

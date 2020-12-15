@@ -48,6 +48,8 @@ namespace _20201212_ファイル名
             MyComboTest.ItemsSource = myType;
 
 
+
+            MyComboTest3.ItemsSource = Enum.GetValues(typeof(ImageType));
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -56,6 +58,11 @@ namespace _20201212_ファイル名
             var inu = MyComboBoxDateFormat.Text;
             var um = MyComboTest.SelectedItem;
             var v = MyComboTest.SelectedValue;
+            //var item2 = MyComboTest2.SelectedItem;
+            //var value2 = MyComboTest2.SelectedValue;
+            var item3 = MyComboTest3.SelectedItem;
+            var value3 = MyComboTest3.SelectedValue;
+
         }
 
 
@@ -111,6 +118,10 @@ namespace _20201212_ファイル名
     }
 
 
+
+//    列挙体をコンボボックスにBindingする
+//https://tepp91.github.io/contents/wpf/enum-combobox.html
+
     public class MyImageTypeConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -118,12 +129,21 @@ namespace _20201212_ファイル名
             FieldInfo field = value.GetType().GetField(value.ToString());
             DisplayAttribute displayAttribute = field.GetCustomAttribute<DisplayAttribute>();
             return displayAttribute.Name;
+
+            //return value.ToString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            //FieldInfo field = value.GetType().GetField(value.ToString());
+            //DisplayAttribute displayAttribute = field.GetCustomAttribute<DisplayAttribute>();
+            //return displayAttribute.Name;
+
+            //return value.ToString();
             throw new NotImplementedException();
         }
+
+
         //public static string GetString(ImageType type)
         //{
         //    return type.ToString()+": " + getdi
