@@ -9,6 +9,7 @@
   <Window.Resources>
     <local:MyConvert x:Key="MyConv"/>
     <!--<local:ImageType x:Key="ImageType"/>-->
+    <local:MyImageTypeConverter x:Key="ImagpeTypeConv"/>
   </Window.Resources>
   <Grid>
     <StackPanel>
@@ -57,7 +58,7 @@
                  Text="{Binding ElementName=MyComboBoxDateFormat,Path=Text, Converter={StaticResource MyConv}}"
                  FontSize="20"/>
       <TextBlock x:Name="MyTextNow" FontSize="20" Text="Now"/>
-      <ComboBox Name="MyComboTest" ItemsSource="{Binding Source={StaticResource ImageType}}"/>
+      <ComboBox Name="MyComboTest" DisplayMemberPath="Value" SelectedValue="{Binding Path=ImageType}" SelectedValuePath="Key"/>
     </StackPanel>
   </Grid>
 </Window>

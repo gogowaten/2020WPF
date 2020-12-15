@@ -14,6 +14,9 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+
 
 namespace _20201212_ファイル名
 {
@@ -35,12 +38,24 @@ namespace _20201212_ファイル名
             t.Start();
             t.Tick += (s, e) => { MyTextNow.Text = DateTime.Now.ToString(); };
 
+            Dictionary<ImageType, string> myType = new();            
+            foreach (var item in Enum.GetValues(typeof(ImageType)))
+            {
+                var imageType = (ImageType)item;
+                FieldInfo field = imageType.GetType().GetField(imageType.ToString());                
+                myType.Add(imageType, field.GetCustomAttribute<DisplayAttribute>().Name);
+            }
+            MyComboTest.ItemsSource = myType;
+
+
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             var neko = MyData;
             var inu = MyComboBoxDateFormat.Text;
+            var um = MyComboTest.SelectedItem;
+            var v = MyComboTest.SelectedValue;
         }
 
 
@@ -100,30 +115,32 @@ namespace _20201212_ファイル名
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return getstr
+            FieldInfo field = value.GetType().GetField(value.ToString());
+            DisplayAttribute displayAttribute = field.GetCustomAttribute<DisplayAttribute>();
+            return displayAttribute.Name;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
-        public static string GetString(ImageType type)
-        {
-            return type.ToString()+": " + getdi
-        }
-        public static string GetDescription(ImageType type)
-        {
-            return type.GetType().GetMember(type.ToString())[0].GetCustomAttributes(typeof(desc)
-        }
+        //public static string GetString(ImageType type)
+        //{
+        //    return type.ToString()+": " + getdi
+        //}
+        //public static string GetDescription(ImageType type)
+        //{
+        //    return type.GetType().GetMember(type.ToString())[0].GetCustomAttributes(typeof(desc)
+        //}
     }
 
 
     public enum ImageType
     {
-        png,
-        bmp,
-        jpg,
-        tiff,
+        [Display(Name = "ピング")] png,
+        [Display(Name = "ビットマップ")] bmp,
+        [Display(Name = "ジェイペグ")] jpg,
+        [Display(Name = "ティフ")] tiff,
 
     }
 }
